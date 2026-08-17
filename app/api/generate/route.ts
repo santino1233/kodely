@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { runAgent, normalizePath, type FileMap } from "@/lib/agent";
 import { chargeForBuild, costMicros, creditsFor, getBalance } from "@/lib/credits";
+import { checkGenerateRateLimit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -34,6 +35,14 @@ export async function POST(req: Request) {
     return Response.json(
       { error: "You're out of credits. Top up to keep building." },
       { status: 402 },
+    );
+  }
+
+  const rateLimit = await checkGenerateRateLimit(user.id);
+  if (!rateLimit.allowed) {
+    return Response.json(
+      { error: "You're generating too fast — take a short break and try again shortly." },
+      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
     );
   }
 

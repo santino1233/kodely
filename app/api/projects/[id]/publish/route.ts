@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { scanForSecrets } from "@/lib/secret-scan";
+import { checkPublishRateLimit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,18 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   if (!project) return Response.json({ error: "Project not found." }, { status: 404 });
   if (project.files.length === 0) {
     return Response.json({ error: "Nothing to publish yet — generate a site first." }, { status: 400 });
+  }
+
+  // Only gate genuinely new subdomains — republishing an already-live project
+  // isn't the spam-farming vector this protects against.
+  if (!project.publishedAt) {
+    const rateLimit = await checkPublishRateLimit(user.id);
+    if (!rateLimit.allowed) {
+      return Response.json(
+        { error: "You've published a lot of new sites today — try again tomorrow." },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
+      );
+    }
   }
 
   const leaks = scanForSecrets(project.files.map((f) => ({ path: f.path, content: f.content })));
