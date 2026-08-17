@@ -7,6 +7,7 @@ const MIME: Record<string, string> = {
   html: "text/html; charset=utf-8",
   css: "text/css; charset=utf-8",
   js: "text/javascript; charset=utf-8",
+  map: "application/json",
   json: "application/json",
   svg: "image/svg+xml",
   txt: "text/plain; charset=utf-8",
@@ -30,7 +31,7 @@ export async function GET(
 
   const filePath = path && path.length > 0 ? path.join("/") : "index.html";
   const file = await db.projectFile.findFirst({
-    where: { projectId: id, path: filePath, published: false },
+    where: { projectId: id, path: filePath, published: false, kind: "build" },
   });
   if (!file) {
     return new Response(

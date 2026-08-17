@@ -78,7 +78,9 @@ export default function Editor(props: Props) {
     }
   }
 
-  const isFirstBuild = Object.keys(files).length === 0;
+  // The foundation means source files are never empty — "first build" means
+  // no chat history yet, matching the same signal the generate route uses.
+  const isFirstBuild = messages.length === 0;
 
   async function send() {
     const text = prompt.trim();

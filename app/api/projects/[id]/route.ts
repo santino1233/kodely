@@ -11,7 +11,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const project = await db.project.findFirst({
     where: { id, userId: user.id },
     include: {
-      files: { where: { published: false } },
+      // Source is what the agent/Code-view work with; the compiled build
+      // output isn't meant to be shown or edited directly.
+      files: { where: { published: false, kind: "source" } },
       messages: { orderBy: { createdAt: "asc" } },
     },
   });

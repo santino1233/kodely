@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { runAgent, normalizePath, type FileMap } from "@/lib/agent";
+import { buildSite, BuildError } from "@/lib/build-site";
 import { chargeForBuild, costMicros, creditsFor, getBalance } from "@/lib/credits";
 import { checkGenerateRateLimit } from "@/lib/rate-limit";
 
@@ -10,6 +11,10 @@ export const maxDuration = 300;
 function sse(event: unknown) {
   return `data: ${JSON.stringify(event)}\n\n`;
 }
+
+// A build that fails to compile even after one repair attempt gives up — this
+// bounds the worst case to ~2x the cost of a normal generation, not unbounded.
+const MAX_BUILD_ATTEMPTS = 2;
 
 export async function POST(req: Request) {
   const user = await getCurrentUser();
@@ -46,19 +51,12 @@ export async function POST(req: Request) {
     );
   }
 
-  const draft = await db.projectFile.findMany({
-    where: { projectId: project.id, published: false },
-  });
-  const files: FileMap = Object.fromEntries(draft.map((f) => [f.path, f.content]));
-  const kind = draft.length === 0 ? "create" : "edit";
+  // The foundation means source files are never empty — "first build" is
+  // instead "first real customization request" for this project.
+  const kind = project.messages.length === 0 ? "create" : "edit";
 
   const build = await db.build.create({
-    data: {
-      projectId: project.id,
-      status: "RUNNING",
-      model: "",
-      prompt,
-    },
+    data: { projectId: project.id, status: "RUNNING", model: "", prompt },
   });
 
   await db.message.create({
@@ -83,95 +81,148 @@ export async function POST(req: Request) {
           // client is gone
         }
       };
-      let reply = "";
+
       let filesWritten = 0;
       let succeeded = false;
+      const totals = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheWriteTokens: 0 };
+      let model = "";
+      let lastReply = "";
+
+      const readSourceFiles = async (): Promise<FileMap> => {
+        const rows = await db.projectFile.findMany({
+          where: { projectId: project.id, published: false, kind: "source" },
+        });
+        return Object.fromEntries(rows.map((f) => [f.path, f.content]));
+      };
 
       try {
-        const generator = runAgent({
-          history: project.messages.map((m) => ({
-            role: m.role === "assistant" ? ("assistant" as const) : ("user" as const),
-            content: m.content,
-          })),
-          request: prompt,
-          files,
-          kind,
-          signal: abortController.signal,
-          onWrite: async (path, content) => {
-            if (!normalizePath(path)) return false;
-            await db.projectFile.upsert({
-              where: {
-                projectId_path_published: { projectId: project.id, path, published: false },
-              },
-              create: { projectId: project.id, path, content, published: false },
-              update: { content },
-            });
-            filesWritten++;
-            return true;
-          },
-          onDelete: async (path) => {
-            const { count } = await db.projectFile.deleteMany({
-              where: { projectId: project.id, path, published: false },
-            });
-            return count > 0;
-          },
-        });
+        let request = prompt;
+        let buildOutput: FileMap | null = null;
+        let lastBuildError = "";
 
-        for await (const event of generator) {
-          if (event.type === "text") {
-            reply += event.text;
-            send(event);
-          } else if (event.type === "file") {
-            send(event);
-          } else if (event.type === "usage") {
-            succeeded = true;
-            // The build succeeded. Meter the real spend, then charge.
-            const micros = costMicros(event.model, event);
-            const credits = creditsFor(micros);
-            const remaining = await chargeForBuild(user.id, build.id, credits);
+        for (let attempt = 1; attempt <= MAX_BUILD_ATTEMPTS; attempt++) {
+          if (abortController.signal.aborted) break;
 
-            // Snapshot the full draft tree as it stands now, so this build is
-            // a checkpoint a user can roll back to later.
-            const currentFiles = await db.projectFile.findMany({
-              where: { projectId: project.id, published: false },
-            });
-            const filesSnapshot = Object.fromEntries(currentFiles.map((f) => [f.path, f.content]));
-
-            await db.build.update({
-              where: { id: build.id },
-              data: {
-                status: "SUCCEEDED",
-                model: event.model,
-                endedAt: new Date(),
-                inputTokens: event.inputTokens,
-                outputTokens: event.outputTokens,
-                cacheReadTokens: event.cacheReadTokens,
-                cacheWriteTokens: event.cacheWriteTokens,
-                filesWritten,
-                costMicros: micros,
-                creditsCharged: credits,
-                filesSnapshot,
-              },
-            });
-
-            if (reply.trim()) {
-              await db.message.create({
-                data: { projectId: project.id, role: "assistant", content: reply.trim() },
+          const generator = runAgent({
+            history: project.messages.map((m) => ({
+              role: m.role === "assistant" ? ("assistant" as const) : ("user" as const),
+              content: m.content,
+            })),
+            request,
+            files: await readSourceFiles(),
+            kind,
+            signal: abortController.signal,
+            onWrite: async (path, content) => {
+              if (!normalizePath(path)) return false;
+              await db.projectFile.upsert({
+                where: {
+                  projectId_path_published_kind: {
+                    projectId: project.id,
+                    path,
+                    published: false,
+                    kind: "source",
+                  },
+                },
+                create: { projectId: project.id, path, content, published: false, kind: "source" },
+                update: { content },
               });
-            }
-            await db.project.update({
-              where: { id: project.id },
-              data: { updatedAt: new Date() },
-            });
+              filesWritten++;
+              return true;
+            },
+            onDelete: async (path) => {
+              const { count } = await db.projectFile.deleteMany({
+                where: { projectId: project.id, path, published: false, kind: "source" },
+              });
+              return count > 0;
+            },
+          });
 
-            send({ type: "done", credits, remaining, filesWritten });
+          for await (const event of generator) {
+            if (event.type === "text") {
+              lastReply += event.text;
+              send(event);
+            } else if (event.type === "file") {
+              send(event);
+            } else if (event.type === "usage") {
+              model = event.model;
+              totals.inputTokens += event.inputTokens;
+              totals.outputTokens += event.outputTokens;
+              totals.cacheReadTokens += event.cacheReadTokens;
+              totals.cacheWriteTokens += event.cacheWriteTokens;
+            }
+          }
+
+          if (abortController.signal.aborted) break;
+
+          try {
+            buildOutput = await buildSite(await readSourceFiles());
+            break; // compiled cleanly — done
+          } catch (err) {
+            lastBuildError = err instanceof BuildError ? err.message : String(err);
+            if (attempt >= MAX_BUILD_ATTEMPTS) throw new Error(lastBuildError);
+            send({ type: "status", text: "Build didn't compile — fixing it…" });
+            request = `The last change failed to build. Fix it and keep the rest of the change. Build error:\n${lastBuildError}`;
           }
         }
 
-        // The loop can end without ever reaching "usage" — most commonly an
-        // aborted client disconnect (runAgent returns early, no exception).
-        // Leaving the row at RUNNING forever would corrupt the rate-limit
-        // count and the project's build history, so resolve it explicitly.
+        if (abortController.signal.aborted || !buildOutput) {
+          // Loop ended without a successful build and without throwing —
+          // only reachable via the abort path (see the `break` above).
+        } else {
+          succeeded = true;
+
+          // Replace the compiled tree with the new build output.
+          await db.$transaction([
+            db.projectFile.deleteMany({ where: { projectId: project.id, published: false, kind: "build" } }),
+            ...(Object.keys(buildOutput).length > 0
+              ? [
+                  db.projectFile.createMany({
+                    data: Object.entries(buildOutput).map(([path, content]) => ({
+                      projectId: project.id,
+                      path,
+                      content,
+                      published: false,
+                      kind: "build",
+                    })),
+                  }),
+                ]
+              : []),
+          ]);
+
+          const micros = costMicros(model, totals);
+          const credits = creditsFor(micros);
+          const remaining = await chargeForBuild(user.id, build.id, credits);
+
+          const sourceFiles = await readSourceFiles();
+          const filesSnapshot = { source: sourceFiles, build: buildOutput };
+
+          await db.build.update({
+            where: { id: build.id },
+            data: {
+              status: "SUCCEEDED",
+              model,
+              endedAt: new Date(),
+              inputTokens: totals.inputTokens,
+              outputTokens: totals.outputTokens,
+              cacheReadTokens: totals.cacheReadTokens,
+              cacheWriteTokens: totals.cacheWriteTokens,
+              filesWritten,
+              costMicros: micros,
+              creditsCharged: credits,
+              filesSnapshot,
+            },
+          });
+
+          if (lastReply.trim()) {
+            await db.message.create({
+              data: { projectId: project.id, role: "assistant", content: lastReply.trim() },
+            });
+          }
+          await db.project.update({ where: { id: project.id }, data: { updatedAt: new Date() } });
+
+          send({ type: "done", credits, remaining, filesWritten });
+        }
+
         if (!succeeded) {
           await db.build.update({
             where: { id: build.id },

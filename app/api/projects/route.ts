@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
+import { FOUNDATION_FILES } from "@/lib/foundation";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,19 @@ export async function POST(req: Request) {
 
   const project = await db.project.create({
     data: { userId: user.id, name, slug: slugify(name) },
+  });
+
+  // Every project starts from the real Vite+React+TS+Tailwind foundation,
+  // not a blank slate — the agent edits/extends this, it never scaffolds
+  // a project from scratch.
+  await db.projectFile.createMany({
+    data: Object.entries(FOUNDATION_FILES).map(([path, content]) => ({
+      projectId: project.id,
+      path,
+      content,
+      published: false,
+      kind: "source",
+    })),
   });
 
   return Response.json({ project });

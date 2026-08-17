@@ -26,7 +26,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   const project = await db.project.findFirst({
     where: { id, userId: user.id },
-    include: { files: { where: { published: false } } },
+    include: {
+      files: { where: { published: false, kind: "build" } },
+    },
   });
   if (!project) return Response.json({ error: "Project not found." }, { status: 404 });
   if (project.files.length === 0) {
@@ -45,7 +47,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     }
   }
 
-  const leaks = scanForSecrets(project.files.map((f) => ({ path: f.path, content: f.content })));
+  // Scan both the compiled output (what's actually served) and the source
+  // (a comment or string that got stripped by the build can still leak if
+  // someone reads it another way) — belt and suspenders, cheap either way.
+  const sourceFiles = await db.projectFile.findMany({
+    where: { projectId: id, published: false, kind: "source" },
+  });
+  const leaks = scanForSecrets(
+    [...project.files, ...sourceFiles].map((f) => ({ path: f.path, content: f.content })),
+  );
   if (leaks.length > 0) {
     const { path, kind } = leaks[0];
     return Response.json(
@@ -55,13 +65,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   }
 
   await db.$transaction([
-    db.projectFile.deleteMany({ where: { projectId: id, published: true } }),
+    db.projectFile.deleteMany({ where: { projectId: id, published: true, kind: "build" } }),
     db.projectFile.createMany({
       data: project.files.map((f) => ({
         projectId: id,
         path: f.path,
         content: f.content,
         published: true,
+        kind: "build",
       })),
     }),
     db.project.update({ where: { id }, data: { publishedAt: new Date() } }),

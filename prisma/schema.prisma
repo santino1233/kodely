@@ -68,17 +68,22 @@ model Project {
 
 // The working tree of a generated project. `published` files are the live
 // snapshot served on the public subdomain; draft files are what the preview shows.
+// `kind` separates the two file universes that live in this one table:
+// "source" is the real Vite+React+TS project the agent edits (never served
+// directly — a browser can't run raw .tsx); "build" is the compiled static
+// output (lib/build-site.ts) that preview/publish/site-serving actually read.
 model ProjectFile {
   id        String   @id @default(cuid())
   projectId String
   path      String
   content   String
   published Boolean  @default(false)
+  kind      String   @default("source") // "source" | "build"
   updatedAt DateTime @updatedAt
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
-  @@unique([projectId, path, published])
+  @@unique([projectId, path, published, kind])
   @@index([projectId])
 }
 

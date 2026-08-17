@@ -14,7 +14,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   const project = await db.project.findFirst({
     where: { id, userId: user.id },
     include: {
-      files: { where: { published: false } },
+      files: { where: { published: false, kind: "source" } },
       messages: { orderBy: { createdAt: "asc" } },
     },
   });
