@@ -7,7 +7,7 @@ import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { Aura } from "@/components/marketing/Aura";
 import { PinnedStatement } from "@/components/marketing/PinnedStatement";
-import { ShowcaseCarousel } from "@/components/marketing/ShowcaseCarousel";
+import { WhatPeopleBuild } from "@/components/marketing/WhatPeopleBuild";
 import { Reveal, RevealGroup, RevealItem } from "@/components/marketing/Reveal";
 import { MagneticButton } from "@/components/marketing/MagneticButton";
 
@@ -142,7 +142,7 @@ export default async function Home() {
         </Reveal>
         <Reveal delay={0.08}>
           <div className="mt-8">
-            <ShowcaseCarousel />
+            <WhatPeopleBuild />
           </div>
         </Reveal>
       </section>
