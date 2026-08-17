@@ -1,14 +1,29 @@
 @import "tailwindcss";
 
+/* Class-based dark mode (".dark" on <html>) so the manual theme toggle can
+   override the OS preference — Tailwind's dark: classes elsewhere in the
+   app are unaffected in shape, only in what triggers them. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  /* Brand gradient — spent deliberately (wordmark, CTAs, one highlight),
-     never as a page-wide wash. Locked 2026-08-16. */
-  --brand-coral: #ff6a3d;
-  --brand-magenta: #ec2e88;
-  --brand-purple: #9b2fd6;
-  --brand-gradient: linear-gradient(100deg, var(--brand-coral), var(--brand-magenta), var(--brand-purple));
+
+  /* Kodely brand tokens — ported 1:1 from the approved reference mockup
+     (scratchpad/kodely.html) so the shipped site and the approved design
+     don't drift again. */
+  --ink-2: #605b66;
+  --faint: #a49fad;
+  --line: rgba(11, 10, 13, 0.09);
+  --line-2: rgba(11, 10, 13, 0.045);
+  --panel: #ffffff;
+  --accent: #e01b6e;
+  --glow: rgba(247, 37, 112, 0.13);
+  --glow-2: rgba(163, 61, 255, 0.12);
+  --sh-s: 0 1px 2px rgba(11, 10, 13, 0.04), 0 6px 16px -8px rgba(11, 10, 13, 0.1);
+  --sh: 0 40px 100px -50px rgba(120, 40, 160, 0.3), 0 18px 50px -30px rgba(11, 10, 13, 0.16);
+
+  --brand-gradient: linear-gradient(100deg, #f72570 0%, #ff6b67 44%, #ff9868 66%, #a33dff 100%);
 }
 
 @theme inline {
@@ -19,10 +34,37 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.light) {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --ink-2: #a8a1b0;
+    --faint: #5f5869;
+    --line: rgba(246, 243, 247, 0.1);
+    --line-2: rgba(246, 243, 247, 0.05);
+    --panel: #100e15;
+    --accent: #ff5c97;
+    --glow: rgba(255, 76, 139, 0.22);
+    --glow-2: rgba(180, 114, 255, 0.2);
+    --sh-s: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 20px -10px rgba(0, 0, 0, 0.6);
+    --sh: 0 50px 120px -50px rgba(0, 0, 0, 0.8), 0 20px 60px -30px rgba(180, 114, 255, 0.4);
+    --brand-gradient: linear-gradient(100deg, #ff4c8b 0%, #ff8778 44%, #ffae7e 66%, #b472ff 100%);
   }
+}
+
+:root.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --ink-2: #a8a1b0;
+  --faint: #5f5869;
+  --line: rgba(246, 243, 247, 0.1);
+  --line-2: rgba(246, 243, 247, 0.05);
+  --panel: #100e15;
+  --accent: #ff5c97;
+  --glow: rgba(255, 76, 139, 0.22);
+  --glow-2: rgba(180, 114, 255, 0.2);
+  --sh-s: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 20px -10px rgba(0, 0, 0, 0.6);
+  --sh: 0 50px 120px -50px rgba(0, 0, 0, 0.8), 0 20px 60px -30px rgba(180, 114, 255, 0.4);
+  --brand-gradient: linear-gradient(100deg, #ff4c8b 0%, #ff8778 44%, #ffae7e 66%, #b472ff 100%);
 }
 
 body {
@@ -36,6 +78,37 @@ body {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+/* Ambient background — one very slow, very soft light behind every
+   marketing page. Fixed, never scrolls, never shifts color — the motion
+   budget is spent on foreground elements, not this. */
+.aura {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.aura b {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.6;
+}
+.aura .a1 {
+  width: 52vw;
+  height: 52vw;
+  left: -8vw;
+  top: -14vw;
+  background: radial-gradient(closest-side, var(--glow), transparent);
+}
+.aura .a2 {
+  width: 46vw;
+  height: 46vw;
+  right: -10vw;
+  bottom: -4vw;
+  background: radial-gradient(closest-side, var(--glow-2), transparent);
 }
 
 /* Prose styling for blog/SEO content (BlogPost.bodyHtml) — hand-rolled
@@ -109,4 +182,14 @@ body {
   padding-left: 1.1rem;
   margin: 1.5rem 0;
   color: color-mix(in srgb, var(--foreground) 70%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.2s !important;
+  }
 }
