@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { Wordmark } from "@/components/marketing/Wordmark";
 import { HeroMock } from "@/components/marketing/HeroMock";
+import { MarketingNav } from "@/components/marketing/MarketingNav";
+import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 
 export default async function Home() {
   const user = await getCurrentUser();
@@ -10,24 +11,7 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-50">
-      {/* Nav */}
-      <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
-        <Wordmark className="text-lg" />
-        <nav className="flex items-center gap-6 text-sm">
-          <Link href="/pricing" className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">
-            Pricing
-          </Link>
-          <Link href="/login" className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">
-            Sign in
-          </Link>
-          <Link
-            href="/signup"
-            className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
-          >
-            Get started
-          </Link>
-        </nav>
-      </header>
+      <MarketingNav />
 
       {/* Hero */}
       <section className="mx-auto max-w-6xl px-6 pt-16 pb-28 text-center sm:pt-24">
@@ -144,19 +128,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <footer className="border-t border-neutral-100 px-6 py-10 dark:border-neutral-900">
-        <div className="mx-auto flex max-w-6xl items-center justify-between text-sm text-neutral-500 dark:text-neutral-500">
-          <Wordmark className="text-base" />
-          <div className="flex gap-6">
-            <Link href="/pricing" className="hover:text-neutral-900 dark:hover:text-white">
-              Pricing
-            </Link>
-            <Link href="/login" className="hover:text-neutral-900 dark:hover:text-white">
-              Sign in
-            </Link>
-          </div>
-        </div>
-      </footer>
+      <MarketingFooter />
     </div>
   );
 }

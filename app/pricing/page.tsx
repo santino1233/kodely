@@ -1,27 +1,13 @@
 import Link from "next/link";
-import { Wordmark } from "@/components/marketing/Wordmark";
 import { CREDIT_PACKS } from "@/lib/stripe";
 import { SIGNUP_GRANT } from "@/lib/credits";
+import { MarketingNav } from "@/components/marketing/MarketingNav";
+import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 
 export default function PricingPage() {
   return (
     <div className="min-h-screen bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-50">
-      <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
-        <Link href="/">
-          <Wordmark className="text-lg" />
-        </Link>
-        <nav className="flex items-center gap-6 text-sm">
-          <Link href="/login" className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">
-            Sign in
-          </Link>
-          <Link
-            href="/signup"
-            className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
-          >
-            Get started
-          </Link>
-        </nav>
-      </header>
+      <MarketingNav />
 
       <section className="mx-auto max-w-4xl px-6 pb-8 pt-16 text-center sm:pt-24">
         <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
@@ -129,19 +115,7 @@ export default function PricingPage() {
         </div>
       </section>
 
-      <footer className="border-t border-neutral-100 px-6 py-10 dark:border-neutral-900">
-        <div className="mx-auto flex max-w-6xl items-center justify-between text-sm text-neutral-500 dark:text-neutral-500">
-          <Wordmark className="text-base" />
-          <div className="flex gap-6">
-            <Link href="/" className="hover:text-neutral-900 dark:hover:text-white">
-              Home
-            </Link>
-            <Link href="/login" className="hover:text-neutral-900 dark:hover:text-white">
-              Sign in
-            </Link>
-          </div>
-        </div>
-      </footer>
+      <MarketingFooter />
     </div>
   );
 }

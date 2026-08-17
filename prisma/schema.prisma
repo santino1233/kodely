@@ -144,3 +144,21 @@ model CreditLedger {
 
   @@index([userId])
 }
+
+// SEO content pages (comparisons, guides, use-cases, glossary, feature pages,
+// personas — see the "SEO · *" board columns). bodyHtml is pre-rendered,
+// hand-authored semantic HTML, not user input or markdown rendered at
+// runtime — there's no templating/interpolation risk serving it directly.
+model BlogPost {
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  title           String
+  metaDescription String
+  category        String // matches the board column, e.g. "Comparisons", "Guides"
+  targetKeyword   String
+  bodyHtml        String
+  publishedAt     DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([category])
+}
