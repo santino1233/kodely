@@ -11,7 +11,15 @@ const SITES_BASE = process.env.KODELY_SITES_BASE ?? "kodely.site";
 // NOT deploying to real Nxeon hosting infra in Phase 1 — that provisioner is
 // still gated (see the Nxeon shared-hosting security review), so *.kodely.site
 // is served straight out of this app from the published rows.
-export async function POST(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+//
+// The *.kodely.site wildcard's nginx block only routes to the PROD app
+// (port 3000) — there is no separate wildcard for staging. A project
+// published from staging would otherwise return a *.kodely.site URL that
+// resolves through prod's app against prod's database, where the slug
+// doesn't exist. Deriving the mode from the request's own Host header (never
+// touches DNS, nginx, or .env) means staging always gets a URL that resolves
+// against itself.
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser().catch(() => null);
   if (!user) return Response.json({ error: "Not signed in." }, { status: 401 });
   const { id } = await params;
@@ -59,5 +67,10 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     db.project.update({ where: { id }, data: { publishedAt: new Date() } }),
   ]);
 
-  return Response.json({ url: `https://${project.slug}.${SITES_BASE}` });
+  const host = req.headers.get("host") ?? "";
+  const url = host.includes("staging")
+    ? `https://${host}/api/site/${project.slug}`
+    : `https://${project.slug}.${SITES_BASE}`;
+
+  return Response.json({ url });
 }

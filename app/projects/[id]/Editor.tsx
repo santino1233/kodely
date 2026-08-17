@@ -18,6 +18,17 @@ type Props = {
 
 const SITES_BASE = process.env.NEXT_PUBLIC_SITES_BASE ?? "kodely.site";
 
+// Mirrors the publish route's own Host-based derivation (see the comment
+// there) so the header's "live site" link always matches what publish
+// actually returned, on staging or prod, without hardcoding either.
+function liveSiteUrl(slug: string): string {
+  if (typeof window === "undefined") return `https://${slug}.${SITES_BASE}`;
+  const host = window.location.host;
+  return host.includes("staging")
+    ? `${window.location.origin}/api/site/${slug}`
+    : `https://${slug}.${SITES_BASE}`;
+}
+
 export default function Editor(props: Props) {
   const [messages, setMessages] = useState<Message[]>(props.initialMessages);
   const [files, setFiles] = useState(props.initialFiles);
@@ -201,7 +212,7 @@ export default function Editor(props: Props) {
           <span className="text-xs text-black/50 dark:text-white/50">{balance} credits</span>
           {published && (
             <a
-              href={`https://${props.slug}.${SITES_BASE}`}
+              href={liveSiteUrl(props.slug)}
               target="_blank"
               className="text-xs text-black/50 underline hover:text-black dark:text-white/50 dark:hover:text-white"
             >
