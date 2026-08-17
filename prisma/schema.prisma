@@ -110,6 +110,11 @@ model Build {
   cacheWriteTokens Int @default(0)
   filesWritten     Int @default(0)
 
+  // Full draft file tree AFTER this build finished, as {path: content}. Small
+  // sites, so a JSON snapshot per successful build is cheap and makes rollback
+  // a plain restore instead of needing per-file version history.
+  filesSnapshot Json?
+
   // Real model spend in micro-dollars, and what we actually charged.
   costMicros     Int @default(0)
   creditsCharged Int @default(0)

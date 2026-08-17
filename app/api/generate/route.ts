@@ -113,6 +113,13 @@ export async function POST(req: Request) {
             const credits = creditsFor(micros);
             const remaining = await chargeForBuild(user.id, build.id, credits);
 
+            // Snapshot the full draft tree as it stands now, so this build is
+            // a checkpoint a user can roll back to later.
+            const currentFiles = await db.projectFile.findMany({
+              where: { projectId: project.id, published: false },
+            });
+            const filesSnapshot = Object.fromEntries(currentFiles.map((f) => [f.path, f.content]));
+
             await db.build.update({
               where: { id: build.id },
               data: {
@@ -126,6 +133,7 @@ export async function POST(req: Request) {
                 filesWritten,
                 costMicros: micros,
                 creditsCharged: credits,
+                filesSnapshot,
               },
             });
 

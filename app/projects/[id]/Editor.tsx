@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 
 type Message = { role: string; content: string };
+type BuildCheckpoint = { id: string; prompt: string; createdAt: string; filesWritten: number };
 
 type Props = {
   projectId: string;
@@ -28,7 +29,43 @@ export default function Editor(props: Props) {
   const [previewNonce, setPreviewNonce] = useState(0);
   const [published, setPublished] = useState(props.published);
   const [publishing, setPublishing] = useState(false);
+  const [view, setView] = useState<"preview" | "code" | "history">("preview");
+  const [builds, setBuilds] = useState<BuildCheckpoint[] | null>(null);
+  const [restoring, setRestoring] = useState<string | null>(null);
+  const [activeFile, setActiveFile] = useState<string | null>(null);
   const streamingReply = useRef("");
+
+  async function openHistory() {
+    setView("history");
+    const res = await fetch(`/api/projects/${props.projectId}/builds`);
+    const body = await res.json();
+    setBuilds(body.builds ?? []);
+  }
+
+  async function restore(buildId: string) {
+    if (!confirm("Restore this checkpoint? Your current draft will be replaced.")) return;
+    setRestoring(buildId);
+    setError(null);
+    try {
+      const res = await fetch(`/api/projects/${props.projectId}/builds/${buildId}/restore`, {
+        method: "POST",
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body?.error ?? "Restore failed.");
+      const res2 = await fetch(`/api/projects/${props.projectId}`);
+      const body2 = await res2.json();
+      const nextFiles: Record<string, string> = Object.fromEntries(
+        (body2.project?.files ?? []).map((f: { path: string; content: string }) => [f.path, f.content]),
+      );
+      setFiles(nextFiles);
+      setPreviewNonce((n) => n + 1);
+      setView("preview");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Restore failed.");
+    } finally {
+      setRestoring(null);
+    }
+  }
 
   const isFirstBuild = Object.keys(files).length === 0;
 
@@ -136,6 +173,31 @@ export default function Editor(props: Props) {
           <span className="text-sm font-medium">{props.projectName}</span>
         </div>
         <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 rounded-lg border border-black/10 p-0.5 text-xs dark:border-white/10">
+            <button
+              onClick={() => setView("preview")}
+              className={`rounded-md px-2 py-1 ${view === "preview" ? "bg-black text-white dark:bg-white dark:text-black" : "text-black/60 dark:text-white/60"}`}
+            >
+              Preview
+            </button>
+            <button
+              onClick={() => {
+                setView("code");
+                setActiveFile((f) => f ?? Object.keys(files)[0] ?? null);
+              }}
+              className={`rounded-md px-2 py-1 ${view === "code" ? "bg-black text-white dark:bg-white dark:text-black" : "text-black/60 dark:text-white/60"}`}
+              disabled={isFirstBuild}
+            >
+              Code
+            </button>
+            <button
+              onClick={openHistory}
+              className={`rounded-md px-2 py-1 ${view === "history" ? "bg-black text-white dark:bg-white dark:text-black" : "text-black/60 dark:text-white/60"}`}
+              disabled={isFirstBuild}
+            >
+              History
+            </button>
+          </div>
           <span className="text-xs text-black/50 dark:text-white/50">{balance} credits</span>
           {published && (
             <a
@@ -200,13 +262,85 @@ export default function Editor(props: Props) {
         </div>
 
         <div className="min-w-0 flex-1 bg-black/[0.02] dark:bg-white/[0.02]">
-          <iframe
-            key={previewNonce}
-            src={`/api/preview/${props.projectId}?v=${previewNonce}`}
-            sandbox="allow-scripts allow-forms"
-            className="h-full w-full border-0 bg-white"
-            title="Live preview"
-          />
+          {view === "preview" && (
+            <iframe
+              key={previewNonce}
+              src={`/api/preview/${props.projectId}?v=${previewNonce}`}
+              sandbox="allow-scripts allow-forms"
+              className="h-full w-full border-0 bg-white"
+              title="Live preview"
+            />
+          )}
+
+          {view === "code" && (
+            <div className="flex h-full">
+              <div className="w-48 shrink-0 overflow-y-auto border-r border-black/10 p-2 dark:border-white/10">
+                {Object.keys(files).map((path) => (
+                  <button
+                    key={path}
+                    onClick={() => setActiveFile(path)}
+                    className={`block w-full truncate rounded-md px-2 py-1.5 text-left text-xs ${
+                      activeFile === path
+                        ? "bg-black/10 font-medium dark:bg-white/10"
+                        : "text-black/60 hover:bg-black/5 dark:text-white/60 dark:hover:bg-white/5"
+                    }`}
+                  >
+                    {path}
+                  </button>
+                ))}
+              </div>
+              <div className="min-w-0 flex-1 overflow-auto">
+                {activeFile && files[activeFile] !== undefined ? (
+                  <div className="relative">
+                    <button
+                      onClick={() => navigator.clipboard.writeText(files[activeFile])}
+                      className="absolute right-3 top-3 rounded-md border border-black/15 bg-white px-2 py-1 text-xs dark:border-white/15 dark:bg-black"
+                    >
+                      Copy
+                    </button>
+                    <pre className="p-4 text-xs leading-relaxed">
+                      <code>{files[activeFile]}</code>
+                    </pre>
+                  </div>
+                ) : (
+                  <p className="p-4 text-sm text-black/50 dark:text-white/50">Select a file.</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {view === "history" && (
+            <div className="h-full overflow-y-auto p-4">
+              {builds === null ? (
+                <p className="text-sm text-black/50 dark:text-white/50">Loading…</p>
+              ) : builds.length === 0 ? (
+                <p className="text-sm text-black/50 dark:text-white/50">No checkpoints yet.</p>
+              ) : (
+                <ul className="space-y-2">
+                  {builds.map((b) => (
+                    <li
+                      key={b.id}
+                      className="flex items-center justify-between rounded-lg border border-black/10 px-3 py-2 dark:border-white/10"
+                    >
+                      <div className="min-w-0">
+                        <div className="truncate text-sm">{b.prompt}</div>
+                        <div className="text-xs text-black/40 dark:text-white/40">
+                          {new Date(b.createdAt).toLocaleString()} · {b.filesWritten} file{b.filesWritten === 1 ? "" : "s"} touched
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => restore(b.id)}
+                        disabled={restoring === b.id}
+                        className="ml-3 shrink-0 rounded-md border border-black/15 px-2 py-1 text-xs disabled:opacity-50 dark:border-white/15"
+                      >
+                        {restoring === b.id ? "Restoring…" : "Restore"}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
