@@ -111,6 +111,15 @@ body {
   background: radial-gradient(closest-side, var(--glow-2), transparent);
 }
 
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 /* Prose styling for blog/SEO content (BlogPost.bodyHtml) — hand-rolled
    instead of a Tailwind typography plugin dependency, matching the same
    near-monochrome + generous-whitespace system as the rest of the site. */

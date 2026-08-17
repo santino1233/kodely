@@ -7,6 +7,7 @@ import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { Aura } from "@/components/marketing/Aura";
 import { PinnedStatement } from "@/components/marketing/PinnedStatement";
+import { ShowcaseCarousel } from "@/components/marketing/ShowcaseCarousel";
 import { Reveal, RevealGroup, RevealItem } from "@/components/marketing/Reveal";
 import { MagneticButton } from "@/components/marketing/MagneticButton";
 
@@ -130,6 +131,20 @@ export default async function Home() {
         <div className="mt-16">
           <HeroMock />
         </div>
+      </section>
+
+      {/* Showcase — the range of sites Kodely builds (no named customers yet, so no logo cloud) */}
+      <section className="border-t border-neutral-100 pb-20 pt-16 dark:border-neutral-900">
+        <Reveal>
+          <p className="text-center text-xs font-medium uppercase tracking-[0.18em] text-neutral-400 dark:text-neutral-600">
+            What people build with Kodely
+          </p>
+        </Reveal>
+        <Reveal delay={0.08}>
+          <div className="mt-8">
+            <ShowcaseCarousel />
+          </div>
+        </Reveal>
       </section>
 
       {/* Pinned scroll statement */}

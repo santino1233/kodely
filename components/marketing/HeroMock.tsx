@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
+import { Coffee, CupSoda, Croissant } from "lucide-react";
 
 const container: Variants = {
   hidden: {},
@@ -77,12 +78,14 @@ export function HeroMock() {
 
           <motion.div variants={item} className="mt-7 grid grid-cols-3 gap-3">
             {[
-              { name: "House Blend", price: "$4" },
-              { name: "Cold Brew", price: "$5" },
-              { name: "Pastry Box", price: "$8" },
+              { name: "House Blend", price: "$4", Icon: Coffee },
+              { name: "Cold Brew", price: "$5", Icon: CupSoda },
+              { name: "Pastry Box", price: "$8", Icon: Croissant },
             ].map((p) => (
               <div key={p.name}>
-                <div className="aspect-square rounded-lg border border-[#b5602f]/15 bg-gradient-to-br from-[#f1e4d5] to-[#e7d3ba] dark:from-[#2a2019] dark:to-[#241b15]" />
+                <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-lg border border-[#b5602f]/15 bg-gradient-to-br from-[#f3e7d4] via-[#e8d2ac] to-[#d8b183] dark:from-[#2a2019] dark:via-[#332419] dark:to-[#3f2c19]">
+                  <p.Icon className="h-7 w-7 text-[#b5602f]/60 dark:text-[#e0a86a]/70" strokeWidth={1.5} />
+                </div>
                 <div className="mt-1.5 text-[11px] font-medium">{p.name}</div>
                 <div className="text-[10px] text-[#8a7362] dark:text-[#b39d8a]">{p.price}</div>
               </div>
