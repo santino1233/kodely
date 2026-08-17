@@ -3,6 +3,12 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* Brand gradient — spent deliberately (wordmark, CTAs, one highlight),
+     never as a page-wide wash. Locked 2026-08-16. */
+  --brand-coral: #ff6a3d;
+  --brand-magenta: #ec2e88;
+  --brand-purple: #9b2fd6;
+  --brand-gradient: linear-gradient(100deg, var(--brand-coral), var(--brand-magenta), var(--brand-purple));
 }
 
 @theme inline {
@@ -22,5 +28,12 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+.brand-gradient-text {
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
