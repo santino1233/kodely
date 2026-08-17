@@ -3,8 +3,10 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { getBalance } from "@/lib/credits";
 import { db } from "@/lib/db";
+import { billingEnabled } from "@/lib/stripe";
 import NewProjectButton from "./NewProjectButton";
 import SignOutButton from "./SignOutButton";
+import TopUpButton from "./TopUpButton";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +35,7 @@ export default async function DashboardPage() {
             <span className="font-medium">{balance}</span>{" "}
             <span className="text-black/60 dark:text-white/60">credits</span>
           </div>
+          {billingEnabled() && <TopUpButton />}
           <SignOutButton />
         </div>
       </div>

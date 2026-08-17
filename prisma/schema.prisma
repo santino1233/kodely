@@ -14,16 +14,26 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  name         String?
-  role         String   @default("CUSTOMER") // CUSTOMER | ADMIN
-  createdAt    DateTime @default(now())
+  id               String   @id @default(cuid())
+  email            String   @unique
+  passwordHash     String
+  name             String?
+  role             String   @default("CUSTOMER") // CUSTOMER | ADMIN
+  stripeCustomerId String?
+  createdAt        DateTime @default(now())
 
   sessions Session[]
   projects Project[]
   ledger   CreditLedger[]
+}
+
+// Every processed Stripe webhook event, keyed by Stripe's own event id.
+// This is the idempotency guard: a webhook retry (Stripe resends on any
+// non-2xx or timeout) must never grant credits twice for the same payment.
+model StripeEvent {
+  id        String   @id
+  type      String
+  createdAt DateTime @default(now())
 }
 
 model Session {
