@@ -1,0 +1,126 @@
+// Kodely — Phase 1 data model.
+// Principles baked in here (see the Kodely board):
+//  - every generation is a Build row with real token counts, so cost per build is never a guess
+//  - credits are a ledger, never a mutable counter: the balance is derivable and auditable
+//  - failed builds are recorded but NEVER charged
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  role         String   @default("CUSTOMER") // CUSTOMER | ADMIN
+  createdAt    DateTime @default(now())
+
+  sessions Session[]
+  projects Project[]
+  ledger   CreditLedger[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Project {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  slug      String   @unique // becomes <slug>.kodely.site when published
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  publishedAt DateTime?
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  files    ProjectFile[]
+  messages Message[]
+  builds   Build[]
+
+  @@index([userId])
+}
+
+// The working tree of a generated project. `published` files are the live
+// snapshot served on the public subdomain; draft files are what the preview shows.
+model ProjectFile {
+  id        String   @id @default(cuid())
+  projectId String
+  path      String
+  content   String
+  published Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, path, published])
+  @@index([projectId])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  projectId String
+  role      String // user | assistant
+  content   String
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model Build {
+  id        String    @id @default(cuid())
+  projectId String
+  status    String    @default("RUNNING") // RUNNING | SUCCEEDED | FAILED
+  model     String
+  prompt    String
+  error     String?
+  createdAt DateTime  @default(now())
+  endedAt   DateTime?
+
+  inputTokens      Int @default(0)
+  outputTokens     Int @default(0)
+  cacheReadTokens  Int @default(0)
+  cacheWriteTokens Int @default(0)
+  filesWritten     Int @default(0)
+
+  // Real model spend in micro-dollars, and what we actually charged.
+  costMicros     Int @default(0)
+  creditsCharged Int @default(0)
+
+  project Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  ledger  CreditLedger[]
+
+  @@index([projectId])
+}
+
+model CreditLedger {
+  id          String   @id @default(cuid())
+  userId      String
+  delta       Int // negative = spend, positive = grant/refund
+  reason      String
+  buildId     String?
+  balanceAfter Int
+  createdAt   DateTime @default(now())
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  build Build? @relation(fields: [buildId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+}
