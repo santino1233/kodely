@@ -65,12 +65,27 @@ export async function POST(req: Request) {
     data: { projectId: project.id, role: "user", content: prompt },
   });
 
+  // Aborted when the client disconnects (tab closed, network drop) — cancels
+  // the in-flight Anthropic request instead of burning tokens for nobody.
+  const abortController = new AbortController();
+
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
-      const send = (event: unknown) => controller.enqueue(encoder.encode(sse(event)));
+      // A client disconnect races with our own sends: enqueue on a closed
+      // controller throws "Controller is already closed", which used to be
+      // caught as a generic failure and wrongly mark an otherwise-fine build
+      // FAILED. There's nothing to do about a gone client — swallow it.
+      const send = (event: unknown) => {
+        try {
+          controller.enqueue(encoder.encode(sse(event)));
+        } catch {
+          // client is gone
+        }
+      };
       let reply = "";
       let filesWritten = 0;
+      let succeeded = false;
 
       try {
         const generator = runAgent({
@@ -81,6 +96,7 @@ export async function POST(req: Request) {
           request: prompt,
           files,
           kind,
+          signal: abortController.signal,
           onWrite: async (path, content) => {
             if (!normalizePath(path)) return false;
             await db.projectFile.upsert({
@@ -108,6 +124,7 @@ export async function POST(req: Request) {
           } else if (event.type === "file") {
             send(event);
           } else if (event.type === "usage") {
+            succeeded = true;
             // The build succeeded. Meter the real spend, then charge.
             const micros = costMicros(event.model, event);
             const credits = creditsFor(micros);
@@ -150,6 +167,23 @@ export async function POST(req: Request) {
             send({ type: "done", credits, remaining, filesWritten });
           }
         }
+
+        // The loop can end without ever reaching "usage" — most commonly an
+        // aborted client disconnect (runAgent returns early, no exception).
+        // Leaving the row at RUNNING forever would corrupt the rate-limit
+        // count and the project's build history, so resolve it explicitly.
+        if (!succeeded) {
+          await db.build.update({
+            where: { id: build.id },
+            data: {
+              status: "FAILED",
+              endedAt: new Date(),
+              error: abortController.signal.aborted ? "Client disconnected." : "Generation ended without producing output.",
+              filesWritten,
+              creditsCharged: 0,
+            },
+          });
+        }
       } catch (error) {
         // A build that fails is never charged — that is the product promise,
         // so the ledger is deliberately untouched on this path.
@@ -170,8 +204,17 @@ export async function POST(req: Request) {
 
         send({ type: "error", message });
       } finally {
-        controller.close();
+        try {
+          controller.close();
+        } catch {
+          // already closed by the client disconnect path
+        }
       }
+    },
+    cancel() {
+      // The client disconnected — stop the in-flight Anthropic request
+      // rather than let it run to completion for a response nobody reads.
+      abortController.abort();
     },
   });
 

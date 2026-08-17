@@ -111,6 +111,13 @@ type RunOptions = {
   /** Applies the write; returning false rejects it (e.g. bad path). */
   onWrite: (path: string, content: string) => Promise<boolean>;
   onDelete: (path: string) => Promise<boolean>;
+  /**
+   * Aborted when the client disconnects (tab closed, network drop). Actually
+   * cancels the in-flight Anthropic request instead of letting it run to
+   * completion for nobody — a disconnect shouldn't mean paying full price for
+   * a generation no one will ever see the result of.
+   */
+  signal?: AbortSignal;
 };
 
 /**
@@ -145,15 +152,20 @@ export async function* runAgent(opts: RunOptions): AsyncGenerator<AgentEvent> {
   const MAX_TURNS = 8;
 
   for (let turn = 0; turn < MAX_TURNS; turn++) {
-    const stream = anthropic.messages.stream({
-      model,
-      max_tokens: 32_000,
-      thinking: { type: "adaptive" },
-      output_config: { effort },
-      system: [{ type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } }],
-      tools: TOOLS,
-      messages,
-    });
+    if (opts.signal?.aborted) return;
+
+    const stream = anthropic.messages.stream(
+      {
+        model,
+        max_tokens: 32_000,
+        thinking: { type: "adaptive" },
+        output_config: { effort },
+        system: [{ type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } }],
+        tools: TOOLS,
+        messages,
+      },
+      { signal: opts.signal },
+    );
 
     for await (const event of stream) {
       if (event.type === "content_block_delta" && event.delta.type === "text_delta") {

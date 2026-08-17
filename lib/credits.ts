@@ -11,8 +11,13 @@ import { MODEL_RATES } from "./models";
 /** One credit = $0.002 of underlying model spend (500 credits = $1). */
 export const MICROS_PER_CREDIT = 2_000;
 
-/** New accounts start with enough to build and iterate on a real page. */
-export const SIGNUP_GRANT = 250;
+/**
+ * New accounts start with enough to build and iterate on a real page.
+ * Sized from measured real costs (2026-08-17): a full first build runs
+ * ~$0.29 (144 credits), a follow-up edit ~$0.34 (172 credits) on Sonnet 5 —
+ * 750 covers roughly one build plus 2-3 real edits.
+ */
+export const SIGNUP_GRANT = 750;
 
 export type Usage = {
   inputTokens: number;
@@ -21,10 +26,18 @@ export type Usage = {
   cacheWriteTokens: number;
 };
 
-/** Micro-dollars of real model spend for a given usage on a given model. */
+/**
+ * Micro-dollars of real model spend for a given usage on a given model.
+ * MODEL_RATES stores USD per MILLION tokens, which — numerically — is
+ * already USD-per-token expressed in micro-dollars (1e-6 USD = 1 microUSD).
+ * So `rate * tokens` IS the cost in micros directly; do NOT also divide by
+ * 1e6, that computes cost in whole dollars instead and silently floors every
+ * build under $0.50 to 0 (which is exactly the bug this comment replaced —
+ * caught 2026-08-17 when a real ~$0.22 build was charged only 1 credit).
+ */
 export function costMicros(model: string, usage: Usage): number {
   const rate = MODEL_RATES[model] ?? MODEL_RATES.default;
-  const perToken = (perMTok: number, tokens: number) => (perMTok * tokens) / 1_000_000;
+  const perToken = (perMTok: number, tokens: number) => perMTok * tokens;
   return Math.round(
     perToken(rate.input, usage.inputTokens) +
       perToken(rate.output, usage.outputTokens) +
