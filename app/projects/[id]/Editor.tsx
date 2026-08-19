@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { PENDING_PROMPT_KEY } from "@/lib/pending-prompt";
 
 type Message = { role: string; content: string };
 type BuildCheckpoint = { id: string; prompt: string; createdAt: string; filesWritten: number };
@@ -82,8 +83,27 @@ export default function Editor(props: Props) {
   // no chat history yet, matching the same signal the generate route uses.
   const isFirstBuild = messages.length === 0;
 
-  async function send() {
-    const text = prompt.trim();
+  // If the visitor typed a prompt on the homepage before hitting the auth
+  // wall, that prompt survives login/signup in sessionStorage — fire it
+  // automatically the moment they land in their new project, instead of
+  // making them retype what they already told us.
+  useEffect(() => {
+    if (!isFirstBuild) return;
+    let pending: string | null = null;
+    try {
+      pending = sessionStorage.getItem(PENDING_PROMPT_KEY);
+    } catch {}
+    if (!pending) return;
+    try {
+      sessionStorage.removeItem(PENDING_PROMPT_KEY);
+    } catch {}
+    send(pending);
+    // Runs once on mount only — send() is intentionally not a dependency.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function send(overrideText?: string) {
+    const text = (overrideText ?? prompt).trim();
     if (!text || busy) return;
     if (balance <= 0) {
       setError("You're out of credits. Top up to keep building.");
@@ -265,7 +285,7 @@ export default function Editor(props: Props) {
               className="w-full resize-none rounded-lg border border-black/15 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/40 dark:border-white/15 dark:focus:border-white/40"
             />
             <button
-              onClick={send}
+              onClick={() => send()}
               disabled={busy || !prompt.trim()}
               className="mt-2 w-full rounded-lg bg-black px-3 py-2 text-sm font-medium text-white disabled:opacity-40 dark:bg-white dark:text-black"
             >

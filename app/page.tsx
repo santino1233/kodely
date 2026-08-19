@@ -8,6 +8,7 @@ import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { Aura } from "@/components/marketing/Aura";
 import { PinnedStatement } from "@/components/marketing/PinnedStatement";
 import { WhatPeopleBuild } from "@/components/marketing/WhatPeopleBuild";
+import { PromptHero } from "@/components/marketing/PromptHero";
 import { Reveal, RevealGroup, RevealItem } from "@/components/marketing/Reveal";
 import { MagneticButton } from "@/components/marketing/MagneticButton";
 
@@ -104,28 +105,18 @@ export default async function Home() {
         </Reveal>
 
         <Reveal delay={0.18}>
-          <div className="mt-9 flex items-center justify-center gap-4">
-            <MagneticButton>
-              <Link
-                href="/signup"
-                className="inline-block rounded-lg px-6 py-3 text-sm font-medium text-white shadow-[0_14px_34px_-16px_var(--glow)]"
-                style={{ background: "var(--brand-gradient)" }}
-              >
-                Start building — free
-              </Link>
-            </MagneticButton>
-            <MagneticButton>
-              <Link
-                href="/pricing"
-                className="inline-block rounded-lg border border-neutral-200 px-6 py-3 text-sm font-medium text-neutral-700 hover:border-neutral-300 dark:border-neutral-800 dark:text-neutral-300 dark:hover:border-neutral-700"
-              >
-                See pricing
-              </Link>
-            </MagneticButton>
+          <div className="mt-10">
+            <PromptHero />
           </div>
           <p className="mt-5 font-mono text-xs text-neutral-400 dark:text-neutral-600">
             No credit card · Failed builds are free · Real React, not a template
           </p>
+          <Link
+            href="/pricing"
+            className="mt-3 inline-block text-xs font-medium text-neutral-500 underline underline-offset-4 hover:text-neutral-900 dark:text-neutral-500 dark:hover:text-white"
+          >
+            See pricing
+          </Link>
         </Reveal>
 
         <div className="mt-16">

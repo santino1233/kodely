@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { api, ApiError } from "@/lib/api";
+import { PENDING_PROMPT_KEY, destinationAfterAuth } from "@/lib/pending-prompt";
 import { Reveal } from "@/components/marketing/Reveal";
 import { MotionLift } from "@/components/marketing/FloatCard";
 
@@ -16,6 +17,13 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      setPendingPrompt(sessionStorage.getItem(PENDING_PROMPT_KEY));
+    } catch {}
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -23,7 +31,8 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await api("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
-      router.push("/dashboard");
+      const dest = await destinationAfterAuth();
+      router.push(dest);
       router.refresh();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong.");
@@ -44,6 +53,15 @@ export default function LoginPage() {
             Sign in to keep building.
           </p>
         </div>
+
+        {pendingPrompt && (
+          <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-3.5 py-3 text-sm dark:border-neutral-800 dark:bg-neutral-900">
+            <p className="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+              Picking up where you left off
+            </p>
+            <p className="mt-1 text-neutral-700 dark:text-neutral-300">“{pendingPrompt}”</p>
+          </div>
+        )}
 
         <div className="space-y-3">
           <input
@@ -77,7 +95,7 @@ export default function LoginPage() {
             className="w-full rounded-lg px-3.5 py-2.5 text-sm font-medium text-white shadow-[0_14px_34px_-16px_var(--glow)] transition-opacity disabled:opacity-50"
             style={{ background: "var(--brand-gradient)" }}
           >
-            {loading ? "Signing in…" : "Sign in"}
+            {loading ? "Signing in…" : pendingPrompt ? "Sign in & build it" : "Sign in"}
           </button>
         </MotionLift>
 
