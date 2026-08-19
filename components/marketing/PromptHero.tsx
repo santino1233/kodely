@@ -30,36 +30,27 @@ export function PromptHero() {
 
   return (
     <div className="relative mx-auto w-full max-w-2xl">
-      {/* The glow — a static-color brand gradient, breathing slowly. Not a
-          color-cycling shimmer (that pattern was rejected earlier in this
-          project) — just a calm pulse in scale/opacity, like Gemini's
-          composer glow. Sized and saturated to actually read against a
-          white background, not just dark mode. */}
+      {/* The glow — a static-color brand gradient, always present, breathing
+          gently in place. Not a color-cycling shimmer (rejected earlier in
+          this project), and deliberately NOT sweeping through a dim trough
+          or resizing — both read as "the glow disappearing" rather than a
+          calm accent. Fixed size, narrow opacity band anchored well above
+          zero. */}
       <motion.div
         aria-hidden
-        className="pointer-events-none absolute -inset-16 -z-10 rounded-[3rem] blur-3xl"
+        className="pointer-events-none absolute -inset-10 -z-10 rounded-[2.5rem] blur-3xl"
         style={{ background: "var(--brand-gradient)" }}
-        initial={{ opacity: 0.55, scale: 0.94 }}
-        animate={
-          reduced
-            ? { opacity: 0.65, scale: 1 }
-            : { opacity: [0.5, 0.75, 0.5], scale: [0.94, 1.02, 0.94] }
-        }
-        transition={{ duration: 5, repeat: reduced ? 0 : Infinity, ease: "easeInOut" }}
+        initial={{ opacity: 0.3 }}
+        animate={reduced ? { opacity: 0.32 } : { opacity: [0.26, 0.4, 0.26] }}
+        transition={{ duration: 6, repeat: reduced ? 0 : Infinity, ease: "easeInOut" }}
       />
+      {/* Focus adds a small extra lift on top of the resting glow — never
+          drops below the resting level. */}
       <motion.div
         aria-hidden
-        className="pointer-events-none absolute -inset-10 -z-10 rounded-[2.5rem] blur-2xl"
+        className="pointer-events-none absolute -inset-6 -z-10 rounded-[2.25rem] blur-2xl"
         style={{ background: "var(--brand-gradient)" }}
-        animate={reduced ? { opacity: 0.35 } : { opacity: [0.3, 0.5, 0.3] }}
-        transition={{ duration: 5, repeat: reduced ? 0 : Infinity, ease: "easeInOut", delay: 1.4 }}
-      />
-      {/* Focus intensifies the glow — the panel visibly "wakes up". */}
-      <motion.div
-        aria-hidden
-        className="pointer-events-none absolute -inset-6 -z-10 rounded-[2.25rem] blur-xl"
-        style={{ background: "var(--brand-gradient)" }}
-        animate={{ opacity: focused ? 0.6 : 0 }}
+        animate={{ opacity: focused ? 0.28 : 0 }}
         transition={{ duration: 0.5 }}
       />
 
