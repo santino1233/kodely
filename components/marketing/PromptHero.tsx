@@ -30,27 +30,49 @@ export function PromptHero() {
 
   return (
     <div className="relative mx-auto w-full max-w-2xl">
-      {/* The glow — a static-color brand gradient, always present, breathing
-          gently in place. Not a color-cycling shimmer (rejected earlier in
-          this project), and deliberately NOT sweeping through a dim trough
-          or resizing — both read as "the glow disappearing" rather than a
-          calm accent. Fixed size, narrow opacity band anchored well above
-          zero. */}
+      {/* The glow — a wide, soft ambient radial wash centered behind the
+          composer (the Gemini-style "accent light" look), not a blur hugging
+          the box's edges. Reuses the same radial-gradient(closest-side, …,
+          transparent) + heavy-blur language as the page's own Aura background
+          blobs, just centered on the box instead of tucked in a page corner.
+          Two overlapping ellipses (pink + violet, the two ends of the brand
+          gradient) breathe in opacity only — fixed size/position, never
+          sweeping through a dim trough — so it never reads as vanishing. */}
       <motion.div
         aria-hidden
-        className="pointer-events-none absolute -inset-10 -z-10 rounded-[2.5rem] blur-3xl"
-        style={{ background: "var(--brand-gradient)" }}
-        initial={{ opacity: 0.3 }}
-        animate={reduced ? { opacity: 0.32 } : { opacity: [0.26, 0.4, 0.26] }}
+        className="pointer-events-none absolute left-1/2 top-1/2 -z-10 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[90px]"
+        style={{
+          width: "min(880px, 92vw)",
+          height: "460px",
+          background: "radial-gradient(closest-side, var(--glow), transparent)",
+        }}
+        initial={{ opacity: 0.55 }}
+        animate={reduced ? { opacity: 0.6 } : { opacity: [0.45, 0.7, 0.45] }}
         transition={{ duration: 6, repeat: reduced ? 0 : Infinity, ease: "easeInOut" }}
+      />
+      <motion.div
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 top-1/2 -z-10 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[90px]"
+        style={{
+          width: "min(620px, 70vw)",
+          height: "340px",
+          background: "radial-gradient(closest-side, var(--glow-2), transparent)",
+        }}
+        initial={{ opacity: 0.4 }}
+        animate={reduced ? { opacity: 0.45 } : { opacity: [0.3, 0.55, 0.3] }}
+        transition={{ duration: 7, repeat: reduced ? 0 : Infinity, ease: "easeInOut", delay: 0.7 }}
       />
       {/* Focus adds a small extra lift on top of the resting glow — never
           drops below the resting level. */}
       <motion.div
         aria-hidden
-        className="pointer-events-none absolute -inset-6 -z-10 rounded-[2.25rem] blur-2xl"
-        style={{ background: "var(--brand-gradient)" }}
-        animate={{ opacity: focused ? 0.28 : 0 }}
+        className="pointer-events-none absolute left-1/2 top-1/2 -z-10 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[90px]"
+        style={{
+          width: "min(880px, 92vw)",
+          height: "460px",
+          background: "radial-gradient(closest-side, var(--glow), transparent)",
+        }}
+        animate={{ opacity: focused ? 0.3 : 0 }}
         transition={{ duration: 0.5 }}
       />
 
