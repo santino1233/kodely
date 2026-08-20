@@ -13,8 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Kodely — AI websites, simplified",
-  description: "Describe it. Generate it. Ship it.",
+  title: "Kodely — AI Website Builder",
+  description:
+    "Kodely is an AI website builder. Describe the site you want in plain English, and Kodely designs it, writes a real React app, and publishes it live at a working URL — no coding or hosting setup required.",
 };
 
 // Sets the .dark class before paint (no flash), preferring a saved manual
