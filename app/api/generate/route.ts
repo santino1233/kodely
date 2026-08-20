@@ -23,11 +23,17 @@ export async function POST(req: Request) {
   const body = (await req.json().catch(() => null)) as {
     projectId?: string;
     prompt?: string;
+    image?: string;
   } | null;
   const prompt = body?.prompt?.trim();
   if (!body?.projectId || !prompt) {
     return Response.json({ error: "Missing project or prompt." }, { status: 400 });
   }
+
+  // Only a data: URL (what the client-side downscale in PromptHero produces)
+  // is accepted — anything else is silently dropped rather than passed on.
+  const imageMatch = body.image?.match(/^data:(image\/(?:png|jpeg|webp));base64,(.+)$/);
+  const image = imageMatch ? { mediaType: imageMatch[1], data: imageMatch[2] } : undefined;
 
   const project = await db.project.findFirst({
     where: { id: body.projectId, userId: user.id },
@@ -111,6 +117,10 @@ export async function POST(req: Request) {
             request,
             files: await readSourceFiles(),
             kind,
+            // Only attached on the very first turn of a project — a repair
+            // retry re-sends the same `request` text but should not attach
+            // the image again mid-loop.
+            image: attempt === 1 ? image : undefined,
             signal: abortController.signal,
             onWrite: async (path, content) => {
               if (!normalizePath(path)) return false;

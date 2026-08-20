@@ -120,6 +120,24 @@ body {
   }
 }
 
+/* CTA button sheen (ShineButton) — a bright white bar sweeps across, then
+   pauses off-screen before the next pass, rather than looping constantly. */
+@keyframes btn-shine {
+  0% {
+    left: -40%;
+  }
+  35% {
+    left: 120%;
+  }
+  100% {
+    left: 120%;
+  }
+}
+.btn-shine {
+  left: -40%;
+  animation: btn-shine 3.2s ease-in-out infinite;
+}
+
 /* Prose styling for blog/SEO content (BlogPost.bodyHtml) — hand-rolled
    instead of a Tailwind typography plugin dependency, matching the same
    near-monochrome + generous-whitespace system as the rest of the site. */

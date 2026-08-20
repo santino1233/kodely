@@ -1,16 +1,17 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ShieldCheck, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import { HeroMock } from "@/components/marketing/HeroMock";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { Aura } from "@/components/marketing/Aura";
 import { PinnedStatement } from "@/components/marketing/PinnedStatement";
-import { WhatPeopleBuild } from "@/components/marketing/WhatPeopleBuild";
+import { LogoCarousel } from "@/components/marketing/LogoCarousel";
 import { PromptHero } from "@/components/marketing/PromptHero";
 import { Reveal, RevealGroup, RevealItem } from "@/components/marketing/Reveal";
-import { MagneticButton } from "@/components/marketing/MagneticButton";
+import { ShineButton } from "@/components/marketing/ShineButton";
+import { CodeVisual, ShieldVisual, HostingVisual } from "@/components/marketing/FeatureVisuals";
 
 const PROOF_POINTS = ["Real React app, not HTML", "Live in one click", "Metered by real cost"];
 
@@ -36,43 +37,9 @@ const FEATURES = [
 ];
 
 function FeatureVisual({ kind }: { kind: "code" | "shield" | "url" }) {
-  if (kind === "code") {
-    return (
-      <div className="w-full rounded-2xl border border-neutral-200 bg-white p-6 font-mono text-[13px] leading-[1.9] text-neutral-600 shadow-[var(--sh-s)] dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-400">
-        <div>
-          <span style={{ color: "#a33dff" }}>export default function</span>{" "}
-          <span style={{ color: "var(--accent)" }}>Hero</span>() {"{"}
-        </div>
-        <div>
-          &nbsp;&nbsp;<span style={{ color: "#a33dff" }}>return</span> &lt;<span style={{ color: "var(--accent)" }}>section</span>&gt;
-        </div>
-        <div>&nbsp;&nbsp;&nbsp;&nbsp;Small-batch coffee, roasted weekly.</div>
-        <div>
-          &nbsp;&nbsp;&lt;/<span style={{ color: "var(--accent)" }}>section</span>&gt;
-        </div>
-        <div>{"}"}</div>
-        <div className="mt-2 opacity-50">// real .tsx, visible in the Code tab</div>
-      </div>
-    );
-  }
-  if (kind === "shield") {
-    return (
-      <div className="flex aspect-[4/3] w-full items-center justify-center rounded-2xl border border-neutral-200 bg-white shadow-[var(--sh-s)] dark:border-neutral-800 dark:bg-neutral-950">
-        <ShieldCheck size={72} strokeWidth={1.4} style={{ color: "var(--accent)" }} />
-      </div>
-    );
-  }
-  return (
-    <div className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-4 rounded-2xl border border-neutral-200 bg-white shadow-[var(--sh-s)] dark:border-neutral-800 dark:bg-neutral-950">
-      <div className="font-mono text-sm text-neutral-400 dark:text-neutral-600">
-        roan-coffee<span style={{ color: "var(--accent)" }}>.kodely.site</span>
-      </div>
-      <div className="inline-flex items-center gap-2 rounded-full border border-neutral-200 px-4 py-2 font-mono text-xs text-neutral-600 dark:border-neutral-800 dark:text-neutral-400">
-        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
-        Live · HTTPS
-      </div>
-    </div>
-  );
+  if (kind === "code") return <CodeVisual />;
+  if (kind === "shield") return <ShieldVisual />;
+  return <HostingVisual />;
 }
 
 export default async function Home() {
@@ -85,7 +52,7 @@ export default async function Home() {
       <MarketingNav />
 
       {/* Hero */}
-      <section className="relative mx-auto max-w-6xl px-6 pb-28 pt-40 text-center sm:pt-52">
+      <section className="relative mx-auto max-w-7xl px-6 pb-28 pt-40 text-center sm:pt-52">
         <Reveal>
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-neutral-500 dark:text-neutral-400">
             AI websites, simplified
@@ -124,16 +91,17 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Showcase — the range of sites Kodely builds (no named customers yet, so no logo cloud) */}
+      {/* Logo strip — the range of businesses Kodely builds for (illustrative
+          example brands, not real customers — Kodely has none to name yet) */}
       <section className="border-t border-neutral-100 pb-20 pt-16 dark:border-neutral-900">
         <Reveal>
           <p className="text-center text-xs font-medium uppercase tracking-[0.18em] text-neutral-400 dark:text-neutral-600">
-            What people build with Kodely
+            The range of sites people build with Kodely
           </p>
         </Reveal>
         <Reveal delay={0.08}>
           <div className="mt-8">
-            <WhatPeopleBuild />
+            <LogoCarousel />
           </div>
         </Reveal>
       </section>
@@ -143,7 +111,7 @@ export default async function Home() {
 
       {/* Features — alternating */}
       <section className="border-t border-neutral-100 dark:border-neutral-900">
-        <div className="mx-auto max-w-5xl px-6 py-8">
+        <div className="mx-auto max-w-6xl px-6 py-8">
           {FEATURES.map((f, i) => (
             <Reveal key={f.title}>
               <div
@@ -174,10 +142,10 @@ export default async function Home() {
 
       {/* Differentiation — big type statement */}
       <section className="border-t border-neutral-100 dark:border-neutral-900">
-        <div className="mx-auto max-w-4xl px-6 py-28 text-center sm:py-36">
+        <div className="mx-auto max-w-5xl px-6 py-28 text-center sm:py-36">
           <Reveal>
             <h2 className="text-[clamp(2.2rem,6vw,4.4rem)] font-semibold leading-[1.05] tracking-tight">
-              Claude writes code.
+              AI writes code.
               <br />
               <span className="brand-gradient-text">Kodely gives you a live business.</span>
             </h2>
@@ -207,32 +175,10 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Pricing preview */}
-      <section className="border-t border-neutral-100 dark:border-neutral-900">
-        <div className="mx-auto max-w-3xl px-6 py-24 text-center">
-          <Reveal>
-            <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-              Start free. Pay only for what you build.
-            </h2>
-          </Reveal>
-          <Reveal delay={0.06}>
-            <p className="mt-4 text-base text-neutral-600 dark:text-neutral-400">
-              750 free credits on signup — enough for a real site and a few
-              changes. A build that fails is never charged.
-            </p>
-          </Reveal>
-          <Reveal delay={0.12}>
-            <Link
-              href="/pricing"
-              className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-neutral-900 underline underline-offset-4 dark:text-white"
-            >
-              See full pricing <ArrowRight size={14} />
-            </Link>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* Final CTA */}
+      {/* Final CTA — combines what used to be two separate sections (a
+          "start free, pay only for what you build" pricing blurb, and a
+          "what will you build?" close) into one, so the page doesn't repeat
+          itself right before the footer. */}
       <section className="relative overflow-hidden border-t border-neutral-100 dark:border-neutral-900">
         <div className="relative mx-auto max-w-3xl px-6 py-28 text-center sm:py-36">
           <Reveal>
@@ -241,20 +187,30 @@ export default async function Home() {
             </h2>
           </Reveal>
           <Reveal delay={0.06}>
-            <p className="mt-5 text-base text-neutral-600 dark:text-neutral-400">
-              Your next site is one sentence away.
+            <p className="mx-auto mt-5 max-w-md text-base leading-relaxed text-neutral-600 dark:text-neutral-400">
+              750 free credits on signup — enough for a real site and a few
+              changes. Pay only for what you build; a failed build is never
+              charged.
             </p>
           </Reveal>
           <Reveal delay={0.12}>
-            <MagneticButton className="mt-8">
+            <ShineButton className="mt-8">
               <Link
                 href="/signup"
                 className="inline-block rounded-lg px-7 py-3.5 text-sm font-medium text-white shadow-[0_14px_34px_-16px_var(--glow)]"
                 style={{ background: "var(--brand-gradient)" }}
               >
-                Start building — free
+                Let&apos;s build it
               </Link>
-            </MagneticButton>
+            </ShineButton>
+          </Reveal>
+          <Reveal delay={0.16}>
+            <Link
+              href="/pricing"
+              className="mt-5 flex items-center justify-center gap-1.5 text-xs font-medium text-neutral-500 underline underline-offset-4 hover:text-neutral-900 dark:text-neutral-500 dark:hover:text-white"
+            >
+              See full pricing <ArrowRight size={12} />
+            </Link>
           </Reveal>
         </div>
       </section>

@@ -1,4 +1,9 @@
 export const PENDING_PROMPT_KEY = "kodely:pending_prompt";
+// A reference image attached on the homepage before signing up, carried
+// through the auth wall the same way the prompt text is. Stored as a data
+// URL (already downscaled client-side — see PromptHero) so it comfortably
+// fits sessionStorage's per-origin limit.
+export const PENDING_PROMPT_IMAGE_KEY = "kodely:pending_prompt_image";
 
 function deriveName(prompt: string): string {
   const trimmed = prompt.trim().replace(/\s+/g, " ");

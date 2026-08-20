@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { PENDING_PROMPT_KEY } from "@/lib/pending-prompt";
+import { PENDING_PROMPT_KEY, PENDING_PROMPT_IMAGE_KEY } from "@/lib/pending-prompt";
 
 type Message = { role: string; content: string };
 type BuildCheckpoint = { id: string; prompt: string; createdAt: string; filesWritten: number };
@@ -90,19 +90,22 @@ export default function Editor(props: Props) {
   useEffect(() => {
     if (!isFirstBuild) return;
     let pending: string | null = null;
+    let pendingImage: string | null = null;
     try {
       pending = sessionStorage.getItem(PENDING_PROMPT_KEY);
+      pendingImage = sessionStorage.getItem(PENDING_PROMPT_IMAGE_KEY);
     } catch {}
     if (!pending) return;
     try {
       sessionStorage.removeItem(PENDING_PROMPT_KEY);
+      sessionStorage.removeItem(PENDING_PROMPT_IMAGE_KEY);
     } catch {}
-    send(pending);
+    send(pending, pendingImage ?? undefined);
     // Runs once on mount only — send() is intentionally not a dependency.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function send(overrideText?: string) {
+  async function send(overrideText?: string, image?: string) {
     const text = (overrideText ?? prompt).trim();
     if (!text || busy) return;
     if (balance <= 0) {
@@ -121,7 +124,7 @@ export default function Editor(props: Props) {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectId: props.projectId, prompt: text }),
+        body: JSON.stringify({ projectId: props.projectId, prompt: text, image }),
       });
 
       if (!res.ok || !res.body) {

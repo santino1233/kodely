@@ -1,96 +1,220 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion, useReducedMotion, type Variants } from "framer-motion";
-import { Coffee, CupSoda, Croissant } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence, useReducedMotion, type Variants } from "framer-motion";
+import { Coffee, CupSoda, Croissant, Sparkles, Loader2 } from "lucide-react";
+
+const PROMPT_TEXT = "A cozy neighborhood coffee shop, warm and inviting, with online ordering";
+
+const PHASE_DURATIONS = { typing: 2600, building: 1900, live: 4800 } as const;
+type Phase = "typing" | "building" | "live";
+const NEXT_PHASE: Record<Phase, Phase> = { typing: "building", building: "live", live: "typing" };
+// The "live" frame has real content (nav, banner, heading, buttons, product
+// grid) — measured taller than the typing/building placeholder states, so
+// the frame animates its own height per phase instead of clipping it.
+const FRAME_HEIGHT: Record<Phase, number> = { typing: 340, building: 300, live: 660 };
 
 const container: Variants = {
   hidden: {},
-  shown: { transition: { staggerChildren: 0.13, delayChildren: 0.15 } },
+  shown: { transition: { staggerChildren: 0.11, delayChildren: 0.1 } },
 };
 const item: Variants = {
-  hidden: { opacity: 0, y: 14 },
-  shown: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.2, 0.9, 0.2, 1] } },
+  hidden: { opacity: 0, y: 12 },
+  shown: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.2, 0.9, 0.2, 1] } },
 };
 
-// The one real hero object — a miniature browser frame showing an actual
-// example of what Kodely generates, not an abstract graphic or skeleton
-// blocks. The content assembles in (then gently re-assembles every few
-// seconds) to literally show "watch it get built" — the approved
-// reference design's signature hero motion.
+function useTypewriter(text: string, active: boolean, msPerChar: number) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (!active) {
+      setCount(0);
+      return;
+    }
+    const id = setInterval(() => {
+      setCount((c) => (c >= text.length ? c : c + 1));
+    }, msPerChar);
+    return () => clearInterval(id);
+  }, [active, text, msPerChar]);
+  return text.slice(0, count);
+}
+
+const SKELETON_ROWS = [
+  { w: "w-2/5", h: "h-3" },
+  { w: "w-4/5", h: "h-6" },
+  { w: "w-3/5", h: "h-6" },
+  { w: "w-full", h: "h-10" },
+];
+
+/** The one real hero object — a miniature browser frame that plays out the
+ * actual product loop (type a prompt → watch it build → it's live at a real
+ * URL) instead of showing a single static screenshot. Loops continuously;
+ * respects prefers-reduced-motion by settling on the finished "live" frame. */
 export function HeroMock() {
   const reduced = useReducedMotion();
-  const [cycle, setCycle] = useState(0);
+  const [phase, setPhase] = useState<Phase>(reduced ? "live" : "typing");
+  const [liveCycle, setLiveCycle] = useState(0);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (reduced) return;
-    const id = setInterval(() => setCycle((c) => c + 1), 8000);
-    return () => clearInterval(id);
-  }, [reduced]);
+    timeoutRef.current = setTimeout(() => {
+      setPhase((p) => {
+        const next = NEXT_PHASE[p];
+        if (next === "live") setLiveCycle((c) => c + 1);
+        return next;
+      });
+    }, PHASE_DURATIONS[phase]);
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, [phase, reduced]);
+
+  const typed = useTypewriter(PROMPT_TEXT, phase === "typing", 38);
 
   return (
     <div className="mx-auto w-full max-w-2xl" style={{ perspective: "1800px" }}>
-      <div
-        className="group overflow-hidden rounded-2xl border border-black/10 bg-white shadow-[0_40px_80px_-32px_rgba(0,0,0,0.25)] transition-transform duration-500 [transform:rotateX(4deg)] hover:[transform:rotateX(0deg)] dark:border-white/10 dark:bg-neutral-900"
-      >
+      <div className="group overflow-hidden rounded-2xl border border-black/10 bg-white shadow-[0_40px_80px_-32px_rgba(0,0,0,0.25)] transition-transform duration-500 [transform:rotateX(4deg)] hover:[transform:rotateX(0deg)] dark:border-white/10 dark:bg-neutral-900">
         <div className="flex items-center gap-2 border-b border-black/10 bg-black/[0.03] px-4 py-2.5 dark:border-white/10 dark:bg-white/[0.03]">
           <span className="h-2.5 w-2.5 rounded-full bg-black/15 dark:bg-white/15" />
           <span className="h-2.5 w-2.5 rounded-full bg-black/15 dark:bg-white/15" />
           <span className="h-2.5 w-2.5 rounded-full bg-black/15 dark:bg-white/15" />
-          <div className="ml-3 flex-1 rounded-md bg-black/[0.04] px-3 py-1 text-center font-mono text-[11px] text-black/40 dark:bg-white/[0.06] dark:text-white/40">
-            roan-coffee.kodely.site
+          <div className="ml-3 flex-1 overflow-hidden rounded-md bg-black/[0.04] px-3 py-1 text-center font-mono text-[11px] text-black/40 dark:bg-white/[0.06] dark:text-white/40">
+            <AnimatePresence mode="wait">
+              {phase === "live" ? (
+                <motion.span key="url" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  roan-coffee.kodely.site
+                </motion.span>
+              ) : (
+                <motion.span key="new" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  new-project.kodely.site
+                </motion.span>
+              )}
+            </AnimatePresence>
           </div>
           <div className="hidden items-center gap-1.5 font-mono text-[10px] text-black/30 sm:flex dark:text-white/30">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
-            Generated by Kodely
+            {phase === "live" ? (
+              <>
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
+                Generated by Kodely
+              </>
+            ) : (
+              <>
+                <Loader2 size={11} className="animate-spin" />
+                {phase === "typing" ? "Waiting for prompt" : "Building"}
+              </>
+            )}
           </div>
         </div>
 
         <motion.div
-          key={cycle}
-          initial={reduced ? "shown" : "hidden"}
-          animate="shown"
-          variants={container}
-          className="bg-[#fbf7f2] px-7 py-8 text-[#2a1f1a] dark:bg-[#1c1512] dark:text-[#f2e9e2]"
+          className="relative overflow-hidden bg-[#fbf7f2] dark:bg-[#1c1512]"
+          animate={{ height: FRAME_HEIGHT[phase] }}
+          transition={{ duration: 0.5, ease: [0.2, 0.9, 0.2, 1] }}
         >
-          <motion.div variants={item} className="mb-8 flex items-center justify-between">
-            <span className="text-sm font-semibold tracking-tight">Roan Coffee</span>
-            <div className="flex gap-4 text-xs text-[#6b5347] dark:text-[#c9b3a5]">
-              <span>Menu</span>
-              <span>Visit</span>
-            </div>
-          </motion.div>
-
-          <motion.p variants={item} className="text-[11px] font-medium uppercase tracking-[0.14em]" style={{ color: "var(--accent)" }}>
-            Birch Street, Portland
-          </motion.p>
-          <motion.h3 variants={item} className="mt-2 text-2xl font-semibold leading-tight tracking-tight sm:text-3xl">
-            Small-batch coffee,
-            <br />
-            roasted weekly.
-          </motion.h3>
-          <motion.div variants={item} className="mt-6 flex gap-3">
-            <span className="rounded-lg bg-[#b5602f] px-4 py-2 text-xs font-medium text-white">See the menu</span>
-            <span className="rounded-lg border border-[#b5602f]/30 px-4 py-2 text-xs font-medium text-[#b5602f]">
-              Get directions
-            </span>
-          </motion.div>
-
-          <motion.div variants={item} className="mt-7 grid grid-cols-3 gap-3">
-            {[
-              { name: "House Blend", price: "$4", Icon: Coffee },
-              { name: "Cold Brew", price: "$5", Icon: CupSoda },
-              { name: "Pastry Box", price: "$8", Icon: Croissant },
-            ].map((p) => (
-              <div key={p.name}>
-                <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-lg border border-[#b5602f]/15 bg-gradient-to-br from-[#f3e7d4] via-[#e8d2ac] to-[#d8b183] dark:from-[#2a2019] dark:via-[#332419] dark:to-[#3f2c19]">
-                  <p.Icon className="h-7 w-7 text-[#b5602f]/60 dark:text-[#e0a86a]/70" strokeWidth={1.5} />
+          <AnimatePresence mode="wait">
+            {phase === "typing" && (
+              <motion.div
+                key="typing"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex h-full flex-col items-center justify-center gap-5 px-10 text-center"
+              >
+                <Sparkles size={22} strokeWidth={1.6} style={{ color: "var(--accent)" }} />
+                <div className="w-full max-w-sm rounded-xl border border-[#e4d9cc] bg-white px-4 py-3.5 text-left text-[13px] leading-relaxed text-[#2a1f1a] shadow-sm dark:border-white/10 dark:bg-[#241a15] dark:text-[#f2e9e2]">
+                  {typed}
+                  <motion.span
+                    className="ml-0.5 inline-block h-[1em] w-[2px] translate-y-[2px] bg-current align-middle"
+                    animate={{ opacity: [1, 1, 0, 0] }}
+                    transition={{ duration: 0.9, repeat: Infinity, times: [0, 0.5, 0.5, 1] }}
+                  />
                 </div>
-                <div className="mt-1.5 text-[11px] font-medium">{p.name}</div>
-                <div className="text-[10px] text-[#8a7362] dark:text-[#b39d8a]">{p.price}</div>
-              </div>
-            ))}
-          </motion.div>
+                <p className="text-xs text-[#8a7362] dark:text-[#b39d8a]">Describe it, and Kodely builds it.</p>
+              </motion.div>
+            )}
+
+            {phase === "building" && (
+              <motion.div
+                key="building"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex h-full flex-col justify-center gap-3 px-10"
+              >
+                {SKELETON_ROWS.map((row, i) => (
+                  <motion.div
+                    key={i}
+                    className={`${row.w} ${row.h} rounded-lg bg-[#ecdfcd] dark:bg-[#332419]`}
+                    animate={{ opacity: [0.4, 0.85, 0.4] }}
+                    transition={{ duration: 1.3, repeat: Infinity, delay: i * 0.15, ease: "easeInOut" }}
+                  />
+                ))}
+              </motion.div>
+            )}
+
+            {phase === "live" && (
+              <motion.div
+                key={`live-${liveCycle}`}
+                initial="hidden"
+                animate="shown"
+                variants={container}
+                className="h-full overflow-hidden px-7 py-7 text-[#2a1f1a] dark:text-[#f2e9e2]"
+              >
+                <motion.div variants={item} className="flex items-center justify-between">
+                  <span className="text-sm font-semibold tracking-tight">Roan Coffee</span>
+                  <div className="flex gap-4 text-xs text-[#6b5347] dark:text-[#c9b3a5]">
+                    <span>Menu</span>
+                    <span>Order</span>
+                    <span>Visit</span>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  variants={item}
+                  className="relative mt-5 flex h-28 items-end overflow-hidden rounded-xl bg-gradient-to-br from-[#d8b183] via-[#c98f56] to-[#8a5a30] p-4 dark:from-[#3f2c19] dark:via-[#523a20] dark:to-[#2a1c10]"
+                >
+                  <span className="rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-medium text-[#5b3d21] backdrop-blur-sm">
+                    Now roasting · Ethiopia Yirgacheffe
+                  </span>
+                </motion.div>
+
+                <motion.p
+                  variants={item}
+                  className="mt-4 text-[11px] font-medium uppercase tracking-[0.14em]"
+                  style={{ color: "var(--accent)" }}
+                >
+                  Birch Street, Portland
+                </motion.p>
+                <motion.h3 variants={item} className="mt-1.5 text-xl font-semibold leading-tight tracking-tight sm:text-2xl">
+                  Small-batch coffee,
+                  <br />
+                  roasted weekly.
+                </motion.h3>
+                <motion.div variants={item} className="mt-4 flex gap-3">
+                  <span className="rounded-lg bg-[#b5602f] px-4 py-2 text-xs font-medium text-white">Order online</span>
+                  <span className="rounded-lg border border-[#b5602f]/30 px-4 py-2 text-xs font-medium text-[#b5602f]">
+                    Get directions
+                  </span>
+                </motion.div>
+
+                <motion.div variants={item} className="mt-5 grid grid-cols-3 gap-3">
+                  {[
+                    { name: "House Blend", price: "$4", Icon: Coffee },
+                    { name: "Cold Brew", price: "$5", Icon: CupSoda },
+                    { name: "Pastry Box", price: "$8", Icon: Croissant },
+                  ].map((p) => (
+                    <div key={p.name}>
+                      <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-lg border border-[#b5602f]/15 bg-gradient-to-br from-[#f3e7d4] via-[#e8d2ac] to-[#d8b183] dark:from-[#2a2019] dark:via-[#332419] dark:to-[#3f2c19]">
+                        <p.Icon className="h-6 w-6 text-[#b5602f]/60 dark:text-[#e0a86a]/70" strokeWidth={1.5} />
+                      </div>
+                      <div className="mt-1.5 text-[11px] font-medium">{p.name}</div>
+                      <div className="text-[10px] text-[#8a7362] dark:text-[#b39d8a]">{p.price}</div>
+                    </div>
+                  ))}
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       </div>
     </div>

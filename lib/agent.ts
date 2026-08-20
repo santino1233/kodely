@@ -112,6 +112,8 @@ type RunOptions = {
   files: FileMap;
   /** First build of a site vs a follow-up tweak — drives how hard we think. */
   kind: "create" | "edit";
+  /** A reference image attached to this turn's request (vision input). */
+  image?: { mediaType: string; data: string };
   /** Applies the write; returning false rejects it (e.g. bad path). */
   onWrite: (path: string, content: string) => Promise<boolean>;
   onDelete: (path: string) => Promise<boolean>;
@@ -140,10 +142,25 @@ export async function* runAgent(opts: RunOptions): AsyncGenerator<AgentEvent> {
   for (const turn of opts.history) {
     messages.push({ role: turn.role, content: turn.content });
   }
-  messages.push({
-    role: "user",
-    content: `${describeFiles(opts.files)}\n\n--- Request ---\n${opts.request}`,
-  });
+  const requestText = `${describeFiles(opts.files)}\n\n--- Request ---\n${opts.request}`;
+  if (opts.image) {
+    messages.push({
+      role: "user",
+      content: [
+        {
+          type: "image",
+          source: {
+            type: "base64",
+            media_type: opts.image.mediaType as "image/png" | "image/jpeg" | "image/webp",
+            data: opts.image.data,
+          },
+        },
+        { type: "text", text: `${requestText}\n\n(A reference image is attached above — use it as visual/style guidance for the site.)` },
+      ],
+    });
+  } else {
+    messages.push({ role: "user", content: requestText });
+  }
 
   const totals = {
     inputTokens: 0,

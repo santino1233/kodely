@@ -1,15 +1,20 @@
 import Link from "next/link";
 import { Logo } from "@/components/marketing/Logo";
 import { Aura } from "@/components/marketing/Aura";
+import { AuthWallpaper } from "@/components/marketing/AuthWallpaper";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-white px-4 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-50">
-      <Aura />
-      <Link href="/" className="absolute left-6 top-6 z-10">
-        <Logo markSize={22} className="text-[15px]" />
-      </Link>
-      <div className="relative w-full max-w-sm">{children}</div>
+    <div className="grid min-h-screen bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-50 lg:grid-cols-2">
+      <AuthWallpaper />
+
+      <div className="relative flex min-h-screen items-center justify-center px-4">
+        <Aura />
+        <Link href="/" className="absolute left-6 top-6 z-10 lg:hidden">
+          <Logo markSize={22} className="text-[15px]" />
+        </Link>
+        <div className="relative w-full max-w-sm">{children}</div>
+      </div>
     </div>
   );
 }

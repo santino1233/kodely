@@ -7,7 +7,7 @@ import { Menu, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
-import { MagneticButton } from "./MagneticButton";
+import { ShineButton } from "./ShineButton";
 
 const LINKS = [
   { href: "/pricing", label: "Pricing" },
@@ -30,7 +30,7 @@ export function MarketingNav() {
   return (
     <header className="fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-4">
       <div
-        className={`w-full max-w-6xl rounded-2xl border transition-all duration-500 ${
+        className={`w-full max-w-7xl rounded-2xl border transition-all duration-500 ${
           scrolled
             ? "max-w-[860px] border-neutral-200/70 bg-white/70 px-2 py-2 shadow-[0_1px_2px_rgba(11,10,13,0.04),0_6px_16px_-8px_rgba(11,10,13,0.1)] backdrop-blur-xl dark:border-neutral-800/70 dark:bg-neutral-950/70"
             : "border-transparent px-2 py-3"
@@ -65,14 +65,14 @@ export function MarketingNav() {
               );
             })}
             <ThemeToggle />
-            <MagneticButton>
+            <ShineButton>
               <Link
                 href="/signup"
                 className="inline-block rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-neutral-900"
               >
                 Get started
               </Link>
-            </MagneticButton>
+            </ShineButton>
           </nav>
 
           <div className="flex items-center gap-2 sm:hidden">

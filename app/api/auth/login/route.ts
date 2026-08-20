@@ -15,8 +15,10 @@ export async function POST(req: Request) {
 
   const user = await db.user.findUnique({ where: { email } });
   // Constant-shape response whether or not the account exists, to avoid
-  // leaking which emails are registered.
-  const ok = user ? await verifyPassword(password, user.passwordHash) : false;
+  // leaking which emails are registered. A Google-only account has no local
+  // password to check against — it never verifies here (correctly, they
+  // must use "Continue with Google" instead).
+  const ok = user?.passwordHash ? await verifyPassword(password, user.passwordHash) : false;
   if (!user || !ok) {
     return Response.json({ error: "Incorrect email or password." }, { status: 401 });
   }

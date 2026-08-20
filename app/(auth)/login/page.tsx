@@ -1,18 +1,33 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { api, ApiError } from "@/lib/api";
 import { PENDING_PROMPT_KEY, destinationAfterAuth } from "@/lib/pending-prompt";
 import { Reveal } from "@/components/marketing/Reveal";
 import { MotionLift } from "@/components/marketing/FloatCard";
+import { GoogleButton } from "@/components/marketing/GoogleButton";
 
 const inputClass =
   "w-full rounded-lg border border-neutral-200 bg-white px-3.5 py-2.5 text-sm outline-none transition-colors placeholder:text-neutral-400 focus:border-neutral-400 dark:border-neutral-800 dark:bg-neutral-950 dark:placeholder:text-neutral-600 dark:focus:border-neutral-600";
 
+const GOOGLE_ERRORS: Record<string, string> = {
+  google_not_configured: "Google sign-in isn't set up yet — use email instead.",
+  google_failed: "Google sign-in didn't go through. Try again or use email.",
+};
+
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +38,9 @@ export default function LoginPage() {
     try {
       setPendingPrompt(sessionStorage.getItem(PENDING_PROMPT_KEY));
     } catch {}
-  }, []);
+    const googleError = searchParams.get("error");
+    if (googleError) setError(GOOGLE_ERRORS[googleError] ?? "Something went wrong.");
+  }, [searchParams]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -62,6 +79,14 @@ export default function LoginPage() {
             <p className="mt-1 text-neutral-700 dark:text-neutral-300">“{pendingPrompt}”</p>
           </div>
         )}
+
+        <GoogleButton label="Sign in with Google" />
+
+        <div className="flex items-center gap-3 text-xs text-neutral-400 dark:text-neutral-600">
+          <span className="h-px flex-1 bg-neutral-200 dark:bg-neutral-800" />
+          or
+          <span className="h-px flex-1 bg-neutral-200 dark:bg-neutral-800" />
+        </div>
 
         <div className="space-y-3">
           <input
