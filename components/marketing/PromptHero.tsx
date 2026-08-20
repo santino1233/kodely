@@ -133,42 +133,47 @@ export function PromptHero() {
           component instead of hugging just the box's border as asked. */}
       <div className="relative">
       {/* The glow — traces the box's own rounded-rect shape as a soft halo
-          just outside its border, not a wide ambient wash sitting behind
-          (and partly under) the box's translucent surface. Two layers offset
-          slightly for depth, each pulsing + drifting a small amount so it
-          reads as alive without wandering off the box it's supposed to be
-          hugging. `initial` is set to match the animation's own starting
-          keyframe — previously it didn't (0.7 vs a 0.6 floor), which caused
-          a real, confirmed-via-computed-styles drop in the first ~100ms of
-          every load that read as "the glow flashes then disappears". */}
+          just outside its border. Two real bugs from the previous pass,
+          both now fixed:
+          1. It used the raw --brand-gradient (full-strength color) as a
+             near-opaque fill, which read as the box itself being flooded
+             with color rather than a soft glow — switched to --glow /
+             --glow-2, the same pre-mixed low-alpha colors the page's own
+             Aura background uses, so the softness comes from the color
+             itself, not just blur.
+          2. The opacity swing was wide enough (e.g. 0.55→0.78) that the low
+             point read as "gone" right after the high point — narrowed to
+             a small sway close to a constant presence (0.85→1 of an
+             already-translucent color) so it never dips far enough to
+             register as disappearing, while still visibly breathing. */}
       <motion.div
         aria-hidden
-        className="pointer-events-none absolute -inset-7 -z-10 rounded-[2.25rem] blur-[45px]"
-        style={{ background: "var(--brand-gradient)" }}
-        initial={{ opacity: 0.6 }}
+        className="pointer-events-none absolute -inset-8 -z-10 rounded-[2.5rem] blur-[60px]"
+        style={{ background: "var(--glow)" }}
+        initial={{ opacity: 0.85 }}
         animate={
           reduced
-            ? { opacity: focused ? 0.85 : 0.68 }
+            ? { opacity: focused ? 1 : 0.9 }
             : {
-                opacity: focused ? [0.7, 0.95, 0.7] : [0.55, 0.78, 0.55],
-                x: [0, 10, -8, 0],
-                y: [0, -8, 10, 0],
+                opacity: focused ? [0.95, 1, 0.95] : [0.85, 1, 0.85],
+                x: [0, 9, -7, 0],
+                y: [0, -7, 9, 0],
               }
         }
         transition={{ duration: 5, repeat: reduced ? 0 : Infinity, ease: "easeInOut" }}
       />
       <motion.div
         aria-hidden
-        className="pointer-events-none absolute -inset-4 -z-10 rounded-[2rem] blur-[28px]"
-        style={{ background: "var(--brand-gradient)" }}
-        initial={{ opacity: 0.5 }}
+        className="pointer-events-none absolute -inset-5 -z-10 rounded-[2.25rem] blur-[40px]"
+        style={{ background: "var(--glow-2)" }}
+        initial={{ opacity: 0.8 }}
         animate={
           reduced
-            ? { opacity: focused ? 0.75 : 0.58 }
+            ? { opacity: focused ? 1 : 0.85 }
             : {
-                opacity: focused ? [0.58, 0.82, 0.58] : [0.4, 0.62, 0.4],
-                x: [0, -9, 7, 0],
-                y: [0, 8, -9, 0],
+                opacity: focused ? [0.9, 1, 0.9] : [0.8, 0.98, 0.8],
+                x: [0, -8, 6, 0],
+                y: [0, 6, -8, 0],
               }
         }
         transition={{ duration: 6.2, repeat: reduced ? 0 : Infinity, ease: "easeInOut", delay: 0.5 }}
