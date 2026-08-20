@@ -70,10 +70,11 @@ const BLOCK_STYLE = {
   border: "1px solid color-mix(in srgb, var(--accent) 28%, transparent)",
 };
 
-// Real photography, not gradient placeholders — this is Kodely's own
-// marketing chrome (not a customer-generated site), so it isn't bound by
-// the no-external-requests CSP that applies to actual generated output.
-const HERO_IMAGE = "https://picsum.photos/id/685/900/400";
+// A real reformer-pilates studio photo, self-hosted under /public (not
+// hotlinked) — this is Kodely's own marketing chrome (not a customer-
+// generated site), so it isn't bound by the no-external-requests CSP that
+// applies to actual generated output.
+const HERO_IMAGE = "/marketing/bloom-pilates-hero.jpg";
 
 const CLASSES = [
   { time: "9:00 AM", name: "Reformer Flow", initial: "M", color: "#a15bd0", meta: "3 spots left" },
