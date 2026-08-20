@@ -11,9 +11,19 @@ const STATE_COOKIE = "kodely_google_oauth_state";
 type GoogleTokenResponse = { access_token?: string; id_token?: string; error?: string };
 type GoogleUserInfo = { sub: string; email?: string; email_verified?: boolean; name?: string };
 
+// Behind nginx, req.url reflects the internal 127.0.0.1:PORT the proxy
+// forwards to, not the public host the visitor actually used — must match
+// exactly what /start sent as redirect_uri, or Google rejects the exchange.
+function originFromRequest(req: Request): string {
+  const host = req.headers.get("host");
+  if (!host) return new URL(req.url).origin;
+  const proto = req.headers.get("x-forwarded-proto") ?? "https";
+  return `${proto}://${host}`;
+}
+
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const origin = url.origin;
+  const origin = originFromRequest(req);
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
 

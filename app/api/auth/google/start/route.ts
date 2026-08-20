@@ -10,9 +10,19 @@ const STATE_COOKIE = "kodely_google_oauth_state";
 // request's own origin so this works on staging and prod without
 // hardcoding either — both origins' /api/auth/google/callback must be
 // added as authorized redirect URIs in the Google Cloud OAuth client.
+// Behind nginx, req.url reflects the internal 127.0.0.1:PORT the proxy
+// forwards to, not the public host the visitor actually used — the same
+// Host-header derivation the publish route already relies on.
+function originFromRequest(req: Request): string {
+  const host = req.headers.get("host");
+  if (!host) return new URL(req.url).origin;
+  const proto = req.headers.get("x-forwarded-proto") ?? "https";
+  return `${proto}://${host}`;
+}
+
 export async function GET(req: Request) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
-  const origin = new URL(req.url).origin;
+  const origin = originFromRequest(req);
 
   if (!clientId) {
     return Response.redirect(`${origin}/login?error=google_not_configured`, 302);
