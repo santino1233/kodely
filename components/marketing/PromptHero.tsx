@@ -115,65 +115,64 @@ export function PromptHero() {
 
   return (
     <div className="relative mx-auto w-full max-w-2xl">
-      {/* The glow — a wide, soft ambient radial wash centered behind the
-          composer (the Gemini-style "accent light" look), not a blur hugging
-          the box's edges. Bumped noticeably brighter/larger than the last
-          pass — at the previous intensity it was technically animating
-          (confirmed via computed styles) but visually blended into the
-          page's own ambient Aura background and read as "no glow" at rest.
-          Two overlapping ellipses (pink + violet) drift/orbit around the box
-          on slow, independently-timed loops — the two different durations
-          keep it from ever looking like a single repeating loop. Opacity
-          shifts up further on focus so clicking in visibly lifts it. */}
-      <motion.div
-        aria-hidden
-        className="pointer-events-none absolute left-1/2 top-1/2 -z-10 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[80px]"
-        style={{
-          width: "min(1040px, 98vw)",
-          height: "540px",
-          background: "radial-gradient(closest-side, var(--glow), transparent)",
-        }}
-        initial={{ opacity: 0.7 }}
-        animate={
-          reduced
-            ? { opacity: focused ? 0.95 : 0.8 }
-            : {
-                opacity: focused ? [0.75, 1, 0.75] : [0.6, 0.88, 0.6],
-                x: [0, 40, -26, 0],
-                y: [0, -30, 34, 0],
-              }
-        }
-        transition={{ duration: 5, repeat: reduced ? 0 : Infinity, ease: "easeInOut" }}
-      />
-      <motion.div
-        aria-hidden
-        className="pointer-events-none absolute left-1/2 top-1/2 -z-10 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[80px]"
-        style={{
-          width: "min(780px, 85vw)",
-          height: "420px",
-          background: "radial-gradient(closest-side, var(--glow-2), transparent)",
-        }}
-        initial={{ opacity: 0.55 }}
-        animate={
-          reduced
-            ? { opacity: focused ? 0.8 : 0.6 }
-            : {
-                opacity: focused ? [0.55, 0.8, 0.55] : [0.42, 0.68, 0.42],
-                x: [0, -32, 26, 0],
-                y: [0, 28, -22, 0],
-              }
-        }
-        transition={{ duration: 6.5, repeat: reduced ? 0 : Infinity, ease: "easeInOut", delay: 0.6 }}
-      />
-
       {/* Free-credits badge — the first thing a visitor should register
-          about pricing, before they've even typed anything. */}
+          about pricing, before they've even typed anything. Sits above the
+          glow/composer group entirely (not inside its relative wrapper) so
+          the glow below hugs just the box, not the badge too. */}
       <div className="mb-4 flex justify-center">
         <span className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200/70 bg-white/60 px-3.5 py-1.5 text-xs font-medium text-neutral-600 backdrop-blur-md dark:border-white/10 dark:bg-white/[0.05] dark:text-neutral-300">
           <Gift size={13} style={{ color: "var(--accent)" }} />
           Get {SIGNUP_GRANT} free credits — enough for a real site and a few edits
         </span>
       </div>
+
+      {/* This inner wrapper is sized to exactly the composer box — the glow
+          layers below position with -inset-N relative to IT specifically,
+          not the outer component (which also holds the badge and suggestion
+          chips) — otherwise the glow would spread across the whole
+          component instead of hugging just the box's border as asked. */}
+      <div className="relative">
+      {/* The glow — traces the box's own rounded-rect shape as a soft halo
+          just outside its border, not a wide ambient wash sitting behind
+          (and partly under) the box's translucent surface. Two layers offset
+          slightly for depth, each pulsing + drifting a small amount so it
+          reads as alive without wandering off the box it's supposed to be
+          hugging. `initial` is set to match the animation's own starting
+          keyframe — previously it didn't (0.7 vs a 0.6 floor), which caused
+          a real, confirmed-via-computed-styles drop in the first ~100ms of
+          every load that read as "the glow flashes then disappears". */}
+      <motion.div
+        aria-hidden
+        className="pointer-events-none absolute -inset-7 -z-10 rounded-[2.25rem] blur-[45px]"
+        style={{ background: "var(--brand-gradient)" }}
+        initial={{ opacity: 0.6 }}
+        animate={
+          reduced
+            ? { opacity: focused ? 0.85 : 0.68 }
+            : {
+                opacity: focused ? [0.7, 0.95, 0.7] : [0.55, 0.78, 0.55],
+                x: [0, 10, -8, 0],
+                y: [0, -8, 10, 0],
+              }
+        }
+        transition={{ duration: 5, repeat: reduced ? 0 : Infinity, ease: "easeInOut" }}
+      />
+      <motion.div
+        aria-hidden
+        className="pointer-events-none absolute -inset-4 -z-10 rounded-[2rem] blur-[28px]"
+        style={{ background: "var(--brand-gradient)" }}
+        initial={{ opacity: 0.5 }}
+        animate={
+          reduced
+            ? { opacity: focused ? 0.75 : 0.58 }
+            : {
+                opacity: focused ? [0.58, 0.82, 0.58] : [0.4, 0.62, 0.4],
+                x: [0, -9, 7, 0],
+                y: [0, 8, -9, 0],
+              }
+        }
+        transition={{ duration: 6.2, repeat: reduced ? 0 : Infinity, ease: "easeInOut", delay: 0.5 }}
+      />
 
       {/* The glass composer. Stays translucent and neutral itself — the
           brand color comes entirely from the glow bleeding through from
@@ -270,6 +269,7 @@ export function PromptHero() {
         >
           <ArrowUp size={16} strokeWidth={2.5} />
         </motion.button>
+      </div>
       </div>
 
       <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
