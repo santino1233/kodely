@@ -29,12 +29,15 @@ export async function GET(req: Request) {
   authUrl.searchParams.set("state", state);
   authUrl.searchParams.set("prompt", "select_account");
 
-  const res = Response.redirect(authUrl.toString(), 302);
-  res.headers.append(
-    "Set-Cookie",
-    `${STATE_COOKIE}=${state}; Path=/; HttpOnly; SameSite=Lax; Max-Age=600${
-      process.env.NODE_ENV === "production" ? "; Secure" : ""
-    }`,
-  );
-  return res;
+  // Response.redirect()'s headers are immutable in this runtime — build the
+  // redirect by hand so the state cookie can actually be attached to it.
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: authUrl.toString(),
+      "Set-Cookie": `${STATE_COOKIE}=${state}; Path=/; HttpOnly; SameSite=Lax; Max-Age=600${
+        process.env.NODE_ENV === "production" ? "; Secure" : ""
+      }`,
+    },
+  });
 }
