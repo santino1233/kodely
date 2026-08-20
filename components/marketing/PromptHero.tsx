@@ -129,54 +129,52 @@ export function PromptHero() {
       {/* This inner wrapper is sized to exactly the composer box — the glow
           layers below position with -inset-N relative to IT specifically,
           not the outer component (which also holds the badge and suggestion
-          chips) — otherwise the glow would spread across the whole
-          component instead of hugging just the box's border as asked. */}
+          chips), so the glow hugs just the box, never the whole component. */}
       <div className="relative">
-      {/* The glow — traces the box's own rounded-rect shape as a soft halo
-          just outside its border. Two real bugs from the previous pass,
-          both now fixed:
-          1. It used the raw --brand-gradient (full-strength color) as a
-             near-opaque fill, which read as the box itself being flooded
-             with color rather than a soft glow — switched to --glow /
-             --glow-2, the same pre-mixed low-alpha colors the page's own
-             Aura background uses, so the softness comes from the color
-             itself, not just blur.
-          2. The opacity swing was wide enough (e.g. 0.55→0.78) that the low
-             point read as "gone" right after the high point — narrowed to
-             a small sway close to a constant presence (0.85→1 of an
-             already-translucent color) so it never dips far enough to
-             register as disappearing, while still visibly breathing. */}
+      {/* The glow — rebuilt from scratch after several rounds of tuning that
+          kept swinging between "too vivid" (raw --brand-gradient as a near-
+          opaque fill) and "too subtle / reads as gone" (the pre-mixed, very
+          low-alpha --glow variable). Both used a color whose intensity
+          wasn't independently controllable — this version uses color-mix()
+          to set an explicit, deliberate alpha per layer instead of
+          inheriting one from a token meant for a different job (the page's
+          large corner Aura blobs). Two distinct hues (the pink and violet
+          ends of the brand gradient) trace the box's rounded shape as a
+          halo just outside its border. Each layer's `initial` matches its
+          own animation's starting keyframe exactly, so there is no jump on
+          mount, and the opacity floor is high enough that it never reads as
+          disappearing at any point in the loop. */}
       <motion.div
         aria-hidden
-        className="pointer-events-none absolute -inset-8 -z-10 rounded-[2.5rem] blur-[60px]"
-        style={{ background: "var(--glow)" }}
-        initial={{ opacity: 0.85 }}
+        className="pointer-events-none absolute -inset-7 -z-10 rounded-[2.25rem] blur-[50px]"
+        style={{ background: "color-mix(in srgb, var(--accent) 55%, transparent)" }}
+        initial={{ opacity: 0.5 }}
         animate={
           reduced
-            ? { opacity: focused ? 1 : 0.9 }
+            ? { opacity: focused ? 0.85 : 0.65 }
             : {
-                opacity: focused ? [0.95, 1, 0.95] : [0.85, 1, 0.85],
-                x: [0, 9, -7, 0],
-                y: [0, -7, 9, 0],
+                opacity: focused ? [0.65, 0.95, 0.65] : [0.5, 0.8, 0.5],
+                x: [0, 16, -12, 0],
+                y: [0, -12, 15, 0],
               }
         }
-        transition={{ duration: 5, repeat: reduced ? 0 : Infinity, ease: "easeInOut" }}
+        transition={{ duration: 4.5, repeat: reduced ? 0 : Infinity, ease: "easeInOut" }}
       />
       <motion.div
         aria-hidden
-        className="pointer-events-none absolute -inset-5 -z-10 rounded-[2.25rem] blur-[40px]"
-        style={{ background: "var(--glow-2)" }}
-        initial={{ opacity: 0.8 }}
+        className="pointer-events-none absolute -inset-4 -z-10 rounded-[2rem] blur-[32px]"
+        style={{ background: "color-mix(in srgb, #a33dff 50%, transparent)" }}
+        initial={{ opacity: 0.4 }}
         animate={
           reduced
-            ? { opacity: focused ? 1 : 0.85 }
+            ? { opacity: focused ? 0.75 : 0.55 }
             : {
-                opacity: focused ? [0.9, 1, 0.9] : [0.8, 0.98, 0.8],
-                x: [0, -8, 6, 0],
-                y: [0, 6, -8, 0],
+                opacity: focused ? [0.55, 0.85, 0.55] : [0.4, 0.68, 0.4],
+                x: [0, -14, 11, 0],
+                y: [0, 11, -14, 0],
               }
         }
-        transition={{ duration: 6.2, repeat: reduced ? 0 : Infinity, ease: "easeInOut", delay: 0.5 }}
+        transition={{ duration: 5.5, repeat: reduced ? 0 : Infinity, ease: "easeInOut", delay: 0.4 }}
       />
 
       {/* The glass composer. Stays translucent and neutral itself — the

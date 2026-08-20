@@ -21,8 +21,11 @@ const BOOKING_TARGET_INDEX = 0;
 // One fixed frame height, used for every phase — previously the frame
 // animated its own height per phase, which shifted every section below it
 // on the page (a visible jitter). Shorter phases just center within the
-// same fixed space now, so the page around it never moves.
-const FRAME_HEIGHT = 620;
+// same fixed space now, so the page around it never moves. Sized to the
+// live phase's actual content (measured ~363px) plus a little breathing
+// room — the old 620px value was sized for the earlier Studio Nine demo's
+// taller content and left a large dead-space gap under this one.
+const FRAME_HEIGHT = 410;
 
 const container: Variants = {
   hidden: {},
