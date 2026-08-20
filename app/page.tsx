@@ -54,8 +54,13 @@ export default async function Home() {
       {/* Hero */}
       <section className="relative mx-auto max-w-7xl px-6 pb-28 pt-40 text-center sm:pt-52">
         <Reveal>
+          {/* Deliberately spells out "Kodely" + "AI website builder" as
+              literal, prominent, above-the-fold text — Google's OAuth
+              consent-screen branding review flagged the home page for not
+              clearly naming/explaining the app, and this line is what a
+              crawler or reviewer sees first. */}
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-neutral-500 dark:text-neutral-400">
-            AI websites, simplified
+            Kodely — AI website builder
           </p>
         </Reveal>
         <Reveal delay={0.06}>
@@ -66,8 +71,9 @@ export default async function Home() {
         </Reveal>
         <Reveal delay={0.12}>
           <p className="mx-auto mt-6 max-w-xl text-lg text-neutral-600 dark:text-neutral-400">
-            Describe the site you want. Kodely designs it, builds a real React
-            app, and puts it online — at a real, working URL.
+            Kodely is an AI website builder. Describe the site you want, and
+            Kodely designs it, builds a real React app, and puts it online —
+            at a real, working URL.
           </p>
         </Reveal>
 
