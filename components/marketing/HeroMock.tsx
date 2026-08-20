@@ -2,13 +2,21 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion, type Variants } from "framer-motion";
+import { Check } from "lucide-react";
 import { Mark } from "./Logo";
 
-const PROMPT_TEXT = "A creative studio portfolio, bold and modern, with a project gallery";
+const PROMPT_TEXT = "A boutique pilates studio with online class booking";
 
-const PHASE_DURATIONS = { typing: 2600, building: 2400, live: 5200 } as const;
+const PHASE_DURATIONS = { typing: 2600, building: 2400, live: 5400 } as const;
 type Phase = "typing" | "building" | "live";
 const NEXT_PHASE: Record<Phase, Phase> = { typing: "building", building: "live", live: "typing" };
+
+// A real booking flow plays out during the "live" phase, not just a static
+// page — the demo is meant to look like a working app, not a brochure.
+type BookingStep = "browse" | "clicking" | "confirmed";
+const BOOKING_DURATIONS: Record<BookingStep, number> = { browse: 1700, clicking: 600, confirmed: 2800 };
+const NEXT_BOOKING: Record<BookingStep, BookingStep> = { browse: "clicking", clicking: "confirmed", confirmed: "browse" };
+const BOOKING_TARGET_INDEX = 0;
 
 // One fixed frame height, used for every phase — previously the frame
 // animated its own height per phase, which shifted every section below it
@@ -62,17 +70,12 @@ const BLOCK_STYLE = {
 // Real photography, not gradient placeholders — this is Kodely's own
 // marketing chrome (not a customer-generated site), so it isn't bound by
 // the no-external-requests CSP that applies to actual generated output.
-const HERO_IMAGE = "https://picsum.photos/id/180/900/400";
-const GALLERY_IMAGES = [
-  "https://picsum.photos/id/685/400/400",
-  "https://picsum.photos/id/519/400/400",
-  "https://picsum.photos/id/704/400/400",
-];
+const HERO_IMAGE = "https://picsum.photos/id/685/900/400";
 
-const STATS = [
-  { value: "120+", label: "Projects" },
-  { value: "40", label: "Clients" },
-  { value: "8 yrs", label: "Experience" },
+const CLASSES = [
+  { time: "9:00 AM", name: "Reformer Flow", initial: "M", color: "#a15bd0", meta: "3 spots left" },
+  { time: "11:30 AM", name: "Mat Pilates", initial: "J", color: "#e0729a", meta: "6 spots left" },
+  { time: "1:00 PM", name: "Power Pilates", initial: "S", color: "#3d9970", meta: "2 spots left" },
 ];
 
 /** The one real hero object — a miniature browser frame that plays out the
@@ -83,7 +86,9 @@ export function HeroMock() {
   const reduced = useReducedMotion();
   const [phase, setPhase] = useState<Phase>(reduced ? "live" : "typing");
   const [liveCycle, setLiveCycle] = useState(0);
+  const [bookingStep, setBookingStep] = useState<BookingStep>("browse");
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const bookingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (reduced) return;
@@ -99,6 +104,22 @@ export function HeroMock() {
     };
   }, [phase, reduced]);
 
+  // Resets to "browse" every time the live phase is (re-)entered, then
+  // steps itself through click -> confirm while that phase is showing.
+  useEffect(() => {
+    setBookingStep("browse");
+  }, [liveCycle]);
+
+  useEffect(() => {
+    if (phase !== "live" || reduced) return;
+    bookingTimeoutRef.current = setTimeout(() => {
+      setBookingStep((s) => NEXT_BOOKING[s]);
+    }, BOOKING_DURATIONS[bookingStep]);
+    return () => {
+      if (bookingTimeoutRef.current) clearTimeout(bookingTimeoutRef.current);
+    };
+  }, [bookingStep, phase, reduced]);
+
   const typed = useTypewriter(PROMPT_TEXT, phase === "typing", 34);
   const dots = useEllipsis(phase === "building");
 
@@ -113,7 +134,7 @@ export function HeroMock() {
             <AnimatePresence mode="wait">
               {phase === "live" ? (
                 <motion.span key="url" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                  studio-nine.kodely.site
+                  bloom-pilates.kodely.site
                 </motion.span>
               ) : (
                 <motion.span key="new" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -205,20 +226,20 @@ export function HeroMock() {
                 initial="hidden"
                 animate="shown"
                 variants={container}
-                className="flex h-full flex-col px-7 py-7 text-[#201c2b] dark:text-[#f1eef7]"
+                className="relative flex h-full flex-col px-6 py-6 text-[#201c2b] dark:text-[#f1eef7]"
               >
                 <motion.div variants={item} className="flex items-center justify-between">
-                  <span className="text-sm font-semibold tracking-tight">Studio Nine</span>
+                  <span className="text-sm font-semibold tracking-tight">Bloom Pilates</span>
                   <div className="flex gap-4 text-xs text-[#716b82] dark:text-[#b3aec2]">
-                    <span>Work</span>
-                    <span>Studio</span>
-                    <span>Contact</span>
+                    <span>Classes</span>
+                    <span>Instructors</span>
+                    <span>Membership</span>
                   </div>
                 </motion.div>
 
                 <motion.div
                   variants={item}
-                  className="relative mt-4 flex h-40 flex-col justify-end overflow-hidden rounded-xl p-4"
+                  className="relative mt-4 flex h-32 flex-col justify-end overflow-hidden rounded-xl p-4"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={HERO_IMAGE} alt="" className="absolute inset-0 h-full w-full object-cover" />
@@ -227,40 +248,99 @@ export function HeroMock() {
                     className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"
                   />
                   <span className="relative text-[10px] font-medium uppercase tracking-[0.14em] text-white/80">
-                    Selected work
+                    Book a class
                   </span>
                   <h3 className="relative mt-1 text-lg font-semibold leading-tight text-white sm:text-xl">
-                    Design that moves people.
+                    Strength. Balance. You.
                   </h3>
                 </motion.div>
 
-                <motion.div variants={item} className="mt-3 grid grid-cols-3 gap-2">
-                  {GALLERY_IMAGES.map((src) => (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img key={src} src={src} alt="" className="aspect-square rounded-lg object-cover" />
-                  ))}
+                <motion.div variants={item} className="mt-4 space-y-2">
+                  {CLASSES.map((c, i) => {
+                    const isTarget = i === BOOKING_TARGET_INDEX;
+                    const booked = isTarget && bookingStep === "confirmed";
+                    const selecting = isTarget && bookingStep === "clicking";
+                    return (
+                      <motion.div
+                        key={c.name}
+                        animate={{ scale: selecting ? 1.015 : 1 }}
+                        transition={{ duration: 0.2 }}
+                        className="flex items-center gap-3 rounded-xl border px-3 py-2.5"
+                        style={{
+                          borderColor: booked
+                            ? "rgba(16,185,129,0.4)"
+                            : "color-mix(in srgb, currentColor 10%, transparent)",
+                          background: booked
+                            ? "rgba(16,185,129,0.06)"
+                            : "color-mix(in srgb, currentColor 3%, transparent)",
+                        }}
+                      >
+                        <div
+                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
+                          style={{ background: c.color }}
+                        >
+                          {c.initial}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-[13px] font-medium">{c.name}</div>
+                          <div className="text-[11px] text-[#8a839a] dark:text-[#9d97ad]">{c.time}</div>
+                        </div>
+                        <AnimatePresence mode="wait">
+                          {booked ? (
+                            <motion.span
+                              key="booked"
+                              initial={{ opacity: 0, scale: 0.7 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              className="flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400"
+                            >
+                              <Check size={11} strokeWidth={3} /> Booked
+                            </motion.span>
+                          ) : (
+                            <motion.button
+                              key="book"
+                              type="button"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              className="shrink-0 rounded-full px-3 py-1 text-[11px] font-medium text-white"
+                              style={{ background: "var(--brand-gradient)" }}
+                            >
+                              Book
+                            </motion.button>
+                          )}
+                        </AnimatePresence>
+                      </motion.div>
+                    );
+                  })}
                 </motion.div>
 
-                <motion.div variants={item} className="mt-5 flex items-center justify-between px-2">
-                  {STATS.map((s) => (
-                    <div key={s.label} className="text-center">
-                      <div className="text-sm font-semibold">{s.value}</div>
-                      <div className="text-[10px] text-[#8a839a] dark:text-[#9d97ad]">{s.label}</div>
-                    </div>
-                  ))}
-                </motion.div>
+                {!reduced && (
+                  <motion.div
+                    aria-hidden
+                    className="pointer-events-none absolute left-6 top-[13.5rem] z-10 h-4 w-4 rounded-full border-2 border-white shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
+                    style={{ background: "var(--accent)" }}
+                    animate={{
+                      x: bookingStep === "browse" ? 0 : 500,
+                      y: bookingStep === "browse" ? 0 : 4,
+                      opacity: bookingStep === "confirmed" ? 0 : 1,
+                      scale: bookingStep === "clicking" ? [1, 0.65, 1] : 1,
+                    }}
+                    transition={{ duration: 0.55, ease: "easeInOut" }}
+                  />
+                )}
 
-                <motion.div variants={item} className="mt-5 flex gap-3">
-                  <span
-                    className="rounded-lg px-4 py-2 text-xs font-medium text-white"
-                    style={{ background: "linear-gradient(135deg, #6d5bd0, #a15bd0)" }}
-                  >
-                    View our work
-                  </span>
-                  <span className="rounded-lg border border-[#716b82]/25 px-4 py-2 text-xs font-medium text-[#4a4558] dark:text-[#d8d4e2]">
-                    Get in touch
-                  </span>
-                </motion.div>
+                <AnimatePresence>
+                  {bookingStep === "confirmed" && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -16 }}
+                      className="absolute left-1/2 top-3 z-20 -translate-x-1/2 whitespace-nowrap rounded-full px-4 py-2 text-xs font-medium text-white shadow-lg"
+                      style={{ background: "var(--brand-gradient)" }}
+                    >
+                      You&apos;re booked — Reformer Flow, Tue 9:00 AM
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             )}
           </AnimatePresence>
