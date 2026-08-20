@@ -17,8 +17,9 @@ type GoogleUserInfo = { sub: string; email?: string; email_verified?: boolean; n
 function originFromRequest(req: Request): string {
   const host = req.headers.get("host");
   if (!host) return new URL(req.url).origin;
-  const proto = req.headers.get("x-forwarded-proto") ?? "https";
-  return `${proto}://${host}`;
+  // See the matching comment in the /start route — X-Forwarded-Proto isn't
+  // trustworthy across this app's Flexible-SSL proxy chain.
+  return `https://${host}`;
 }
 
 export async function GET(req: Request) {

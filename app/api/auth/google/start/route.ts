@@ -16,8 +16,11 @@ const STATE_COOKIE = "kodely_google_oauth_state";
 function originFromRequest(req: Request): string {
   const host = req.headers.get("host");
   if (!host) return new URL(req.url).origin;
-  const proto = req.headers.get("x-forwarded-proto") ?? "https";
-  return `${proto}://${host}`;
+  // The Cloudflare -> host-nginx -> VM-nginx chain runs Flexible SSL (each
+  // hop is plain HTTP even though the real visitor connection is HTTPS), so
+  // X-Forwarded-Proto gets clobbered along the way and can't be trusted —
+  // same reason the publish route hardcodes https rather than deriving it.
+  return `https://${host}`;
 }
 
 export async function GET(req: Request) {
