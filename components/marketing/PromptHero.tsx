@@ -117,52 +117,53 @@ export function PromptHero() {
     <div className="relative mx-auto w-full max-w-2xl">
       {/* The glow — a wide, soft ambient radial wash centered behind the
           composer (the Gemini-style "accent light" look), not a blur hugging
-          the box's edges. Two overlapping ellipses (pink + violet, the two
-          ends of the brand gradient) actually drift/orbit around the box on
-          slow, independently-timed loops (not just breathing in place) for
-          the "vibrating and moving" feel — the two different durations keep
-          it from ever looking like a single repeating loop. Opacity range
-          shifts up on focus (same layers get brighter, not a new one added)
-          so clicking into the box visibly lifts the glow's vibrancy. */}
+          the box's edges. Bumped noticeably brighter/larger than the last
+          pass — at the previous intensity it was technically animating
+          (confirmed via computed styles) but visually blended into the
+          page's own ambient Aura background and read as "no glow" at rest.
+          Two overlapping ellipses (pink + violet) drift/orbit around the box
+          on slow, independently-timed loops — the two different durations
+          keep it from ever looking like a single repeating loop. Opacity
+          shifts up further on focus so clicking in visibly lifts it. */}
       <motion.div
         aria-hidden
-        className="pointer-events-none absolute left-1/2 top-1/2 -z-10 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[90px]"
+        className="pointer-events-none absolute left-1/2 top-1/2 -z-10 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[80px]"
         style={{
-          width: "min(880px, 92vw)",
-          height: "460px",
+          width: "min(1040px, 98vw)",
+          height: "540px",
           background: "radial-gradient(closest-side, var(--glow), transparent)",
+        }}
+        initial={{ opacity: 0.7 }}
+        animate={
+          reduced
+            ? { opacity: focused ? 0.95 : 0.8 }
+            : {
+                opacity: focused ? [0.75, 1, 0.75] : [0.6, 0.88, 0.6],
+                x: [0, 40, -26, 0],
+                y: [0, -30, 34, 0],
+              }
+        }
+        transition={{ duration: 5, repeat: reduced ? 0 : Infinity, ease: "easeInOut" }}
+      />
+      <motion.div
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 top-1/2 -z-10 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[80px]"
+        style={{
+          width: "min(780px, 85vw)",
+          height: "420px",
+          background: "radial-gradient(closest-side, var(--glow-2), transparent)",
         }}
         initial={{ opacity: 0.55 }}
         animate={
           reduced
-            ? { opacity: focused ? 0.75 : 0.6 }
+            ? { opacity: focused ? 0.8 : 0.6 }
             : {
-                opacity: focused ? [0.55, 0.85, 0.55] : [0.45, 0.7, 0.45],
-                x: [0, 30, -18, 0],
-                y: [0, -22, 26, 0],
+                opacity: focused ? [0.55, 0.8, 0.55] : [0.42, 0.68, 0.42],
+                x: [0, -32, 26, 0],
+                y: [0, 28, -22, 0],
               }
         }
-        transition={{ duration: 6, repeat: reduced ? 0 : Infinity, ease: "easeInOut" }}
-      />
-      <motion.div
-        aria-hidden
-        className="pointer-events-none absolute left-1/2 top-1/2 -z-10 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[90px]"
-        style={{
-          width: "min(620px, 70vw)",
-          height: "340px",
-          background: "radial-gradient(closest-side, var(--glow-2), transparent)",
-        }}
-        initial={{ opacity: 0.4 }}
-        animate={
-          reduced
-            ? { opacity: focused ? 0.6 : 0.45 }
-            : {
-                opacity: focused ? [0.4, 0.65, 0.4] : [0.3, 0.55, 0.3],
-                x: [0, -24, 20, 0],
-                y: [0, 22, -16, 0],
-              }
-        }
-        transition={{ duration: 8, repeat: reduced ? 0 : Infinity, ease: "easeInOut", delay: 0.7 }}
+        transition={{ duration: 6.5, repeat: reduced ? 0 : Infinity, ease: "easeInOut", delay: 0.6 }}
       />
 
       {/* Free-credits badge — the first thing a visitor should register

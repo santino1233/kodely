@@ -120,22 +120,18 @@ body {
   }
 }
 
-/* CTA button sheen (ShineButton) — a bright white bar sweeps across, then
-   pauses off-screen before the next pass, rather than looping constantly. */
+/* CTA button sheen (ShineButton) — a bright white bar sweeps across once
+   per hover, not a constant background loop. */
 @keyframes btn-shine {
-  0% {
+  from {
     left: -40%;
   }
-  35% {
-    left: 120%;
-  }
-  100% {
+  to {
     left: 120%;
   }
 }
-.btn-shine {
-  left: -40%;
-  animation: btn-shine 3.2s ease-in-out infinite;
+.group:hover .btn-shine {
+  animation: btn-shine 0.7s ease-in-out;
 }
 
 /* Prose styling for blog/SEO content (BlogPost.bodyHtml) — hand-rolled

@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion, type Variants } from "framer-motion";
-import { Sparkles } from "lucide-react";
 import { Mark } from "./Logo";
 
 const PROMPT_TEXT = "A creative studio portfolio, bold and modern, with a project gallery";
@@ -60,10 +59,14 @@ const BLOCK_STYLE = {
   border: "1px solid color-mix(in srgb, var(--accent) 28%, transparent)",
 };
 
-const GALLERY_GRADIENTS = [
-  "linear-gradient(135deg, #ffb199 0%, #ff6a88 100%)",
-  "linear-gradient(135deg, #7ee8fa 0%, #6a8dff 100%)",
-  "linear-gradient(135deg, #f6d365 0%, #d67ee2 100%)",
+// Real photography, not gradient placeholders — this is Kodely's own
+// marketing chrome (not a customer-generated site), so it isn't bound by
+// the no-external-requests CSP that applies to actual generated output.
+const HERO_IMAGE = "https://picsum.photos/id/180/900/400";
+const GALLERY_IMAGES = [
+  "https://picsum.photos/id/685/400/400",
+  "https://picsum.photos/id/519/400/400",
+  "https://picsum.photos/id/704/400/400",
 ];
 
 const STATS = [
@@ -147,7 +150,7 @@ export function HeroMock() {
                 exit={{ opacity: 0 }}
                 className="flex h-full flex-col items-center justify-center gap-5 px-10 text-center"
               >
-                <Sparkles size={22} strokeWidth={1.6} style={{ color: "var(--accent)" }} />
+                <Mark size={30} />
                 <div className="w-full max-w-sm rounded-xl border border-[#e4d9cc] bg-white px-4 py-3.5 text-left text-[13px] leading-relaxed text-[#2a1f1a] shadow-sm dark:border-white/10 dark:bg-[#241a15] dark:text-[#f2e9e2]">
                   {typed}
                   <motion.span
@@ -216,12 +219,12 @@ export function HeroMock() {
                 <motion.div
                   variants={item}
                   className="relative mt-4 flex h-40 flex-col justify-end overflow-hidden rounded-xl p-4"
-                  style={{ background: "linear-gradient(135deg, #6d5bd0 0%, #a15bd0 48%, #e0729a 100%)" }}
                 >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={HERO_IMAGE} alt="" className="absolute inset-0 h-full w-full object-cover" />
                   <div
                     aria-hidden
-                    className="absolute inset-0"
-                    style={{ background: "radial-gradient(circle at 25% 15%, rgba(255,255,255,0.45), transparent 55%)" }}
+                    className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"
                   />
                   <span className="relative text-[10px] font-medium uppercase tracking-[0.14em] text-white/80">
                     Selected work
@@ -232,8 +235,9 @@ export function HeroMock() {
                 </motion.div>
 
                 <motion.div variants={item} className="mt-3 grid grid-cols-3 gap-2">
-                  {GALLERY_GRADIENTS.map((g, i) => (
-                    <div key={i} className="aspect-square rounded-lg" style={{ background: g }} />
+                  {GALLERY_IMAGES.map((src) => (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img key={src} src={src} alt="" className="aspect-square rounded-lg object-cover" />
                   ))}
                 </motion.div>
 

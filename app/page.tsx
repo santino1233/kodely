@@ -9,12 +9,9 @@ import { Aura } from "@/components/marketing/Aura";
 import { PinnedStatement } from "@/components/marketing/PinnedStatement";
 import { LogoCarousel } from "@/components/marketing/LogoCarousel";
 import { PromptHero } from "@/components/marketing/PromptHero";
-import { Reveal, RevealGroup, RevealItem } from "@/components/marketing/Reveal";
+import { Reveal } from "@/components/marketing/Reveal";
 import { ShineButton } from "@/components/marketing/ShineButton";
 import { TrustBento } from "@/components/marketing/TrustBento";
-import { Mark } from "@/components/marketing/Logo";
-
-const PROOF_POINTS = ["Real React app, not HTML", "Live in one click", "Metered by real cost"];
 
 export default async function Home() {
   const user = await getCurrentUser();
@@ -52,10 +49,7 @@ export default async function Home() {
         </Reveal>
 
         <Reveal delay={0.18}>
-          <div className="mt-10 flex justify-center">
-            <Mark size={34} />
-          </div>
-          <div className="mt-4">
+          <div className="mt-10">
             <PromptHero />
           </div>
           <p className="mt-5 font-mono text-xs text-neutral-400 dark:text-neutral-600">
@@ -106,41 +100,6 @@ export default async function Home() {
               <TrustBento />
             </div>
           </Reveal>
-        </div>
-      </section>
-
-      {/* Differentiation — big type statement */}
-      <section className="border-t border-neutral-100 dark:border-neutral-900">
-        <div className="mx-auto max-w-5xl px-6 py-28 text-center sm:py-36">
-          <Reveal>
-            <h2 className="text-[clamp(2.2rem,6vw,4.4rem)] font-semibold leading-[1.05] tracking-tight">
-              AI writes code.
-              <br />
-              <span className="brand-gradient-text">Kodely gives you a live business.</span>
-            </h2>
-          </Reveal>
-          <Reveal delay={0.08}>
-            <p className="mx-auto mt-8 max-w-xl text-base leading-relaxed text-neutral-600 dark:text-neutral-400">
-              The model doing the writing is a commodity now — anyone can get code
-              out of an AI. What you actually need is a live, hosted, working site
-              with a real URL, without becoming the person who has to maintain a
-              server to get it. That's the part Kodely does for you.
-            </p>
-          </Reveal>
-          <RevealGroup className="mt-8 flex flex-wrap items-center justify-center gap-3" stagger={0.06}>
-            {PROOF_POINTS.map((point) => (
-              <RevealItem key={point}>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 px-3.5 py-1.5 text-xs font-medium text-neutral-600 dark:border-neutral-800 dark:text-neutral-400">
-                  <span
-                    className="h-1.5 w-1.5 rounded-full"
-                    style={{ background: "var(--brand-gradient)" }}
-                    aria-hidden
-                  />
-                  {point}
-                </span>
-              </RevealItem>
-            ))}
-          </RevealGroup>
         </div>
       </section>
 
