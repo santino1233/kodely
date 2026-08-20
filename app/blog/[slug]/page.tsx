@@ -130,8 +130,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               <ShineButton className="mt-5">
                 <Link
                   href="/signup"
-                  className="inline-block rounded-lg px-6 py-2.5 text-sm font-medium text-white"
-                  style={{ background: "var(--brand-gradient)" }}
+                  className="btn-cta-gradient inline-block rounded-lg px-6 py-2.5 text-sm font-medium text-white"
                 >
                   Start building — free
                 </Link>

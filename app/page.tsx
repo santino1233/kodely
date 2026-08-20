@@ -125,8 +125,7 @@ export default async function Home() {
             <ShineButton className="mt-8">
               <Link
                 href="/signup"
-                className="inline-block rounded-lg px-7 py-3.5 text-sm font-medium text-white shadow-[0_14px_34px_-16px_var(--glow)]"
-                style={{ background: "var(--brand-gradient)" }}
+                className="btn-cta-gradient inline-block rounded-lg px-7 py-3.5 text-sm font-medium text-white shadow-[0_14px_34px_-16px_var(--glow)] transition-shadow duration-200 hover:shadow-[0_20px_44px_-14px_var(--glow)]"
               >
                 Let&apos;s build it
               </Link>

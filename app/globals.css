@@ -120,8 +120,13 @@ body {
   }
 }
 
-/* CTA button sheen (ShineButton) — a bright white bar sweeps across once
-   per hover, not a constant background loop. */
+/* CTA button hover treatment — ported from Nxeon's real .btn-deploy
+   pattern (see that codebase's app/globals.css) using Kodely's own brand
+   gradient instead of Nxeon's blue/purple one. Two pieces:
+   1. .btn-shine — a one-shot shimmer sweep on hover (all CTAs).
+   2. .btn-cta-gradient — the background gradient itself shifts position on
+      hover (only on buttons whose background already IS the brand
+      gradient — a plain dark/monochrome button has no gradient to shift). */
 @keyframes btn-shine {
   from {
     left: -40%;
@@ -131,7 +136,17 @@ body {
   }
 }
 .group:hover .btn-shine {
-  animation: btn-shine 0.7s ease-in-out;
+  animation: btn-shine 0.75s ease;
+}
+
+.btn-cta-gradient {
+  background-image: var(--brand-gradient);
+  background-size: 220% 100%;
+  background-position: 0% 0;
+  transition: background-position 0.6s ease;
+}
+.group:hover .btn-cta-gradient {
+  background-position: 100% 0;
 }
 
 /* Prose styling for blog/SEO content (BlogPost.bodyHtml) — hand-rolled

@@ -1,14 +1,15 @@
 import type { ReactNode } from "react";
 
-/** Wraps a solid CTA button/link in a static frame with a bright white
- * sheen that sweeps across only on hover (not a constant background loop —
- * user explicitly asked to match the hover-only pattern used on Nxeon,
- * not an always-on ambient animation). Purely decorative (aria-hidden,
- * pointer-events-none) so it never interferes with the click target
- * underneath. */
+/** Matches Nxeon's real "btn-deploy" hover treatment (see globals.css there):
+ * a slight lift, a one-shot shimmer sweep, and — for buttons whose
+ * background is the brand gradient — the gradient itself shifting position
+ * on hover (see the .btn-cta-gradient class, applied separately on the
+ * gradient buttons themselves). Hover-only, not a constant background loop. */
 export function ShineButton({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <span className={`group relative inline-block overflow-hidden rounded-lg ${className ?? ""}`}>
+    <span
+      className={`group relative inline-block overflow-hidden rounded-lg transition-transform duration-200 ease-out hover:-translate-y-px ${className ?? ""}`}
+    >
       {children}
       <span
         aria-hidden
