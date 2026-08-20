@@ -11,36 +11,10 @@ import { LogoCarousel } from "@/components/marketing/LogoCarousel";
 import { PromptHero } from "@/components/marketing/PromptHero";
 import { Reveal, RevealGroup, RevealItem } from "@/components/marketing/Reveal";
 import { ShineButton } from "@/components/marketing/ShineButton";
-import { CodeVisual, ShieldVisual, HostingVisual } from "@/components/marketing/FeatureVisuals";
+import { TrustBento } from "@/components/marketing/TrustBento";
+import { Mark } from "@/components/marketing/Logo";
 
 const PROOF_POINTS = ["Real React app, not HTML", "Live in one click", "Metered by real cost"];
-
-const FEATURES = [
-  {
-    kicker: "Transparency",
-    title: "Real code, not a black box.",
-    body: "Kodely writes actual React and TypeScript components — open the Code tab any time and read exactly what was generated, line by line.",
-    visual: "code" as const,
-  },
-  {
-    kicker: "Trust",
-    title: "Secure by default.",
-    body: "Every publish is scanned for exposed API keys and secrets before it goes live. The mistakes that leak other people's data never make it out the door.",
-    visual: "shield" as const,
-  },
-  {
-    kicker: "Hosting",
-    title: "Live in one click.",
-    body: "Publishing puts your site on a real, HTTPS-secured *.kodely.site URL immediately — no separate hosting to configure, no DNS to touch.",
-    visual: "url" as const,
-  },
-];
-
-function FeatureVisual({ kind }: { kind: "code" | "shield" | "url" }) {
-  if (kind === "code") return <CodeVisual />;
-  if (kind === "shield") return <ShieldVisual />;
-  return <HostingVisual />;
-}
 
 export default async function Home() {
   const user = await getCurrentUser();
@@ -78,7 +52,10 @@ export default async function Home() {
         </Reveal>
 
         <Reveal delay={0.18}>
-          <div className="mt-10">
+          <div className="mt-10 flex justify-center">
+            <Mark size={34} />
+          </div>
+          <div className="mt-4">
             <PromptHero />
           </div>
           <p className="mt-5 font-mono text-xs text-neutral-400 dark:text-neutral-600">
@@ -115,34 +92,20 @@ export default async function Home() {
       {/* Pinned scroll statement */}
       <PinnedStatement />
 
-      {/* Features — alternating */}
+      {/* Trust — asymmetric bento grid with real, checkable content instead
+          of three even icon tiles (see TrustBento for the reasoning) */}
       <section className="border-t border-neutral-100 dark:border-neutral-900">
-        <div className="mx-auto max-w-6xl px-6 py-8">
-          {FEATURES.map((f, i) => (
-            <Reveal key={f.title}>
-              <div
-                className={`flex flex-col items-center gap-10 py-16 sm:py-20 md:flex-row md:gap-16 ${
-                  i % 2 === 1 ? "md:flex-row-reverse" : ""
-                }`}
-              >
-                <div className="flex-1 text-center md:text-left">
-                  <span
-                    className="font-mono text-xs font-medium uppercase tracking-[0.14em]"
-                    style={{ color: "var(--accent)" }}
-                  >
-                    {f.kicker}
-                  </span>
-                  <h3 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">{f.title}</h3>
-                  <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-neutral-600 md:mx-0 dark:text-neutral-400">
-                    {f.body}
-                  </p>
-                </div>
-                <div className="w-full flex-1">
-                  <FeatureVisual kind={f.visual} />
-                </div>
-              </div>
-            </Reveal>
-          ))}
+        <div className="mx-auto max-w-6xl px-6 py-20 sm:py-28">
+          <Reveal>
+            <h2 className="mx-auto max-w-xl text-center text-3xl font-semibold tracking-tight sm:text-4xl">
+              Built the way you&apos;d want to check it yourself.
+            </h2>
+          </Reveal>
+          <Reveal delay={0.08}>
+            <div className="mt-12">
+              <TrustBento />
+            </div>
+          </Reveal>
         </div>
       </section>
 

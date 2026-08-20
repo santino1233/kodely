@@ -2,17 +2,20 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion, type Variants } from "framer-motion";
-import { Coffee, CupSoda, Croissant, Sparkles, Loader2 } from "lucide-react";
+import { Sparkles } from "lucide-react";
+import { Mark } from "./Logo";
 
-const PROMPT_TEXT = "A cozy neighborhood coffee shop, warm and inviting, with online ordering";
+const PROMPT_TEXT = "A creative studio portfolio, bold and modern, with a project gallery";
 
-const PHASE_DURATIONS = { typing: 2600, building: 1900, live: 4800 } as const;
+const PHASE_DURATIONS = { typing: 2600, building: 2400, live: 5200 } as const;
 type Phase = "typing" | "building" | "live";
 const NEXT_PHASE: Record<Phase, Phase> = { typing: "building", building: "live", live: "typing" };
-// The "live" frame has real content (nav, banner, heading, buttons, product
-// grid) — measured taller than the typing/building placeholder states, so
-// the frame animates its own height per phase instead of clipping it.
-const FRAME_HEIGHT: Record<Phase, number> = { typing: 340, building: 300, live: 660 };
+
+// One fixed frame height, used for every phase — previously the frame
+// animated its own height per phase, which shifted every section below it
+// on the page (a visible jitter). Shorter phases just center within the
+// same fixed space now, so the page around it never moves.
+const FRAME_HEIGHT = 620;
 
 const container: Variants = {
   hidden: {},
@@ -21,6 +24,10 @@ const container: Variants = {
 const item: Variants = {
   hidden: { opacity: 0, y: 12 },
   shown: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.2, 0.9, 0.2, 1] } },
+};
+const blockVariants: Variants = {
+  hidden: { opacity: 0, scale: 0.85 },
+  shown: { opacity: 1, scale: 1, transition: { duration: 0.4, ease: [0.2, 0.9, 0.2, 1] } },
 };
 
 function useTypewriter(text: string, active: boolean, msPerChar: number) {
@@ -38,11 +45,31 @@ function useTypewriter(text: string, active: boolean, msPerChar: number) {
   return text.slice(0, count);
 }
 
-const SKELETON_ROWS = [
-  { w: "w-2/5", h: "h-3" },
-  { w: "w-4/5", h: "h-6" },
-  { w: "w-3/5", h: "h-6" },
-  { w: "w-full", h: "h-10" },
+function useEllipsis(active: boolean) {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    if (!active) return;
+    const id = setInterval(() => setN((v) => (v + 1) % 4), 400);
+    return () => clearInterval(id);
+  }, [active]);
+  return ".".repeat(n);
+}
+
+const BLOCK_STYLE = {
+  background: "color-mix(in srgb, var(--accent) 12%, transparent)",
+  border: "1px solid color-mix(in srgb, var(--accent) 28%, transparent)",
+};
+
+const GALLERY_GRADIENTS = [
+  "linear-gradient(135deg, #ffb199 0%, #ff6a88 100%)",
+  "linear-gradient(135deg, #7ee8fa 0%, #6a8dff 100%)",
+  "linear-gradient(135deg, #f6d365 0%, #d67ee2 100%)",
+];
+
+const STATS = [
+  { value: "120+", label: "Projects" },
+  { value: "40", label: "Clients" },
+  { value: "8 yrs", label: "Experience" },
 ];
 
 /** The one real hero object — a miniature browser frame that plays out the
@@ -69,7 +96,8 @@ export function HeroMock() {
     };
   }, [phase, reduced]);
 
-  const typed = useTypewriter(PROMPT_TEXT, phase === "typing", 38);
+  const typed = useTypewriter(PROMPT_TEXT, phase === "typing", 34);
+  const dots = useEllipsis(phase === "building");
 
   return (
     <div className="mx-auto w-full max-w-2xl" style={{ perspective: "1800px" }}>
@@ -82,7 +110,7 @@ export function HeroMock() {
             <AnimatePresence mode="wait">
               {phase === "live" ? (
                 <motion.span key="url" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                  roan-coffee.kodely.site
+                  studio-nine.kodely.site
                 </motion.span>
               ) : (
                 <motion.span key="new" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -99,17 +127,16 @@ export function HeroMock() {
               </>
             ) : (
               <>
-                <Loader2 size={11} className="animate-spin" />
+                <span className="h-1.5 w-1.5 rounded-full bg-neutral-300 dark:bg-neutral-700" />
                 {phase === "typing" ? "Waiting for prompt" : "Building"}
               </>
             )}
           </div>
         </div>
 
-        <motion.div
+        <div
           className="relative overflow-hidden bg-[#fbf7f2] dark:bg-[#1c1512]"
-          animate={{ height: FRAME_HEIGHT[phase] }}
-          transition={{ duration: 0.5, ease: [0.2, 0.9, 0.2, 1] }}
+          style={{ height: FRAME_HEIGHT }}
         >
           <AnimatePresence mode="wait">
             {phase === "typing" && (
@@ -136,19 +163,36 @@ export function HeroMock() {
             {phase === "building" && (
               <motion.div
                 key="building"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                initial="hidden"
+                animate="shown"
                 exit={{ opacity: 0 }}
-                className="flex h-full flex-col justify-center gap-3 px-10"
+                variants={container}
+                className="flex h-full flex-col items-center justify-center gap-6 px-10"
               >
-                {SKELETON_ROWS.map((row, i) => (
-                  <motion.div
-                    key={i}
-                    className={`${row.w} ${row.h} rounded-lg bg-[#ecdfcd] dark:bg-[#332419]`}
-                    animate={{ opacity: [0.4, 0.85, 0.4] }}
-                    transition={{ duration: 1.3, repeat: Infinity, delay: i * 0.15, ease: "easeInOut" }}
+                <motion.div variants={item} className="relative flex h-16 w-16 items-center justify-center">
+                  <motion.span
+                    aria-hidden
+                    className="absolute inset-0 rounded-full"
+                    style={{ background: "conic-gradient(from 0deg, transparent, var(--glow) 20%, transparent 45%)" }}
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 2.2, repeat: Infinity, ease: "linear" }}
                   />
-                ))}
+                  <div className="relative flex h-11 w-11 items-center justify-center rounded-full bg-[#fbf7f2] dark:bg-[#1c1512]">
+                    <Mark size={26} />
+                  </div>
+                </motion.div>
+
+                <motion.div variants={item} className="grid w-full max-w-[220px] grid-cols-3 gap-2">
+                  <motion.div variants={blockVariants} className="col-span-3 h-6 rounded-md" style={BLOCK_STYLE} />
+                  <motion.div variants={blockVariants} className="col-span-3 h-16 rounded-md" style={BLOCK_STYLE} />
+                  <motion.div variants={blockVariants} className="h-10 rounded-md" style={BLOCK_STYLE} />
+                  <motion.div variants={blockVariants} className="h-10 rounded-md" style={BLOCK_STYLE} />
+                  <motion.div variants={blockVariants} className="h-10 rounded-md" style={BLOCK_STYLE} />
+                </motion.div>
+
+                <motion.p variants={item} className="font-mono text-xs text-[#8a7362] dark:text-[#b39d8a]">
+                  Building your site{dots}
+                </motion.p>
               </motion.div>
             )}
 
@@ -158,64 +202,65 @@ export function HeroMock() {
                 initial="hidden"
                 animate="shown"
                 variants={container}
-                className="h-full overflow-hidden px-7 py-7 text-[#2a1f1a] dark:text-[#f2e9e2]"
+                className="flex h-full flex-col px-7 py-7 text-[#201c2b] dark:text-[#f1eef7]"
               >
                 <motion.div variants={item} className="flex items-center justify-between">
-                  <span className="text-sm font-semibold tracking-tight">Roan Coffee</span>
-                  <div className="flex gap-4 text-xs text-[#6b5347] dark:text-[#c9b3a5]">
-                    <span>Menu</span>
-                    <span>Order</span>
-                    <span>Visit</span>
+                  <span className="text-sm font-semibold tracking-tight">Studio Nine</span>
+                  <div className="flex gap-4 text-xs text-[#716b82] dark:text-[#b3aec2]">
+                    <span>Work</span>
+                    <span>Studio</span>
+                    <span>Contact</span>
                   </div>
                 </motion.div>
 
                 <motion.div
                   variants={item}
-                  className="relative mt-5 flex h-28 items-end overflow-hidden rounded-xl bg-gradient-to-br from-[#d8b183] via-[#c98f56] to-[#8a5a30] p-4 dark:from-[#3f2c19] dark:via-[#523a20] dark:to-[#2a1c10]"
+                  className="relative mt-4 flex h-40 flex-col justify-end overflow-hidden rounded-xl p-4"
+                  style={{ background: "linear-gradient(135deg, #6d5bd0 0%, #a15bd0 48%, #e0729a 100%)" }}
                 >
-                  <span className="rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-medium text-[#5b3d21] backdrop-blur-sm">
-                    Now roasting · Ethiopia Yirgacheffe
+                  <div
+                    aria-hidden
+                    className="absolute inset-0"
+                    style={{ background: "radial-gradient(circle at 25% 15%, rgba(255,255,255,0.45), transparent 55%)" }}
+                  />
+                  <span className="relative text-[10px] font-medium uppercase tracking-[0.14em] text-white/80">
+                    Selected work
                   </span>
+                  <h3 className="relative mt-1 text-lg font-semibold leading-tight text-white sm:text-xl">
+                    Design that moves people.
+                  </h3>
                 </motion.div>
 
-                <motion.p
-                  variants={item}
-                  className="mt-4 text-[11px] font-medium uppercase tracking-[0.14em]"
-                  style={{ color: "var(--accent)" }}
-                >
-                  Birch Street, Portland
-                </motion.p>
-                <motion.h3 variants={item} className="mt-1.5 text-xl font-semibold leading-tight tracking-tight sm:text-2xl">
-                  Small-batch coffee,
-                  <br />
-                  roasted weekly.
-                </motion.h3>
-                <motion.div variants={item} className="mt-4 flex gap-3">
-                  <span className="rounded-lg bg-[#b5602f] px-4 py-2 text-xs font-medium text-white">Order online</span>
-                  <span className="rounded-lg border border-[#b5602f]/30 px-4 py-2 text-xs font-medium text-[#b5602f]">
-                    Get directions
-                  </span>
+                <motion.div variants={item} className="mt-3 grid grid-cols-3 gap-2">
+                  {GALLERY_GRADIENTS.map((g, i) => (
+                    <div key={i} className="aspect-square rounded-lg" style={{ background: g }} />
+                  ))}
                 </motion.div>
 
-                <motion.div variants={item} className="mt-5 grid grid-cols-3 gap-3">
-                  {[
-                    { name: "House Blend", price: "$4", Icon: Coffee },
-                    { name: "Cold Brew", price: "$5", Icon: CupSoda },
-                    { name: "Pastry Box", price: "$8", Icon: Croissant },
-                  ].map((p) => (
-                    <div key={p.name}>
-                      <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-lg border border-[#b5602f]/15 bg-gradient-to-br from-[#f3e7d4] via-[#e8d2ac] to-[#d8b183] dark:from-[#2a2019] dark:via-[#332419] dark:to-[#3f2c19]">
-                        <p.Icon className="h-6 w-6 text-[#b5602f]/60 dark:text-[#e0a86a]/70" strokeWidth={1.5} />
-                      </div>
-                      <div className="mt-1.5 text-[11px] font-medium">{p.name}</div>
-                      <div className="text-[10px] text-[#8a7362] dark:text-[#b39d8a]">{p.price}</div>
+                <motion.div variants={item} className="mt-5 flex items-center justify-between px-2">
+                  {STATS.map((s) => (
+                    <div key={s.label} className="text-center">
+                      <div className="text-sm font-semibold">{s.value}</div>
+                      <div className="text-[10px] text-[#8a839a] dark:text-[#9d97ad]">{s.label}</div>
                     </div>
                   ))}
+                </motion.div>
+
+                <motion.div variants={item} className="mt-5 flex gap-3">
+                  <span
+                    className="rounded-lg px-4 py-2 text-xs font-medium text-white"
+                    style={{ background: "linear-gradient(135deg, #6d5bd0, #a15bd0)" }}
+                  >
+                    View our work
+                  </span>
+                  <span className="rounded-lg border border-[#716b82]/25 px-4 py-2 text-xs font-medium text-[#4a4558] dark:text-[#d8d4e2]">
+                    Get in touch
+                  </span>
                 </motion.div>
               </motion.div>
             )}
           </AnimatePresence>
-        </motion.div>
+        </div>
       </div>
     </div>
   );

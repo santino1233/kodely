@@ -117,12 +117,13 @@ export function PromptHero() {
     <div className="relative mx-auto w-full max-w-2xl">
       {/* The glow — a wide, soft ambient radial wash centered behind the
           composer (the Gemini-style "accent light" look), not a blur hugging
-          the box's edges. Reuses the same radial-gradient(closest-side, …,
-          transparent) + heavy-blur language as the page's own Aura background
-          blobs, just centered on the box instead of tucked in a page corner.
-          Two overlapping ellipses (pink + violet, the two ends of the brand
-          gradient) breathe in opacity only — fixed size/position, never
-          sweeping through a dim trough — so it never reads as vanishing. */}
+          the box's edges. Two overlapping ellipses (pink + violet, the two
+          ends of the brand gradient) actually drift/orbit around the box on
+          slow, independently-timed loops (not just breathing in place) for
+          the "vibrating and moving" feel — the two different durations keep
+          it from ever looking like a single repeating loop. Opacity range
+          shifts up on focus (same layers get brighter, not a new one added)
+          so clicking into the box visibly lifts the glow's vibrancy. */}
       <motion.div
         aria-hidden
         className="pointer-events-none absolute left-1/2 top-1/2 -z-10 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[90px]"
@@ -132,7 +133,15 @@ export function PromptHero() {
           background: "radial-gradient(closest-side, var(--glow), transparent)",
         }}
         initial={{ opacity: 0.55 }}
-        animate={reduced ? { opacity: 0.6 } : { opacity: [0.45, 0.7, 0.45] }}
+        animate={
+          reduced
+            ? { opacity: focused ? 0.75 : 0.6 }
+            : {
+                opacity: focused ? [0.55, 0.85, 0.55] : [0.45, 0.7, 0.45],
+                x: [0, 30, -18, 0],
+                y: [0, -22, 26, 0],
+              }
+        }
         transition={{ duration: 6, repeat: reduced ? 0 : Infinity, ease: "easeInOut" }}
       />
       <motion.div
@@ -144,21 +153,16 @@ export function PromptHero() {
           background: "radial-gradient(closest-side, var(--glow-2), transparent)",
         }}
         initial={{ opacity: 0.4 }}
-        animate={reduced ? { opacity: 0.45 } : { opacity: [0.3, 0.55, 0.3] }}
-        transition={{ duration: 7, repeat: reduced ? 0 : Infinity, ease: "easeInOut", delay: 0.7 }}
-      />
-      {/* Focus adds a small extra lift on top of the resting glow — never
-          drops below the resting level. */}
-      <motion.div
-        aria-hidden
-        className="pointer-events-none absolute left-1/2 top-1/2 -z-10 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[90px]"
-        style={{
-          width: "min(880px, 92vw)",
-          height: "460px",
-          background: "radial-gradient(closest-side, var(--glow), transparent)",
-        }}
-        animate={{ opacity: focused ? 0.3 : 0 }}
-        transition={{ duration: 0.5 }}
+        animate={
+          reduced
+            ? { opacity: focused ? 0.6 : 0.45 }
+            : {
+                opacity: focused ? [0.4, 0.65, 0.4] : [0.3, 0.55, 0.3],
+                x: [0, -24, 20, 0],
+                y: [0, 22, -16, 0],
+              }
+        }
+        transition={{ duration: 8, repeat: reduced ? 0 : Infinity, ease: "easeInOut", delay: 0.7 }}
       />
 
       {/* Free-credits badge — the first thing a visitor should register
