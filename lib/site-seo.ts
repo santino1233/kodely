@@ -29,8 +29,23 @@ const PLACEHOLDER_TITLE = "Kodely Site";
  */
 export function siteBaseUrl(req: Request, slug: string): string {
   const host = req.headers.get("host") ?? "";
-  const proto = req.headers.get("x-forwarded-proto") ?? "https";
   const bare = host.split(":")[0];
+
+  // Deliberately NOT derived from x-forwarded-proto. Cloudflare's SSL mode
+  // here is Flexible: it terminates TLS at the edge and talks to the origin
+  // over plain HTTP, so nginx forwards `x-forwarded-proto: http` even though
+  // the visitor is on https. Trusting it emitted http:// canonical and og:url
+  // on sites that are only reachable over https.
+  //
+  // That was invisible in testing because Cloudflare's Automatic HTTPS
+  // Rewrites silently repairs href="http://..." (canonical) but NOT
+  // content="http://..." (og:url) — so only the OG tag stayed wrong, and
+  // only when checked through the real edge.
+  //
+  // Every published site is reachable only via the Cloudflare HTTPS edge, so
+  // anything that isn't loopback is https by definition.
+  const isLocal = bare === "localhost" || bare === "127.0.0.1" || bare === "::1";
+  const proto = isLocal ? "http" : "https";
   // Branded subdomain: the site lives at the host root.
   if (bare.endsWith(`.${SITES_BASE}`)) return `${proto}://${host}`;
   // Otherwise it is served under a path (staging, localhost).
