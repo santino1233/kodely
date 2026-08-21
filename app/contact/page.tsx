@@ -20,11 +20,8 @@ export default function ContactPage() {
           </p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Contact us</h1>
           <p className="mt-3 text-sm leading-relaxed text-neutral-500 dark:text-neutral-400">
-            Questions, feedback, or something broken — send it our way and we&apos;ll get back to you at{" "}
-            <a href="mailto:hello@kodely.me" className="font-medium text-neutral-900 underline underline-offset-2 dark:text-white">
-              hello@kodely.me
-            </a>
-            .
+            Questions, feedback, or something broken — send it our way and we&apos;ll reply to the
+            address you leave below.
           </p>
         </Reveal>
 
