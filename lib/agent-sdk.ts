@@ -67,6 +67,30 @@ export function adaptPromptForSdk(system: string): string {
   return system.replace(API_TOOL_CONTRACT, SDK_TOOL_CONTRACT);
 }
 
+/**
+ * Environment for the SDK child process.
+ *
+ * Everything the process needs, minus ANTHROPIC_API_KEY. Claude Code will use
+ * an API key in preference to CLAUDE_CODE_OAUTH_TOKEN if it can see one, which
+ * silently routes generation onto metered billing — the opposite of why this
+ * engine exists. Throws if no OAuth token is configured, rather than starting
+ * a run that cannot possibly authenticate.
+ */
+function sdkEnv(): Record<string, string> {
+  if (!process.env.CLAUDE_CODE_OAUTH_TOKEN) {
+    throw new Error(
+      "KODELY_ENGINE=sdk but CLAUDE_CODE_OAUTH_TOKEN is not set. " +
+        "Run `claude setup-token` as the service user and add it to .env.",
+    );
+  }
+  const env: Record<string, string> = {};
+  for (const [k, v] of Object.entries(process.env)) {
+    if (k === "ANTHROPIC_API_KEY") continue;
+    if (v !== undefined) env[k] = v;
+  }
+  return env;
+}
+
 /** Reject path traversal and absolute paths before anything touches the DB. */
 function safeRelPath(raw: string): string | null {
   const p = raw.trim().replace(/^\.?\//, "");
@@ -142,6 +166,14 @@ export async function* runAgentSdk(
       prompt: `${historyText}## Current request\n${opts.request}${imageNote}`,
       options: {
         cwd: workDir,
+        // Explicit child env. ANTHROPIC_API_KEY is deliberately withheld:
+        // Claude Code prefers an API key over CLAUDE_CODE_OAUTH_TOKEN when
+        // both are present, so leaving it in made the first run bill against
+        // the metered account and fail with "Credit balance is too low" —
+        // the exact spend path this engine exists to avoid. Passing env here
+        // rather than mutating process.env keeps the API engine unaffected
+        // and is safe under concurrent generations.
+        env: sdkEnv(),
         systemPrompt: adaptPromptForSdk(systemPrompt),
         allowedTools: ["Read", "Write", "Edit", "Bash", "Glob", "Grep"],
         permissionMode: "acceptEdits",
