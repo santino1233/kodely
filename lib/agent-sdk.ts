@@ -1,5 +1,6 @@
 import { query } from "@anthropic-ai/claude-agent-sdk";
 import { mkdtemp, mkdir, writeFile, readFile, rm } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import type { AgentEvent, FileMap } from "./agent";
@@ -77,10 +78,21 @@ export function adaptPromptForSdk(system: string): string {
  * a run that cannot possibly authenticate.
  */
 function sdkEnv(): Record<string, string> {
-  if (!process.env.CLAUDE_CODE_OAUTH_TOKEN) {
+  // Two valid ways to authenticate, and a dev machine usually uses the second:
+  //   1. CLAUDE_CODE_OAUTH_TOKEN — headless servers (the VM).
+  //   2. ~/.claude/.credentials.json — written by an interactive
+  //      `claude setup-token` login, which is what a workstation already has.
+  // Requiring (1) unconditionally broke local development, where (2) is
+  // present and perfectly sufficient.
+  const home = process.env.HOME ?? process.env.USERPROFILE;
+  const hasCredentialsFile =
+    !!home && existsSync(path.join(home, ".claude", ".credentials.json"));
+
+  if (!process.env.CLAUDE_CODE_OAUTH_TOKEN && !hasCredentialsFile) {
     throw new Error(
-      "KODELY_ENGINE=sdk but CLAUDE_CODE_OAUTH_TOKEN is not set. " +
-        "Run `claude setup-token` as the service user and add it to .env.",
+      "KODELY_ENGINE=sdk but no subscription credentials were found. " +
+        "Either run `claude setup-token` as this user, or set " +
+        "CLAUDE_CODE_OAUTH_TOKEN in the environment.",
     );
   }
   const env: Record<string, string> = {};
