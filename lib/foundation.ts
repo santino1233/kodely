@@ -61,12 +61,21 @@ export default defineConfig({
     2,
   ),
 
+  // The builder is instructed to rewrite the title/description/OG tags below
+  // for every new site (see lib/agent.ts). If it doesn't, lib/site-seo.ts
+  // substitutes the project name at serve time — a published site must never
+  // show "Kodely Site" in a browser tab, a search result, or a link preview.
   "index.html": `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Kodely Site</title>
+    <meta name="description" content="" />
+    <meta property="og:title" content="" />
+    <meta property="og:description" content="" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
   </head>
   <body>
     <div id="root"></div>
