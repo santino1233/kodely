@@ -43,12 +43,26 @@ say "Rollback point (current prod): $ROLLBACK"
 # --------------------------------------------------------------- transport
 # Bundle only what the VM is missing, using prod's current HEAD as the base.
 say "Bundling commits for the VM"
-BASE=$(vm 'cd /opt/kodely && git rev-parse HEAD')
+# Base on the OLDER of the two environments, not just prod: staging is
+# routinely behind, and a bundle cut from prod's HEAD would be missing the
+# commits staging still needs. merge-base gives the common ancestor.
+PROD_HEAD=$(vm 'cd /opt/kodely && git rev-parse HEAD')
+STAGING_HEAD=$(vm 'cd /opt/kodely-staging && git rev-parse HEAD')
+for c in "$PROD_HEAD" "$STAGING_HEAD"; do
+  git cat-file -e "${c}^{commit}" 2>/dev/null || die "the VM is on commit ${c:0:7}, which this checkout does not have — fetch/rebase first"
+done
+BASE=$(git merge-base "$PROD_HEAD" "$STAGING_HEAD")
+echo "  prod=${PROD_HEAD:0:7}  staging=${STAGING_HEAD:0:7}  base=${BASE:0:7}"
+
 if [ "$BASE" = "$(git rev-parse HEAD)" ]; then
-  echo "  VM already at $NEW — nothing to transport"
+  echo "  both environments already at $NEW — nothing to transport"
+  rm -f /tmp/kodely-deploy.bundle
+  vm "rm -f /tmp/kodely-deploy.bundle" || true
 else
-  git cat-file -e "$BASE^{commit}" 2>/dev/null || die "prod is on commit $BASE which this checkout does not have — fetch/rebase first"
-  git bundle create /tmp/kodely-deploy.bundle "$BASE..HEAD" >/dev/null 2>&1
+  # Must be `..main`, not `..HEAD`: a bundle cut against HEAD is written with a
+  # ref literally named "HEAD", and the VM's `git fetch <bundle> main` then
+  # fails with "couldn't find remote ref main".
+  git bundle create /tmp/kodely-deploy.bundle "$BASE..main" >/dev/null 2>&1
   echo "  $(git rev-list --count "$BASE..HEAD") commit(s), $(du -h /tmp/kodely-deploy.bundle | cut -f1)"
   base64 -w0 /tmp/kodely-deploy.bundle > /tmp/kodely-deploy.b64
   B64=$(cat /tmp/kodely-deploy.b64)
