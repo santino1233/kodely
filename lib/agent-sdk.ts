@@ -68,16 +68,21 @@ export function adaptPromptForSdk(system: string): string {
   return system.replace(API_TOOL_CONTRACT, SDK_TOOL_CONTRACT);
 }
 
-/**
- * Environment for the SDK child process.
- *
- * Everything the process needs, minus ANTHROPIC_API_KEY. Claude Code will use
- * an API key in preference to CLAUDE_CODE_OAUTH_TOKEN if it can see one, which
- * silently routes generation onto metered billing — the opposite of why this
- * engine exists. Throws if no OAuth token is configured, rather than starting
- * a run that cannot possibly authenticate.
- */
-function sdkEnv(): Record<string, string> {
+// Hide the metered key from the SDK and everything it spawns.
+//
+// This runs at module load, and this module is only imported when
+// KODELY_ENGINE=sdk (see lib/agent.ts), so nothing in this process wants the
+// API key anyway. Doing it once here — rather than passing a constructed
+// `env` to query() — matters: an explicit env REPLACES the child's
+// environment, and under Next.js `process.env` is a proxy that does not
+// enumerate the full OS environment. Rebuilding it from Object.entries()
+// therefore dropped USERPROFILE/APPDATA, and the spawned Claude Code could no
+// longer find ~/.claude/.credentials.json — it failed with "Not logged in"
+// even on a machine that was logged in. Deleting one key and letting the
+// child inherit normally avoids that entirely.
+if (process.env.ANTHROPIC_API_KEY) delete process.env.ANTHROPIC_API_KEY;
+
+function assertSdkCredentials(): void {
   // Two valid ways to authenticate, and a dev machine usually uses the second:
   //   1. CLAUDE_CODE_OAUTH_TOKEN — headless servers (the VM).
   //   2. ~/.claude/.credentials.json — written by an interactive
@@ -95,12 +100,6 @@ function sdkEnv(): Record<string, string> {
         "CLAUDE_CODE_OAUTH_TOKEN in the environment.",
     );
   }
-  const env: Record<string, string> = {};
-  for (const [k, v] of Object.entries(process.env)) {
-    if (k === "ANTHROPIC_API_KEY") continue;
-    if (v !== undefined) env[k] = v;
-  }
-  return env;
 }
 
 /** Reject path traversal and absolute paths before anything touches the DB. */
@@ -151,6 +150,7 @@ export async function* runAgentSdk(
 ): AsyncGenerator<AgentEvent> {
   // The SDK edits a real directory rather than calling tools over the wire,
   // so the project is materialised to a temp dir and diffed afterwards.
+  assertSdkCredentials();
   const workDir = await mkdtemp(path.join(tmpdir(), "kodely-sdk-"));
 
   try {
@@ -178,14 +178,6 @@ export async function* runAgentSdk(
       prompt: `${historyText}## Current request\n${opts.request}${imageNote}`,
       options: {
         cwd: workDir,
-        // Explicit child env. ANTHROPIC_API_KEY is deliberately withheld:
-        // Claude Code prefers an API key over CLAUDE_CODE_OAUTH_TOKEN when
-        // both are present, so leaving it in made the first run bill against
-        // the metered account and fail with "Credit balance is too low" —
-        // the exact spend path this engine exists to avoid. Passing env here
-        // rather than mutating process.env keeps the API engine unaffected
-        // and is safe under concurrent generations.
-        env: sdkEnv(),
         systemPrompt: adaptPromptForSdk(systemPrompt),
         allowedTools: ["Read", "Write", "Edit", "Bash", "Glob", "Grep"],
         permissionMode: "acceptEdits",
