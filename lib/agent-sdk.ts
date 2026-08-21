@@ -30,6 +30,43 @@ import type { AgentEvent, FileMap } from "./agent";
 // is not authenticated this throws, rather than quietly spending money on the
 // metered key that the operator asked not to use.
 
+// The shared SYSTEM prompt is written for the API engine, which exposes
+// custom `write_file` / `delete_file` tools. The SDK exposes its own
+// Read/Write/Edit/Bash/Glob/Grep instead, so that sentence is not just
+// useless here — it actively breaks generation: the agent announces it is
+// building, reaches for a tool that does not exist, and the run ends having
+// written nothing. (That is exactly what happened the first time this engine
+// ran in prod.)
+const API_TOOL_CONTRACT =
+  "Use the write_file and delete_file tools. Always pass the complete final file — there is no patch tool.";
+
+const SDK_TOOL_CONTRACT = [
+  "You are editing a real checkout on disk in the working directory.",
+  "- Use Write to create or replace a file, passing the complete final contents.",
+  "- Use Edit for a targeted change to an existing file.",
+  "- Use Read, Glob and Grep to inspect what is already there before changing it.",
+  "- Delete a file with Bash (`rm`).",
+  "There is no write_file or delete_file tool — those belong to a different engine.",
+].join("\n");
+
+/**
+ * Adapt the shared prompt to the SDK's toolset.
+ *
+ * Throws if the expected sentence is missing rather than silently sending a
+ * prompt that names tools the agent does not have — a silent mismatch here is
+ * invisible until a generation quietly produces zero files.
+ */
+export function adaptPromptForSdk(system: string): string {
+  if (!system.includes(API_TOOL_CONTRACT)) {
+    throw new Error(
+      "agent-sdk: the API tool-contract sentence was not found in SYSTEM. " +
+        "It was probably reworded in lib/agent.ts — update API_TOOL_CONTRACT to match, " +
+        "or the SDK engine will instruct the agent to call tools it does not have.",
+    );
+  }
+  return system.replace(API_TOOL_CONTRACT, SDK_TOOL_CONTRACT);
+}
+
 /** Reject path traversal and absolute paths before anything touches the DB. */
 function safeRelPath(raw: string): string | null {
   const p = raw.trim().replace(/^\.?\//, "");
@@ -105,7 +142,7 @@ export async function* runAgentSdk(
       prompt: `${historyText}## Current request\n${opts.request}${imageNote}`,
       options: {
         cwd: workDir,
-        systemPrompt,
+        systemPrompt: adaptPromptForSdk(systemPrompt),
         allowedTools: ["Read", "Write", "Edit", "Bash", "Glob", "Grep"],
         permissionMode: "acceptEdits",
       },
