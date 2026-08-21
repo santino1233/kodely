@@ -1,4 +1,4 @@
-import { query } from "@anthropic-ai/claude-agent-sdk";
+import { query, type ModelUsage } from "@anthropic-ai/claude-agent-sdk";
 import { mkdtemp, mkdir, writeFile, readFile, rm } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -15,13 +15,13 @@ import type { AgentEvent, FileMap } from "./agent";
 //
 // Two things to keep in view while this is switched on:
 //
-// 1. USAGE IS REPORTED AS ZERO, honestly — there is no metered spend to
-//    report. credits.ts therefore charges 0 credits per build, and /admin's
-//    cost/margin dashboard reads zero across the board. That dashboard is the
-//    instrument for "riskiest assumption #1" (can infra beat credit
-//    economics), so while this engine is active that question cannot be
-//    answered. Builds are tagged `claude-agent-sdk-subscription` so the zeros
-//    are obviously explained rather than looking like a bug.
+// 1. COSTS RECORDED HERE ARE IMPUTED, NOT BILLED. The token counts are real —
+//    taken from the SDK's own modelUsage — but they are priced against the API
+//    rate card to answer "what would this build have cost on metered billing?".
+//    No money moves. That keeps the credit meter, the ledger and the margin
+//    dashboard behaving exactly as they will on metered billing (so they can be
+//    tested now), but /admin figures are a model, not a statement. See
+//    meterUsage() below.
 //
 // 2. A Claude subscription is licensed for individual use. Running a private
 //    testing period on it is one thing; serving real customers' generations
@@ -100,6 +100,81 @@ function assertSdkCredentials(): void {
         "CLAUDE_CODE_OAUTH_TOKEN in the environment.",
     );
   }
+}
+
+/**
+ * Map a raw model id from the SDK onto a key in MODEL_RATES.
+ *
+ * The SDK reports concrete ids ("claude-sonnet-5-20250929"), while the rate
+ * card is keyed by family. Anything unrecognised is returned unchanged so
+ * costMicros() falls through to its deliberately conservative `default` rate
+ * — an unknown model should over-estimate, never under-bill.
+ */
+function toRateKey(model: string): string {
+  const m = model.toLowerCase();
+  if (m.includes("opus")) return "claude-opus-5";
+  if (m.includes("sonnet")) return "claude-sonnet-5";
+  if (m.includes("haiku")) return "claude-haiku-4-5";
+  return model;
+}
+
+/**
+ * Turn an SDK result into the usage event the charging path expects.
+ *
+ * IMPORTANT — what this cost means. On the subscription there is no metered
+ * per-build charge, so this is an IMPUTED cost: the real tokens this build
+ * consumed, priced at the API rate card. It is what the build WOULD have cost
+ * on metered billing, not money that left an account.
+ *
+ * That is deliberately more useful than reporting zeros. Zeroed usage made
+ * every SDK build cost exactly 1 credit (the floor) and flatlined the
+ * cost/margin dashboard — which is the instrument for the board's "riskiest
+ * assumption #1", whether infra can beat credit economics. With real token
+ * counts the credit meter, the ledger and the margin view all behave exactly
+ * as they will on metered billing, which is what makes them testable now.
+ *
+ * `modelUsage` is the field the SDK documents as correct for token accounting:
+ * it spans the main loop plus subagents and internal calls, where `usage`
+ * covers only the main loop. It is cumulative per query() call, so it is read
+ * once from the final result rather than summed across results.
+ */
+function meterUsage(message: { modelUsage?: Record<string, ModelUsage> }): {
+  model: string;
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  cacheWriteTokens: number;
+} {
+  const usage = message.modelUsage ?? {};
+  const totals = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheWriteTokens: 0 };
+
+  // The charging path takes ONE model string plus summed tokens, so attribute
+  // the build to whichever model produced the most output tokens — output
+  // dominates cost on every rate in the card. In practice Claude Code runs one
+  // model for the main loop, so this is usually exact; when a cheap auxiliary
+  // model also ran, its tokens are still counted, just priced at the main
+  // model's rate. That errs toward over-billing, never under.
+  let dominant = "";
+  let mostOutput = -1;
+
+  for (const [model, u] of Object.entries(usage)) {
+    totals.inputTokens += u.inputTokens ?? 0;
+    totals.outputTokens += u.outputTokens ?? 0;
+    totals.cacheReadTokens += u.cacheReadInputTokens ?? 0;
+    totals.cacheWriteTokens += u.cacheCreationInputTokens ?? 0;
+    if ((u.outputTokens ?? 0) > mostOutput) {
+      mostOutput = u.outputTokens ?? 0;
+      dominant = u.canonicalModel ?? model;
+    }
+  }
+
+  return {
+    // No usage at all (a crashed or startup-error result) keeps the old
+    // self-explaining tag, so a 1-credit build is visibly "no telemetry"
+    // rather than looking like a genuinely free one.
+    model: dominant ? toRateKey(dominant) : "claude-agent-sdk-subscription",
+    ...totals,
+  };
 }
 
 /** Reject path traversal and absolute paths before anything touches the DB. */
@@ -190,16 +265,7 @@ export async function* runAgentSdk(
           if ("text" in block && block.text) yield { type: "text", text: block.text };
         }
       } else if (message.type === "result") {
-        yield {
-          type: "usage",
-          // Tagged so zero-cost builds are self-explaining in /admin rather
-          // than looking like broken telemetry.
-          model: "claude-agent-sdk-subscription",
-          inputTokens: 0,
-          outputTokens: 0,
-          cacheReadTokens: 0,
-          cacheWriteTokens: 0,
-        };
+        yield { type: "usage", ...meterUsage(message) };
       }
     }
 
