@@ -165,11 +165,17 @@ export function HostingVisual() {
       </div>
       <div className="flex h-28 flex-col justify-center gap-2.5 bg-[#fbf7f2] px-4 dark:bg-[#1c1512]">
         {HOSTING_ROWS.map((row, i) => (
-          <motion.div
+          // Plain CSS transition, not framer-motion's `animate` — its color
+          // interpolation can't cross a gradient value like --brand-gradient
+          // (it silently no-ops and warns), so this used to never actually
+          // turn into the gradient.
+          <div
             key={i}
-            className={`h-3 rounded ${row.w}`}
-            animate={{ background: phase === "live" ? "var(--brand-gradient)" : "rgba(120,100,90,0.18)" }}
-            transition={{ duration: 0.5, delay: phase === "live" ? i * 0.1 : 0 }}
+            className={`h-3 rounded transition-[background] duration-500 ${row.w}`}
+            style={{
+              background: phase === "live" ? "var(--brand-gradient)" : "rgba(120,100,90,0.18)",
+              transitionDelay: phase === "live" ? `${i * 100}ms` : "0ms",
+            }}
           />
         ))}
         <p className="mt-1 font-mono text-[10px] text-[#8a7362] dark:text-[#b39d8a]">

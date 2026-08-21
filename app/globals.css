@@ -111,6 +111,156 @@ body {
   background: radial-gradient(closest-side, var(--glow-2), transparent);
 }
 
+/* The prompt-box glow ring (PromptHero) — a Gemini-style "chasing light"
+   ring, rebuilt using only decade-old, maximally-compatible CSS: plain
+   `transform: rotate()` and `overflow: hidden` clipping. No @property, no
+   CSS masking — both were dropped after repeated reports that the effect
+   still wasn't appearing correctly even in a fresh browser with a verified
+   non-cached, up-to-date stylesheet, which means the earlier @property +
+   mask-composite combination (both comparatively modern CSS features) was
+   the most likely remaining suspect, even though I could not get direct
+   visual confirmation either way in this environment.
+
+   The technique: each layer is a STATIC outer clipper
+   (`.glow-clip-a/-b`, position:absolute, overflow:hidden, never
+   transforms) containing one OVERSIZED inner rotator
+   (`.glow-spin-a/-b`, ~2x the clipper's size, centered via inset:-50%).
+   Only the inner rotator spins via plain `transform: rotate()` — since
+   it's oversized, its corners sweeping outside a same-sized box (the
+   original "wide rectangle rotated as a rigid body" bug) never matters:
+   they're clipped away by the static outer box at every angle. The
+   composer sitting on top (z-10, opaque) covers the rotator's entire
+   interior, leaving only the outer few px visible as a ring — no masking
+   needed for that either. */
+@keyframes glow-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.glow-spin-a {
+  animation: glow-spin 9s linear infinite;
+}
+.glow-spin-b {
+  animation: glow-spin 14s linear infinite reverse;
+}
+
+/* Entrance fade-in — plain CSS on the static outer clipper, not a
+   framer-motion `whileInView` (depends on IntersectionObserver + React
+   state + framer's scheduling — more moving parts than necessary here).
+   `forwards` is load-bearing: without it, the element snaps back to its
+   non-animated base style the instant the single iteration ends. */
+@keyframes glow-fade-in-a {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+}
+@keyframes glow-fade-in-b {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+}
+
+/* Ambient pulse — a slow breathe, kept subtle so it reads as the glow
+   "living" rather than blinking. Runs as a THIRD animation chained after
+   the entrance: the fade-in owns opacity for its first 0.8s, then this
+   takes over from the same value it settled on (0.35 / 0.2), so there is
+   no jump at the handoff — keep the two in sync when retuning intensity.
+   Its delay must match the fade-in's duration.
+   The floor never approaches 0 — the glow dims and brightens, it never
+   disappears. */
+@keyframes glow-pulse-a {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+@keyframes glow-pulse-b {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.33;
+  }
+}
+.glow-clip-a {
+  animation:
+    glow-fade-in-a 0.8s cubic-bezier(0.16, 1, 0.3, 1) both,
+    glow-pulse-a 4.5s ease-in-out 0.8s infinite;
+}
+.glow-clip-b {
+  animation:
+    glow-fade-in-b 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both,
+    glow-pulse-b 6s ease-in-out 1s infinite;
+}
+
+/* Scroll entrance for the hero mock (HeroMock.tsx). A CSS transition
+   toggled by an `is-entered` class from an IntersectionObserver — no
+   dependence on framer-motion's in-view scheduling, which applied its
+   initial styles here but never actually triggered. */
+@keyframes hero-mock-in {
+  from {
+    opacity: 0;
+    transform: translateY(56px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Fallback for browsers without scroll-driven animation support: play the
+   entrance once on load. Not as nice as scroll-linked, but never leaves
+   the mock stuck invisible. */
+.hero-mock-enter {
+  animation: hero-mock-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* The real thing: a native scroll-driven animation, progressed by the
+   element's own position in the viewport. No IntersectionObserver, no
+   scroll listener, no React state — every JS-based trigger tried here
+   (framer's whileInView, a raw IntersectionObserver, a scroll listener)
+   failed to fire in practice, and this removes that entire class of
+   failure. `view()` ties progress to the element crossing the viewport;
+   the range runs from just after it appears to a third of the way up, so
+   it finishes as you arrive at it rather than while it's still an
+   off-screen sliver. */
+@supports (animation-timeline: view()) {
+  .hero-mock-enter {
+    /* Longhands, not the `animation` shorthand: the shorthand defaults
+       animation-duration to 0s when it's omitted, which — combined with
+       fill:both — snapped straight to the end state at every scroll
+       position (i.e. no visible animation at all). Scroll-driven
+       animations need `auto`, which maps progress onto animation-range.
+       The shorthand also resets animation-timeline, so setting these
+       individually keeps the two declarations from fighting. */
+    animation-name: hero-mock-in;
+    animation-duration: auto;
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+    animation-timeline: view();
+    /* Spans the element's whole entry into the viewport: starts just after
+       its top edge appears and finishes exactly when it's fully on screen.
+       Both endpoints in the same phase keeps it predictable (an earlier
+       `entry 15% cover 38%` mixed phases, which is legal but harder to
+       reason about and compressed the motion into a shorter scroll). */
+    animation-range: entry 10% entry 100%;
+  }
+}
+
 @keyframes marquee {
   from {
     transform: translateX(0);

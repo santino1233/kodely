@@ -3,9 +3,34 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ArrowUp, Paperclip, Mic, X, Gift } from "lucide-react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { PENDING_PROMPT_KEY, PENDING_PROMPT_IMAGE_KEY } from "@/lib/pending-prompt";
 import { SIGNUP_GRANT } from "@/lib/credits";
+
+// The rotating gradient inside each glow clip MUST be a square that is
+// larger than the clip's diagonal, or it stops covering the clip partway
+// through its own rotation and the ring visibly vanishes and returns on a
+// loop. (The previous `inset-[-50%]` made it 2x the clip in BOTH axes —
+// e.g. 1372x296 for this wide composer. Rotated 90deg that occupies
+// 296x1372: only 296px wide, far short of the ~686px the clip needs
+// covered. Hence "the glow keeps disappearing.")
+//
+// 200% width + aspectRatio 1 gives a square of side 2*clipWidth, which
+// always exceeds the diagonal. Centering uses margins rather than a
+// translate because `transform` is owned by the rotation keyframes and a
+// transform in the animation would override any translate set here —
+// percentage margins (all sides, per spec) resolve against the containing
+// block's WIDTH, so -100% on both axes lands the square's center exactly
+// on the clip's center.
+const SPIN_SQUARE: React.CSSProperties = {
+  position: "absolute",
+  left: "50%",
+  top: "50%",
+  width: "200%",
+  aspectRatio: "1",
+  marginLeft: "-100%",
+  marginTop: "-100%",
+};
 
 const SUGGESTIONS = [
   "A portfolio site for a freelance photographer",
@@ -49,7 +74,6 @@ function getSpeechRecognition(): (new () => SpeechRecognitionLike) | null {
 
 export function PromptHero() {
   const router = useRouter();
-  const reduced = useReducedMotion();
   const [value, setValue] = useState("");
   const [focused, setFocused] = useState(false);
   const [image, setImage] = useState<string | null>(null);
@@ -131,64 +155,103 @@ export function PromptHero() {
           not the outer component (which also holds the badge and suggestion
           chips), so the glow hugs just the box, never the whole component. */}
       <div className="relative">
-      {/* The glow — rebuilt from scratch after several rounds of tuning that
-          kept swinging between "too vivid" (raw --brand-gradient as a near-
-          opaque fill) and "too subtle / reads as gone" (the pre-mixed, very
-          low-alpha --glow variable). Both used a color whose intensity
-          wasn't independently controllable — this version uses color-mix()
-          to set an explicit, deliberate alpha per layer instead of
-          inheriting one from a token meant for a different job (the page's
-          large corner Aura blobs). Two distinct hues (the pink and violet
-          ends of the brand gradient) trace the box's rounded shape as a
-          halo just outside its border. Each layer's `initial` matches its
-          own animation's starting keyframe exactly, so there is no jump on
-          mount, and the opacity floor is high enough that it never reads as
-          disappearing at any point in the loop. */}
-      <motion.div
-        aria-hidden
-        className="pointer-events-none absolute -inset-7 -z-10 rounded-[2.25rem] blur-[50px]"
-        style={{ background: "color-mix(in srgb, var(--accent) 55%, transparent)" }}
-        initial={{ opacity: 0.5 }}
-        animate={
-          reduced
-            ? { opacity: focused ? 0.85 : 0.65 }
-            : {
-                opacity: focused ? [0.65, 0.95, 0.65] : [0.5, 0.8, 0.5],
-                x: [0, 16, -12, 0],
-                y: [0, -12, 15, 0],
-              }
-        }
-        transition={{ duration: 4.5, repeat: reduced ? 0 : Infinity, ease: "easeInOut" }}
-      />
-      <motion.div
-        aria-hidden
-        className="pointer-events-none absolute -inset-4 -z-10 rounded-[2rem] blur-[32px]"
-        style={{ background: "color-mix(in srgb, #a33dff 50%, transparent)" }}
-        initial={{ opacity: 0.4 }}
-        animate={
-          reduced
-            ? { opacity: focused ? 0.75 : 0.55 }
-            : {
-                opacity: focused ? [0.55, 0.85, 0.55] : [0.4, 0.68, 0.4],
-                x: [0, -14, 11, 0],
-                y: [0, 11, -14, 0],
-              }
-        }
-        transition={{ duration: 5.5, repeat: reduced ? 0 : Infinity, ease: "easeInOut", delay: 0.4 }}
-      />
+      {/* The glow — a Gemini-style "chasing light" ring, rebuilt with only
+          plain `transform: rotate()` + `overflow: hidden` clipping — no
+          @property, no CSS masking (dropped after those didn't visibly
+          work even in a fresh, verified non-cached browser). Two layers:
+          a thin bright one (-inset-[7px]) and a soft blurred halo
+          (-inset-[22px]). Deliberately NOT the page's big ambient .aura
+          blobs (Aura.tsx), a separate, much larger, static effect.
 
-      {/* The glass composer. Stays translucent and neutral itself — the
-          brand color comes entirely from the glow bleeding through from
-          behind, which is what actually reads as "glass" rather than a
-          tinted card. Heavy blur+saturate for the frosted, light-bending
-          look; the rim is a hairline that just barely picks up warmth. */}
+          The blur lives on the CLIP element, not on the rotating child.
+          That ordering matters: filters apply AFTER the element (and its
+          overflow:hidden clipping) is rendered, so the blur softens the
+          clip's hard outer cutoff and lets the light bleed beyond the
+          clip's bounds — a real falloff. With the blur on the child
+          instead, the clip's crisp edge survives and the result reads as
+          a chunky solid border rather than a glow.
+
+          Each layer's blur radius therefore wants to be comparable to or
+          larger than its own inset, so the band never looks like a hard
+          stripe. Opacities are deliberately well under 1 (see
+          glow-fade-in-a/-b) — at full strength the brand colors read as a
+          saturated ring instead of ambient light.
+
+          Each layer is a STATIC outer clipper (glow-clip-*, overflow:
+          hidden, never transforms) containing one OVERSIZED inner
+          rotator (glow-spin-*, ~2x the clipper's size via inset:-50%,
+          centered). Only the inner rotator spins — being oversized, its
+          corners sweeping outside a same-sized box (the original "wide
+          rectangle rotated as a rigid body swings outside its footprint"
+          bug) never matters, since the static outer box clips them away
+          at every angle. The opaque composer sitting on top (z-10) covers
+          the rotator's entire interior on its own, leaving only the outer
+          few px visible as a ring — no masking needed for that either.
+
+          Opacity is fixed, not keyed off `focused` — an earlier version
+          dimmed on blur, which read as "disappearing." The composer's own
+          border/shadow below is the right place for a focus affordance;
+          this ambient ring stays constant.
+
+          Entrance: fade+scale in once via the glow-fade-in-a/-b keyframes
+          on the outer clipper (globals.css) — plain CSS, not a
+          framer-motion `whileInView`.
+
+          NO NEGATIVE Z-INDEX HERE — this was the "it appears for a moment
+          on load, then is gone for good" bug. PromptHero is wrapped in
+          <Reveal>, which animates opacity 0 -> 1. An element with opacity
+          BETWEEN 0 and 1 establishes a stacking context, which kept these
+          layers painting above the page background while the reveal ran.
+          The moment opacity reached exactly 1 that stacking context was
+          destroyed, and `-z-10` dropped the layers behind the root page
+          div's opaque bg-white / dark:bg-neutral-950 — invisible, forever.
+          Instead the layers now sit at the default level (painting above
+          the page background) and the composer is lifted above THEM with
+          z-10, which needs no stacking-context trickery to hold. */}
+      <div aria-hidden className="glow-clip-a pointer-events-none absolute -inset-[3px] overflow-hidden rounded-[1.9rem] blur-[5px]">
+        <div
+          className="glow-spin-a"
+          style={{
+            ...SPIN_SQUARE,
+            // Stops are pushed into distinct quadrants (rather than the
+            // near-adjacent pink/coral/orange run they used to be) so the
+            // colour visibly travels around the box as this rotates —
+            // closely-spaced hues just blur into one flat pink.
+            background:
+              "conic-gradient(#f72570 0deg, #a33dff 90deg, #ff9868 180deg, #ff6b67 270deg, #f72570 360deg)",
+          }}
+        />
+      </div>
+      <div aria-hidden className="glow-clip-b pointer-events-none absolute -inset-[14px] overflow-hidden rounded-[2.4rem] blur-[22px]">
+        <div
+          className="glow-spin-b"
+          style={{
+            ...SPIN_SQUARE,
+            background:
+              "conic-gradient(from 180deg, #a33dff 0deg, #f72570 90deg, #ff9868 180deg, #ff6b67 270deg, #a33dff 360deg)",
+          }}
+        />
+      </div>
+
+      {/* The glass composer. Opaque enough that the animated ring behind it
+          (see above) reads as a halo around the box, not a wash bleeding
+          through onto the text — earlier versions were translucent enough
+          that the strong glow behind showed straight through onto the
+          placeholder/input text. Still picks up a faint frosted quality from
+          backdrop-blur, just not at the cost of legibility. */}
       <div
-        className="relative overflow-hidden rounded-[1.75rem] bg-white/45 backdrop-blur-2xl backdrop-saturate-150 transition-shadow duration-300 dark:bg-white/[0.06]"
+        className="relative z-10 overflow-hidden rounded-[1.75rem] bg-white/95 backdrop-blur-2xl backdrop-saturate-150 transition-colors duration-300 dark:bg-neutral-950/95"
         style={{
-          border: "1.5px solid color-mix(in srgb, white 75%, var(--accent) 25%)",
-          boxShadow: focused
-            ? "0 24px 70px -20px var(--glow), inset 0 1px 0 rgba(255,255,255,0.6)"
-            : "var(--sh-s), inset 0 1px 0 rgba(255,255,255,0.5)",
+          // No focus-driven glow here — the animated ring behind the box is
+          // the only glow, and a second one on focus fought with it. Focus
+          // is still signalled (it must be, for keyboard users) but with a
+          // quiet border shift instead.
+          border: `1.5px solid ${
+            focused
+              ? "color-mix(in srgb, white 45%, var(--accent) 55%)"
+              : "color-mix(in srgb, white 75%, var(--accent) 25%)"
+          }`,
+          boxShadow: "var(--sh-s), inset 0 1px 0 rgba(255,255,255,0.5)",
         }}
       >
         {image && (
@@ -273,6 +336,7 @@ export function PromptHero() {
           <ArrowUp size={16} strokeWidth={2.5} />
         </motion.button>
       </div>
+
       </div>
 
       <div className="mt-4 flex flex-wrap items-center justify-center gap-2">

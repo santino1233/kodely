@@ -11,6 +11,7 @@ import { Reveal } from "@/components/marketing/Reveal";
 import { MotionLift } from "@/components/marketing/FloatCard";
 import { PasswordStrengthMeter } from "@/components/marketing/PasswordStrengthMeter";
 import { GoogleButton } from "@/components/marketing/GoogleButton";
+import { PasswordInput } from "@/components/marketing/PasswordInput";
 
 const inputClass =
   "w-full rounded-lg border border-neutral-200 bg-white px-3.5 py-2.5 text-sm outline-none transition-colors placeholder:text-neutral-400 focus:border-neutral-400 dark:border-neutral-800 dark:bg-neutral-950 dark:placeholder:text-neutral-600 dark:focus:border-neutral-600";
@@ -126,8 +127,7 @@ function SignupForm() {
             onChange={(e) => setEmail(e.target.value)}
             className={inputClass}
           />
-          <input
-            type="password"
+          <PasswordInput
             required
             minLength={8}
             placeholder="Password (min 8 characters)"
@@ -136,8 +136,7 @@ function SignupForm() {
             className={inputClass}
           />
           <PasswordStrengthMeter password={password} />
-          <input
-            type="password"
+          <PasswordInput
             required
             placeholder="Confirm password"
             value={confirmPassword}

@@ -63,6 +63,10 @@ export default async function Home() {
           </Link>
         </Reveal>
 
+        {/* No <Reveal> here — HeroMock owns its own scroll entrance (see
+            that file), which triggers on how much of it is visible rather
+            than on its top edge clearing the fold. Wrapping it in Reveal
+            too would animate opacity from both sides at once. */}
         <div className="mt-16">
           <HeroMock />
         </div>

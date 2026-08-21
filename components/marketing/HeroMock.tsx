@@ -128,7 +128,12 @@ export function HeroMock() {
   const dots = useEllipsis(phase === "building");
 
   return (
-    <div className="mx-auto w-full max-w-2xl" style={{ perspective: "1800px" }}>
+    // The scroll entrance is entirely CSS — see .hero-mock-enter in
+    // globals.css, which uses a native scroll-driven animation
+    // (animation-timeline: view()). There is deliberately no JS trigger
+    // here: framer's whileInView, a raw IntersectionObserver and a scroll
+    // listener were each tried and none fired reliably in practice.
+    <div className="mx-auto w-full max-w-2xl hero-mock-enter" style={{ perspective: "1800px" }}>
       <div className="group overflow-hidden rounded-2xl border border-black/10 bg-white shadow-[0_40px_80px_-32px_rgba(0,0,0,0.25)] transition-transform duration-500 [transform:rotateX(4deg)] hover:[transform:rotateX(0deg)] dark:border-white/10 dark:bg-neutral-900">
         <div className="flex items-center gap-2 border-b border-black/10 bg-black/[0.03] px-4 py-2.5 dark:border-white/10 dark:bg-white/[0.03]">
           <span className="h-2.5 w-2.5 rounded-full bg-black/15 dark:bg-white/15" />

@@ -30,6 +30,9 @@ export function MarketingFooter() {
           <Link href="/blog" className="hover:text-neutral-900 dark:hover:text-white">
             Blog
           </Link>
+          <Link href="/contact" className="hover:text-neutral-900 dark:hover:text-white">
+            Contact
+          </Link>
           <Link href="/login" className="hover:text-neutral-900 dark:hover:text-white">
             Sign in
           </Link>
