@@ -141,7 +141,26 @@ type RunOptions = {
  * Token usage is accumulated across every turn so the caller can meter the
  * true cost of the build (including the repair turns, which we may not bill).
  */
+// Which generation engine to use.
+//   api (default) — metered Anthropic API via ANTHROPIC_API_KEY. Real cost,
+//                   real usage telemetry, real credit charges.
+//   sdk           — Claude Agent SDK on this machine's `claude setup-token`
+//                   subscription login. No metered spend, so no cost data and
+//                   0 credits charged. See lib/agent-sdk.ts for the caveats.
+// Defaults to `api` so a fresh clone never silently runs on someone's personal
+// subscription; the environment opts in.
+export const ENGINE = process.env.KODELY_ENGINE === "sdk" ? "sdk" : "api";
+
 export async function* runAgent(opts: RunOptions): AsyncGenerator<AgentEvent> {
+  if (ENGINE === "sdk") {
+    // Deliberately no try/catch fallback to the API engine: if the SDK is not
+    // authenticated this must fail loudly rather than quietly spend money on
+    // the metered key the operator asked not to use.
+    const { runAgentSdk } = await import("./agent-sdk");
+    yield* runAgentSdk(opts, SYSTEM);
+    return;
+  }
+
   const model = MODELS.builder;
   // Effort is the sharpest cost lever we have: a first build is a blank-page
   // design problem and earns `high`, while a targeted tweak lands the same
