@@ -30,5 +30,13 @@ await mkdir(FOUNDATION_DIR, { recursive: true });
 await writeFile(`${FOUNDATION_DIR}/package.json`, JSON.stringify(PACKAGE_JSON, null, 2));
 
 console.log(`Installing foundation dependencies into ${FOUNDATION_DIR} ...`);
-execFileSync("npm", ["install"], { cwd: FOUNDATION_DIR, stdio: "inherit" });
+// npm is npm.cmd on Windows, and since CVE-2024-27980 Node refuses to spawn
+// a .cmd without a shell (EINVAL). Both args here are constants — nothing
+// user-supplied reaches the shell — so shell:true is safe.
+const isWindows = process.platform === "win32";
+execFileSync(isWindows ? "npm.cmd" : "npm", ["install"], {
+  cwd: FOUNDATION_DIR,
+  stdio: "inherit",
+  shell: isWindows,
+});
 console.log("Done.");

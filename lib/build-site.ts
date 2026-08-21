@@ -32,9 +32,28 @@ export async function buildSite(sourceFiles: FileMap): Promise<FileMap> {
       await writeFile(fullPath, content, "utf8");
     }
 
-    await symlink(join(FOUNDATION_DIR, "node_modules"), join(workDir, "node_modules"), "dir");
+    // "junction" on Windows, "dir" elsewhere. A Windows directory symlink
+    // needs SeCreateSymbolicLinkPrivilege (admin, or Developer Mode) and
+    // otherwise fails with EPERM, which blocked every local build on a dev
+    // machine. An NTFS junction is equivalent for this purpose and needs no
+    // elevation; it only works for absolute local paths, which is what this
+    // is. No behaviour change on Linux.
+    await symlink(
+      join(FOUNDATION_DIR, "node_modules"),
+      join(workDir, "node_modules"),
+      process.platform === "win32" ? "junction" : "dir",
+    );
 
-    await runBounded("node_modules/.bin/vite", ["build"], workDir);
+    // Invoke Vite's JS entrypoint with this process's own node binary rather
+    // than the `.bin/vite` shim: the shim is extensionless on POSIX but a
+    // .CMD on Windows, and Node refuses to spawn .cmd without a shell. Going
+    // straight to the entrypoint is a single code path on both platforms and
+    // avoids shell quoting entirely.
+    await runBounded(
+      process.execPath,
+      [join("node_modules", "vite", "bin", "vite.js"), "build"],
+      workDir,
+    );
 
     return await readDistTree(join(workDir, "dist"));
   } finally {
