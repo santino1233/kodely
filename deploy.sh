@@ -88,6 +88,7 @@ deploy_env() {
         git reset -q --hard FETCH_HEAD
       fi
       npm ci --no-audit --no-fund >/dev/null 2>&1
+      npx prisma db push --accept-data-loss --skip-generate >/dev/null 2>&1
       npm run build >/dev/null 2>&1
       sudo systemctl restart $svc" || die "$env deploy failed"
   sleep 5
