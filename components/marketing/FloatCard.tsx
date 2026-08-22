@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 /**
  * The one deliberate infinite loop on the site: a slow, tiny idle float
@@ -9,6 +9,8 @@ import { motion } from "framer-motion";
  * — not a shimmer or color cycle, just gentle physical motion.
  */
 export function FloatCard({ children, className }: { children: ReactNode; className?: string }) {
+  const reduced = useReducedMotion();
+
   return (
     <motion.div
       className={className}
@@ -17,8 +19,12 @@ export function FloatCard({ children, className }: { children: ReactNode; classN
       viewport={{ once: true }}
       transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
     >
+      {/* An endless float is exactly what prefers-reduced-motion exists to
+          suppress, and the reduced-motion block in globals.css can't reach
+          it — that rule only neutralises CSS animations, and this is a
+          framer-motion (JS) one. */}
       <motion.div
-        animate={{ y: [0, -10, 0] }}
+        animate={reduced ? undefined : { y: [0, -10, 0] }}
         transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
       >
         {children}
@@ -42,6 +48,14 @@ export function MotionLift({
       className={className}
       whileHover={{ y: -lift }}
       whileTap={{ scale: 0.98 }}
+      // framer-motion makes any element carrying whileTap focusable (it adds
+      // tabIndex={0}) so a keyboard user can trigger the tap state. Here the
+      // element is a decorative WRAPPER around a real button or link, so
+      // that produced a duplicate tab stop with no role, no name and no
+      // action — on the login, signup and contact forms you tabbed onto a
+      // nameless <div>, then onto the submit button it wraps. The child is
+      // the real control; the wrapper stays out of the tab order.
+      tabIndex={-1}
       transition={{ type: "spring", stiffness: 400, damping: 28 }}
     >
       {children}

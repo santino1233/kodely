@@ -1,0 +1,40 @@
+{
+  "slug": "how-to-build-a-coming-soon-page-with-ai",
+  "title": "How to Build a Coming Soon Page With AI",
+  "metaDescription": "A holding page that does real work: says what is coming, when, and gives one way to hear about it. Built and live in under an hour.",
+  "category": "Guides",
+  "targetKeyword": "coming soon page builder",
+  "body": [
+    "<p>A coming-soon page is the easiest page on the internet to get wrong, because it is the easiest to build badly and feel finished. The bad version says a name, says \"something exciting is coming\", and has an email box that goes nowhere.</p>",
+    "<p>The good version does three jobs, and it can be live in under an hour.</p>",
+
+    "<h2>The three jobs</h2>",
+    "<ol><li><strong>Say what it actually is.</strong> Not the category — the thing. \"A pilates studio opening on Grove Road in March\" beats \"a new kind of movement space\" every time.</li><li><strong>Say when, as precisely as you honestly can.</strong> A month is fine. \"Soon\" is not.</li><li><strong>Give exactly one way to hear more.</strong> One. Not a newsletter box and a social row and a contact link.</li></ol>",
+    "<p>Everything else is decoration, and decoration on a holding page reads as stalling.</p>",
+
+    "<h2>The email capture problem</h2>",
+    "<p>Here is the thing that makes coming-soon pages awkward on a static site, and it is worth being direct about.</p>",
+    "<p>A Kodely site is front-end only: no server, no database, no mail path. So an email signup box on the page would collect addresses into nothing. Every person who typed their address in would believe they were on your list. When you launched, you would email nobody.</p>",
+    "<p>That is the single worst version of this failure, because the whole point of a holding page is the list. So do not build the box. Instead:</p>",
+    "<ul><li><strong>Link out to a real list tool.</strong> Whatever you will actually send the launch email from — the button says \"Get the launch email\" and goes to its hosted signup page.</li><li><strong>Or use a <code>mailto:</code> link</strong> with the subject prefilled: \"Tell me when you open\". Unglamorous, completely reliable, and for a small local launch entirely sufficient.</li><li><strong>Or point at the account you will actually post on.</strong> If your launch announcement is going to be an Instagram post, be honest and send people there.</li></ul>",
+    "<p><a href=\"/blog/why-ai-built-sites-have-no-contact-form\">Why no form on the page can work</a> covers the mechanics, including the policy that stops the page reaching a third-party endpoint even if you wired one up yourself.</p>",
+
+    "<h2>Write the prompt</h2>",
+    "<blockquote><p>A single-screen coming-soon page for [name], [what it is, in one concrete sentence], opening [month and year] in [place]. One line explaining who it is for. One button: \"Get the launch email\", linking out to [your signup page]. Below it, small text with [your instagram] and an email link. No signup form on the page. Style: one bold idea rather than a hero-and-cards layout — [describe it, e.g. an enormous wordmark on a deep plum gradient, everything else small and quiet]. Must fit on a phone screen without scrolling.</p></blockquote>",
+    "<p>\"One bold idea\" earns its place in the prompt. A holding page is the one time you can be visually loud without a lot of content to fight, and a vague brief will hand you the safe average instead — which is <a href=\"/blog/why-your-ai-website-looks-generic\">exactly how generated pages end up looking generic</a>.</p>",
+    "<p>Leave out a launch date and you will get a bracketed placeholder rather than an invented one. That is the right behaviour: an invented opening date on a public page is a promise your customers will hold you to.</p>",
+
+    "<h2>Skip the countdown timer</h2>",
+    "<p>Countdowns look great and age badly. If the date slips — and it slips — the page either lies or shows zero. Worse, the day after launch it is still counting, because nobody remembers to take it down.</p>",
+    "<p>A stated month in plain text is honest, updateable in one sentence, and does not become embarrassing on its own.</p>",
+
+    "<h2>Turning it into the real site</h2>",
+    "<p>This is the part that makes a coming-soon page worth doing properly here. When you launch, you do not throw it away and start again — you describe what it becomes:</p>",
+    "<blockquote><p>We're open now. Replace the coming-soon headline with a proper hero, add a services section with [your services and prices], hours [your hours], address [your address], and change the button to \"Book now\" linking to [your booking page]. Keep the palette and the wordmark treatment exactly as they are.</p></blockquote>",
+    "<p>Same project, same URL, same visual identity — and the previous version is still there as a checkpoint you can roll back to for free.</p>",
+
+    "<h2>Publishing</h2>",
+    "<p>One click publishes to a <code>kodely.site</code> subdomain, with a real title, description and link-preview tags in the head. For a holding page that preview is doing most of the work: the page exists so people can share it, and a link that shows your name and one line beats a blank card.</p>",
+    "<p><a href=\"/signup\">Start with your name, your month and your signup link</a> — 750 free credits, no card required. See also: <a href=\"/blog/how-to-build-a-landing-page-with-ai\">a full landing page</a> when you are ready for one.</p>"
+  ]
+}

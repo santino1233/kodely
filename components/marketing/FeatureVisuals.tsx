@@ -60,12 +60,17 @@ const FILES = [
 export function CodeVisual() {
   const reduced = useReducedMotion();
   const [active, setActive] = useState(0);
+  // Picking a tab stops the carousel for good. Auto-advancing content that
+  // the user is actively driving fights them (and WCAG 2.2.2 wants a way to
+  // pause anything that moves on its own for more than five seconds) — a
+  // deliberate click is the clearest possible "stop" signal.
+  const [userPicked, setUserPicked] = useState(false);
 
   useEffect(() => {
-    if (reduced) return;
+    if (reduced || userPicked) return;
     const id = setInterval(() => setActive((a) => (a + 1) % FILES.length), 5200);
     return () => clearInterval(id);
-  }, [reduced]);
+  }, [reduced, userPicked]);
 
   const file = FILES[active];
 
@@ -76,11 +81,19 @@ export function CodeVisual() {
           <button
             key={f.name}
             type="button"
-            onClick={() => setActive(i)}
+            onClick={() => {
+              setActive(i);
+              setUserPicked(true);
+            }}
+            // Which tab is showing was conveyed by background and text
+            // colour only. aria-pressed states it for assistive tech.
+            aria-pressed={i === active}
+            // Contrast: the inactive tabs were neutral-400 / dark:neutral-600
+            // — about 2.5:1, and these are interactive controls.
             className={`rounded-t-md px-3 py-1.5 font-mono text-[11px] transition-colors ${
               i === active
                 ? "bg-neutral-100 text-neutral-900 dark:bg-neutral-900 dark:text-white"
-                : "text-neutral-400 hover:text-neutral-600 dark:text-neutral-600 dark:hover:text-neutral-400"
+                : "text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
             }`}
           >
             {f.name}
@@ -106,17 +119,35 @@ export function CodeVisual() {
               >
                 {line.text}
                 {i === file.lines.length - 1 && (
+                  // The blink is a framer-motion (JS) animation, so the
+                  // global prefers-reduced-motion rule in globals.css — which
+                  // only neutralises CSS animations — never touched it: this
+                  // caret went on flashing forever for a user who asked for
+                  // no motion. It now holds steady instead of disappearing,
+                  // so the panel still reads as a code editor.
                   <motion.span
                     className="ml-0.5 inline-block h-[1em] w-[2px] translate-y-[2px] bg-current align-middle"
-                    animate={{ opacity: [1, 1, 0, 0] }}
-                    transition={{ duration: 1, repeat: Infinity, times: [0, 0.5, 0.5, 1] }}
+                    animate={reduced ? { opacity: 1 } : { opacity: [1, 1, 0, 0] }}
+                    transition={
+                      reduced
+                        ? { duration: 0 }
+                        : { duration: 1, repeat: Infinity, times: [0, 0.5, 0.5, 1] }
+                    }
                   />
                 )}
               </motion.div>
             ))}
           </motion.div>
         </AnimatePresence>
-        <div className="mt-2 opacity-50">// real .tsx, visible in the Code tab</div>
+        {/* Braced string, not a bare text node: JSX text starting with "//"
+            is almost always a mis-typed comment, which is what
+            react/jsx-no-comment-textnodes flags. Here the slashes really are
+            content — this line imitates a code comment in the panel. */}
+        {/* opacity-80, not the original opacity-50: at 50% this line landed
+            at 2.4:1 against the panel in light mode (WCAG AA wants 4.5:1).
+            80% keeps the dimmed "this is a comment" reading while clearing
+            4.6:1 light / 5.6:1 dark. */}
+        <div className="mt-2 opacity-80">{"// real .tsx, visible in the Code tab"}</div>
       </div>
     </div>
   );
@@ -147,16 +178,27 @@ export function HostingVisual() {
         <span className="h-2 w-2 rounded-full bg-neutral-300 dark:bg-neutral-700" />
         <span className="h-2 w-2 rounded-full bg-neutral-300 dark:bg-neutral-700" />
         <span className="h-2 w-2 rounded-full bg-neutral-300 dark:bg-neutral-700" />
-        <div className="ml-2 flex-1 overflow-hidden rounded bg-white px-2 py-0.5 text-center font-mono text-[10px] text-neutral-500 dark:bg-neutral-950 dark:text-neutral-500">
+        {/* dark:text-neutral-500 was 4.2:1 on the dark URL bar; neutral-400
+            clears AA at this 10px size. */}
+        <div className="ml-2 flex-1 overflow-hidden rounded bg-white px-2 py-0.5 text-center font-mono text-[10px] text-neutral-500 dark:bg-neutral-950 dark:text-neutral-400">
           studio-nine<span style={{ color: "var(--accent)" }}>.kodely.site</span>
         </div>
         {phase === "live" ? (
           <span className="relative flex h-2 w-2">
-            <motion.span
-              className="absolute inline-flex h-full w-full rounded-full bg-emerald-500"
-              animate={{ scale: [1, 2], opacity: [0.7, 0] }}
-              transition={{ duration: 1.4, repeat: Infinity, ease: "easeOut" }}
-            />
+            {/* Reduced motion pins this component on "live" forever, which
+                meant this ping was the ONE thing still animating on the page
+                — permanently — for a user who asked for no motion. (It's a
+                framer-motion animation, so the CSS-only reduced-motion block
+                in globals.css never reached it.) The solid dot below carries
+                the "live" meaning on its own. */}
+            {!reduced && (
+              <motion.span
+                aria-hidden
+                className="absolute inline-flex h-full w-full rounded-full bg-emerald-500"
+                animate={{ scale: [1, 2], opacity: [0.7, 0] }}
+                transition={{ duration: 1.4, repeat: Infinity, ease: "easeOut" }}
+              />
+            )}
             <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
           </span>
         ) : (
@@ -178,7 +220,7 @@ export function HostingVisual() {
             }}
           />
         ))}
-        <p className="mt-1 font-mono text-[10px] text-[#8a7362] dark:text-[#b39d8a]">
+        <p className="mt-1 font-mono text-[10px] text-[#826b5a] dark:text-[#b39d8a]">
           {phase === "live" ? "Live · HTTPS" : "Publishing…"}
         </p>
       </div>

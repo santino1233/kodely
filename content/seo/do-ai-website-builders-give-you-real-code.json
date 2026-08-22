@@ -1,0 +1,43 @@
+{
+  "slug": "do-ai-website-builders-give-you-real-code",
+  "title": "Do AI Website Builders Give You Real Code?",
+  "metaDescription": "How to tell whether an AI builder produces a real codebase or a locked page format — and exactly what Kodely hands you, file by file.",
+  "category": "Comparisons",
+  "targetKeyword": "ai website builder real code",
+  "body": [
+    "<p>\"Real code\" has become a marketing phrase, which means it no longer tells you much. Here's how to test the claim yourself, and precisely what Kodely produces — so you can hold us to the same test.</p>",
+
+    "<h2>Four questions that settle it</h2>",
+    "<p>Whatever tool you're evaluating, these four answers tell you almost everything:</p>",
+    "<ol><li><strong>Can you read the source?</strong> Not a preview of the rendered page — the actual component files.</li><li><strong>Can you take it with you?</strong> Download the project and run it somewhere else, without needing the vendor.</li><li><strong>Does it compile?</strong> Is there a real build step, or is the output text that happens to render?</li><li><strong>Is it a standard stack?</strong> Could a developer you hire tomorrow work on it without learning your vendor's abstractions?</li></ol>",
+    "<p>A tool that answers no to the first two is producing a page, not a codebase, however it's described. That isn't automatically bad — plenty of people never want to see a file — but it's a different product, and it decides what happens if you outgrow the tool.</p>",
+
+    "<h2>What Kodely produces, specifically</h2>",
+    "<p>Every Kodely project is a Vite + React + TypeScript + Tailwind application. A new project starts as a working one before the model touches it: <code>package.json</code>, <code>vite.config.ts</code>, <code>tsconfig.json</code>, <code>index.html</code>, an entry point, a stylesheet, an <code>App.tsx</code>, and a set of UI primitives — Button, Card, Section, Nav — under <code>src/components/ui/</code>.</p>",
+    "<p>Generation writes and edits files in that project. You get composable components — a Hero, a FeatureGrid, a Footer — as separate files, styled with Tailwind utility classes, not one enormous file with everything jammed into it.</p>",
+    "<p>There's a Code tab in the editor that shows those files. It's the same source that gets compiled and the same source that gets published; there is no second, different thing behind it.</p>",
+
+    "<h2>Yes, you can download it</h2>",
+    "<p>There's a Download .zip button. It gives you the full source tree of your project nested inside a single folder named for your site, the way a repository download behaves — so unzipping produces one project directory rather than scattering files across your Downloads folder.</p>",
+    "<p>What you do with it is entirely normal: <code>npm install</code>, then <code>npm run build</code>, then deploy the output anywhere that serves static files. Any developer who has touched a Vite project in the last few years will recognise it immediately. There's no Kodely runtime, no proprietary component library, and no phone-home.</p>",
+    "<p>It's free and unlimited. Exporting your work is not a paid tier.</p>",
+
+    "<h2>\"Does it compile\" is the question people skip</h2>",
+    "<p>This is the difference that shows up later. Every Kodely generation ends with a genuine production build on our servers: TypeScript and JSX compiled, Tailwind processed, a bundle emitted. If a component has a type error, an unclosed tag, or a missing import, the build fails and you're told.</p>",
+    "<p>A tool that emits raw HTML has almost nothing that can fail — the page renders regardless of how wrong it is, and the mistakes surface later, in a browser, as your problem. Compiling catches a whole category of them before you ever see the page.</p>",
+    "<p>And a build that fails to compile is charged zero credits. That combination — always compile, never charge for broken output — is the part we'd point at if you asked what the code claim is actually worth.</p>",
+
+    "<h2>The constraints are part of the honest answer</h2>",
+    "<p>Real code, yes. Unrestricted code, no. The project can only use React and React DOM — the model cannot add a dependency, because there's no install step during generation. Published sites run under a policy that blocks all external requests. Sites are single-page.</p>",
+    "<p>That's a narrower sandbox than a developer working locally has, and it's the reason the output reliably compiles and reliably works. <a href=\"/blog/what-kodely-cannot-build-yet\">The complete list of limits is here.</a></p>",
+    "<p>Worth noting what the export does to that: once the zip is on your machine, the sandbox no longer applies. Your local copy is just a Vite project. Add packages, add image files, add a router, wire it to a backend. The constraints exist for sites we host, not for your code.</p>",
+
+    "<h2>Why this matters even if you never open a file</h2>",
+    "<p>Most people who ask for real code never read it. They're asking a different question: <em>if this tool disappears, or gets expensive, or stops fitting, what happens to my website?</em></p>",
+    "<p>With a real codebase in a standard stack, the answer is that you download it and hire someone. With a proprietary page format, the answer is that you rebuild from scratch somewhere else. That's the whole value of the distinction, and it's why the download button matters more than the Code tab.</p>",
+
+    "<h2>Try the four questions on us</h2>",
+    "<p>Read the source: yes, in the Code tab. Take it with you: yes, zip download, free. Does it compile: yes, every single build, server-side. Standard stack: Vite, React, TypeScript, Tailwind.</p>",
+    "<p><a href=\"/signup\">750 free credits, no card</a> — build something, download the zip, and check for yourself. That's the only version of this claim that means anything.</p>"
+  ]
+}

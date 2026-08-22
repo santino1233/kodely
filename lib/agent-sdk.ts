@@ -3,7 +3,9 @@ import { mkdtemp, mkdir, writeFile, readFile, rm } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import type { AgentEvent, FileMap } from "./agent";
+import { isProtectedPath, type AgentEvent, type FileMap } from "./agent";
+import { narrateTool } from "./build-narration";
+import { materializeAssets } from "./assets/materialize";
 
 // Alternative generation engine, selected with KODELY_ENGINE=sdk.
 //
@@ -41,12 +43,52 @@ import type { AgentEvent, FileMap } from "./agent";
 const API_TOOL_CONTRACT =
   "Use the write_file and delete_file tools. Always pass the complete final file — there is no patch tool.";
 
+// The assets paragraph has the same problem as the tool contract: the shared
+// prompt tells the agent to call find_assets, which exists only on the API
+// engine. Here the catalogue is on disk instead (see lib/assets/materialize.ts),
+// so the instruction has to point at Grep and Read.
+const API_ASSET_CONTRACT =
+  "Search the catalogue with the find_assets tool — pass what you need in plain words (\"plumber wrench icon\", \"warm sunset gradient\", \"wave divider\") and paste the source it returns.";
+
+const SDK_ASSET_CONTRACT = [
+  "The catalogue is on disk in this working directory:",
+  "- `.kodely-assets/INDEX.md` lists every asset — id, name, keywords, and the file holding its source.",
+  "- Grep INDEX.md for what you need (e.g. `grep -i wrench .kodely-assets/INDEX.md`), then Read the file it names and paste the contents in.",
+  "Do NOT copy `.kodely-assets` into the site or reference those paths at runtime — they are a reference library, not project files.",
+].join("\n");
+
+// The exact set of tools this engine may use. Enforced by canUseTool below,
+// which denies anything absent from this list — including tools a future SDK
+// version might add.
+//
+// Bash is NOT here, and that is the whole point: the prompt is untrusted user
+// input, and shell access on the machine that runs generations is not something
+// a website request should be able to obtain. The cost is that the agent cannot
+// delete a file; SDK_TOOL_CONTRACT tells it what to do instead.
+const SDK_TOOLS = ["Read", "Write", "Edit", "Glob", "Grep"];
+
+// Belt and braces: named explicitly so they are stripped from the model's
+// context rather than merely refused at call time. A tool it never sees is one
+// it never wastes a turn attempting.
+const SDK_DENIED_TOOLS = [
+  "Bash",
+  "BashOutput",
+  "KillShell",
+  "WebFetch",
+  "WebSearch",
+  "Task",
+  "Agent",
+  "NotebookEdit",
+  "TodoWrite",
+];
+
 const SDK_TOOL_CONTRACT = [
   "You are editing a real checkout on disk in the working directory.",
   "- Use Write to create or replace a file, passing the complete final contents.",
   "- Use Edit for a targeted change to an existing file.",
   "- Use Read, Glob and Grep to inspect what is already there before changing it.",
-  "- Delete a file with Bash (`rm`).",
+  "- You CANNOT delete files and have no shell. To retire a component, remove every",
+  "  reference to it (usually from src/App.tsx) and leave the file in place.",
   "There is no write_file or delete_file tool — those belong to a different engine.",
 ].join("\n");
 
@@ -65,7 +107,16 @@ export function adaptPromptForSdk(system: string): string {
         "or the SDK engine will instruct the agent to call tools it does not have.",
     );
   }
-  return system.replace(API_TOOL_CONTRACT, SDK_TOOL_CONTRACT);
+  if (!system.includes(API_ASSET_CONTRACT)) {
+    throw new Error(
+      "agent-sdk: the API asset-contract sentence was not found in SYSTEM. " +
+        "It was probably reworded in lib/agent.ts — update API_ASSET_CONTRACT to match, " +
+        "or the SDK engine will be told to call find_assets, which it does not have.",
+    );
+  }
+  return system
+    .replace(API_TOOL_CONTRACT, SDK_TOOL_CONTRACT)
+    .replace(API_ASSET_CONTRACT, SDK_ASSET_CONTRACT);
 }
 
 // Hide the metered key from the SDK and everything it spawns.
@@ -177,12 +228,20 @@ function meterUsage(message: { modelUsage?: Record<string, ModelUsage> }): {
   };
 }
 
-/** Reject path traversal and absolute paths before anything touches the DB. */
+/**
+ * Reject path traversal, absolute paths, and server-executed config.
+ *
+ * This engine writes to a real directory and diffs it back afterwards, so the
+ * guard has to run on the way OUT as well — a config file the agent wrote to
+ * disk would otherwise be picked up by the diff and persisted, and then
+ * executed by `vite build` on the next compile. See isProtectedPath.
+ */
 function safeRelPath(raw: string): string | null {
   const p = raw.trim().replace(/^\.?\//, "");
   if (!p || p.length > 200) return null;
   if (p.includes("..") || p.startsWith("/") || p.includes("\\")) return null;
   if (!/^[A-Za-z0-9._/-]+$/.test(p)) return null;
+  if (isProtectedPath(p)) return null;
   return p;
 }
 
@@ -231,6 +290,10 @@ export async function* runAgentSdk(
   try {
     await writeFileMap(workDir, opts.files);
 
+    // Reference library beside the project. Dot-prefixed so readFileTree()
+    // below skips it — otherwise every generated site would gain ~460 files.
+    await materializeAssets(workDir);
+
     let imageNote = "";
     if (opts.image) {
       const ext = opts.image.mediaType.split("/")[1] ?? "png";
@@ -254,7 +317,35 @@ export async function* runAgentSdk(
       options: {
         cwd: workDir,
         systemPrompt: adaptPromptForSdk(systemPrompt),
-        allowedTools: ["Read", "Write", "Edit", "Bash", "Glob", "Grep"],
+        // `allowedTools` is an AUTO-APPROVE list, not a restriction. The SDK's
+        // own docs say so: "List of tool names that are auto-allowed without
+        // prompting for permission... To restrict which tools are available,
+        // use the `tools` option instead."
+        //
+        // This code previously listed Bash here believing it was a whitelist.
+        // It was not: every other tool remained available, and Bash itself was
+        // pre-approved — so a user's prompt had unrestricted shell on the box
+        // that runs generations. `cwd` is not a jail.
+        //
+        // There is no Options-level `tools` field (that exists only on
+        // AgentDefinition), so the restriction is enforced two ways:
+        allowedTools: SDK_TOOLS,
+        // 1. Removes them from the model's context entirely — it cannot call
+        //    what it cannot see.
+        disallowedTools: SDK_DENIED_TOOLS,
+        // 2. The authoritative gate. A deny-list can only block names we
+        //    thought of; this allow-list refuses anything not on it, so a tool
+        //    added by a future SDK version is denied by default rather than
+        //    silently permitted.
+        // `updatedInput` is deliberately omitted — passing it REPLACES the
+        // tool's real input, which would break every call it allows.
+        canUseTool: async (toolName: string) =>
+          SDK_TOOLS.includes(toolName)
+            ? { behavior: "allow" as const }
+            : {
+                behavior: "deny" as const,
+                message: `${toolName} is not available in this environment.`,
+              },
         permissionMode: "acceptEdits",
       },
     })) {
@@ -262,7 +353,16 @@ export async function* runAgentSdk(
 
       if (message.type === "assistant" && message.message?.content) {
         for (const block of message.message.content) {
-          if ("text" in block && block.text) yield { type: "text", text: block.text };
+          if ("text" in block && block.text) {
+            yield { type: "text", text: block.text };
+          } else if (block.type === "tool_use") {
+            // The only live signal this engine gives. Files are diffed out of
+            // the working directory AFTER query() finishes, so without this the
+            // chat sits silent for the whole build and then dumps every file at
+            // once. Narrating the tool calls is what makes the wait legible.
+            const line = narrateTool(block.name, (block.input ?? {}) as Record<string, unknown>);
+            if (line) yield { type: "progress", text: line };
+          }
         }
       } else if (message.type === "result") {
         yield { type: "usage", ...meterUsage(message) };

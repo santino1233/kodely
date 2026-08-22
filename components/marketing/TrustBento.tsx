@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, Zap, ShieldCheck, Ban } from "lucide-react";
+import { SIGNUP_GRANT } from "@/lib/credits";
 import { CodeVisual, HostingVisual } from "./FeatureVisuals";
 
 // The literal categories lib/secret-scan.ts checks for, kept in sync by
@@ -16,7 +17,10 @@ const SCAN_CHECKS = [
 ];
 
 const FACTS = [
-  { Icon: Zap, text: "750 free credits on signup — enough for a real site and a few edits" },
+  // Never a literal — SIGNUP_GRANT in lib/credits.ts is the one source of
+  // truth for the grant, so this line cannot drift away from what a new
+  // account is actually given.
+  { Icon: Zap, text: `${SIGNUP_GRANT} free credits on signup — enough to build a real site` },
   { Icon: Ban, text: "A build that fails to compile is never charged, no exceptions" },
   { Icon: ShieldCheck, text: "Every publish is scanned for exposed secrets before it goes live" },
 ];

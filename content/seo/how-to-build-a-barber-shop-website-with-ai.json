@@ -1,0 +1,43 @@
+{
+  "slug": "how-to-build-a-barber-shop-website-with-ai",
+  "title": "How to Build a Barber Shop Website With AI",
+  "metaDescription": "A practical guide to getting a barber shop online in an afternoon — the prompt to write, how to handle bookings honestly, and what to expect.",
+  "category": "Guides",
+  "targetKeyword": "barber shop website builder",
+  "body": [
+    "<p>A barber shop's website has one job: convince someone nearby that this is the place, then get them to book. Everything else is decoration. This guide covers building exactly that page with Kodely, and it is honest about the one thing you should <em>not</em> try to build into it.</p>",
+
+    "<h2>The shape of the page</h2>",
+    "<p>Kodely builds single-page sites, which suits this perfectly. A barber shop page that works usually goes:</p>",
+    "<ol><li>Shop name, the neighbourhood, and a booking button that is impossible to miss.</li><li>A short line on what kind of cut you do — scissor work, skin fades, hot towel shaves, beard trims.</li><li>Services and prices, as a clean list.</li><li>The barbers, by name.</li><li>Hours, address, and a big tappable phone number.</li></ol>",
+    "<p>That's the whole thing. Most people are on a phone, deciding in under twenty seconds, so the price list and the booking button matter far more than the copywriting.</p>",
+
+    "<h2>Bookings: the one thing to get right</h2>",
+    "<p>Kodely generates the front end of a website. There is no server, no database, and no email sending behind it. So a booking <em>form</em> on your site would be a form that silently throws every appointment away.</p>",
+    "<p>So don't ask for one. Ask for a booking form and you may well get a handsome one that discards every appointment. What you do instead:</p>",
+    "<ul><li>If you already use a booking platform, point a big \"Book now\" button straight at your booking page there.</li><li>If you take bookings by phone, make the number a <code>tel:</code> link so a tap dials it.</li><li>If you take them over Instagram or WhatsApp, link to that profile.</li></ul>",
+    "<p>An outbound link is a navigation, not something the page loads from another server, so it works exactly as you'd expect. Put the destination in your prompt — \"the Book now button links to my booking page\" — and you'll get a real, working call-to-action.</p>",
+
+    "<h2>Write the prompt</h2>",
+    "<p>The more concrete you are about the shop, the less generic the result. Anything factual you leave out — prices, hours, your barbers' names — gets filled in with something plausible that you'll then have to correct, so bring it all.</p>",
+    "<blockquote><p>A one-page site for Sharps &amp; Co, a two-chair barber shop on Union Street. Traditional but not gimmicky — no handlebar-moustache clichés. Services: skin fade 22, scissor cut 20, beard trim 12, cut and beard 30, kids under 12 15. Two barbers, Danny and Ade. Open Tue-Sat 9-6, closed Sunday and Monday. Walk-ins welcome but booking preferred. Big \"Book now\" button at the top and bottom linking out to our booking page, and the phone number as a tap-to-call link. Dark charcoal background, warm off-white text, one amber accent colour, bold condensed headings.</p></blockquote>",
+    "<p>If writing that feels like work, type one line and press <strong>Enhance</strong>. It expands your idea into a fuller brief that you read and edit before building. Enhance costs no credits.</p>",
+
+    "<h2>What it will look like</h2>",
+    "<p>There will be no photographs of your shop. Published Kodely sites run under a security policy that blocks requests to any other host, which rules out stock photography and remote images entirely. Typography, colour, spacing and inline SVG shapes do the visual work instead.</p>",
+    "<p>For a barber shop this is less of a loss than it sounds — a confident dark palette with strong type reads more like a real shop than a stock photo of someone else's chair. Every site is responsive down to a 380px-wide phone and ships with a dark mode treatment by default.</p>",
+
+    "<h2>Iterate in plain English</h2>",
+    "<p>The first build appears in a live preview. Then you refine it by asking, in the same box:</p>",
+    "<ul><li>\"Put the price list above the barbers section.\"</li><li>\"Make the Book now button stick to the bottom of the screen on mobile.\"</li><li>\"Add 'Under-12s half price on Tuesdays' under the kids' cut.\"</li><li>\"The amber is too orange — take it towards gold.\"</li></ul>",
+    "<p>Every successful build is saved as a checkpoint in the History tab, and rolling back to one is free. You are never one bad edit away from losing a version you liked.</p>",
+
+    "<h2>Going live</h2>",
+    "<p>One click publishes the compiled site to a <code>kodely.site</code> subdomain. Kodely also generates <code>robots.txt</code> and <code>sitemap.xml</code>, and guarantees the page has a real title and description so it looks right in a search result and in a link preview.</p>",
+    "<p>You can also download the whole source project as a zip at any point — it's a standard Vite project, so a developer can take it anywhere later without asking us for anything.</p>",
+
+    "<h2>Cost</h2>",
+    "<p>You start with 750 free credits and no card on file. Credits are charged from measured model usage after a build succeeds; a build that fails to compile costs you nothing. You can also set your own rolling 30-day spending cap so the total can never surprise you.</p>",
+    "<p><a href=\"/signup\">Start with your shop name, your price list and your hours</a> — that's enough for a first version. See also: <a href=\"/blog/how-to-write-a-prompt-for-an-ai-website-builder\">how to write a prompt that gets a good first build</a>.</p>"
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "slug": "how-ai-website-builders-actually-work",
+  "title": "How AI Website Builders Actually Work",
+  "metaDescription": "What happens between typing a description and seeing a website: the agent, the tools it has, the compile step, and where it can go wrong.",
+  "category": "Explainers",
+  "targetKeyword": "how ai website builders work",
+  "body": [
+    "<p>\"AI builds you a website\" is doing a lot of hiding. Here's what actually happens between pressing the button and seeing a page — using Kodely as the worked example, because we can describe our own pipeline precisely rather than in the abstract.</p>",
+
+    "<h2>Step 1: your project starts from a real foundation, not a blank page</h2>",
+    "<p>Before the model sees anything, the project already exists. A new Kodely project is a working Vite + React + TypeScript + Tailwind app: a <code>package.json</code>, a Vite config, a tsconfig, an <code>index.html</code>, an entry point, a stylesheet, an <code>App.tsx</code>, and a handful of UI primitives — a Button, a Card, a Section, a Nav.</p>",
+    "<p>This matters more than it sounds. The model is never asked to invent a build system, and it can't pick dependencies — the foundation's <code>package.json</code> is the only dependency set that will ever exist, and it's just React and React DOM. Fewer degrees of freedom means far fewer ways for the output to be broken.</p>",
+
+    "<h2>Step 2: the model gets tools, not a text box</h2>",
+    "<p>The generation step isn't \"write me some HTML\". The model runs as an agent with exactly two tools: write a file, and delete a file. It's given the current contents of every source file in your project plus your request, and it works by writing complete files back.</p>",
+    "<p>There's no patch or diff tool — every write is the whole final file. That's a deliberate trade: patches are smaller but they fail in subtle, hard-to-detect ways when the model's mental model of the file has drifted. A complete file either parses or it doesn't.</p>",
+    "<p>Every path the model asks to write is normalised and checked before anything touches the database. Absolute paths, backslashes, and anything containing <code>..</code> are rejected outright, so a confused model can't write outside its own project.</p>",
+
+    "<h2>Step 3: the site gets compiled — for real</h2>",
+    "<p>This is the step that separates a website from a plausible-looking pile of text. Once the model has finished writing files, Kodely runs an actual production build of your project on the server: TypeScript and JSX compiled, Tailwind processed, the bundle emitted.</p>",
+    "<p>If your components have a type error, an unclosed tag, a missing import or a typo'd prop, the build fails right there — before anything is charged and before anything is published. \"It looked right\" is not the bar; \"it compiles\" is.</p>",
+    "<p>The build runs in a throwaway directory with a fixed 60-second ceiling, against a pre-installed copy of the foundation's dependencies. There is no <code>npm install</code> per generation, which is both why it's fast and why the model can't introduce a package.</p>",
+
+    "<h2>Step 4: if it didn't compile, it gets one repair attempt</h2>",
+    "<p>When the build fails, the compiler error goes straight back to the model with the instruction to fix it and keep the rest of the change. It gets one such attempt. If the second build also fails, the whole generation is marked failed.</p>",
+    "<p>A failed build costs you zero credits. That rule is in the billing code, not just in the marketing copy: the charge only ever happens on the success path. The bound on repair attempts is the other half of it — a model that couldn't fix its own mistake twice isn't going to fix it on the seventh try, and you shouldn't be funding the attempt. <a href=\"/blog/what-happens-when-an-ai-build-fails\">More on what failure looks like from your side.</a></p>",
+
+    "<h2>Step 5: preview, then publish</h2>",
+    "<p>A successful build's compiled output is what you see in the preview pane, and it's the same output that gets published. You're not previewing an approximation of the site — you're looking at the built artefact.</p>",
+    "<p>Publishing copies that compiled output to the published tree and serves it at a <code>kodely.site</code> subdomain as static files. Before it goes live, the files are scanned for anything that looks like a real API key or secret, and the publish is blocked if one turns up.</p>",
+
+    "<h2>The sandbox is the shape of the product</h2>",
+    "<p>Published sites are served under a strict content security policy that blocks every external host: no remote scripts, no remote stylesheets, no remote images, no outbound requests from the page at all. Images have to be inline SVG, CSS gradients, or data URIs. Fonts come from the system stack.</p>",
+    "<p>That's a real limitation and it's worth understanding rather than discovering. It also removes an entire category of quiet breakage — nothing on your published page can stop working because someone else's CDN went down or changed a URL. <a href=\"/blog/why-ai-generated-sites-have-no-stock-photos\">The full reasoning is here.</a></p>",
+
+    "<h2>What the model is and isn't deciding</h2>",
+    "<p>People assume the AI is making infrastructure decisions. It isn't. It doesn't choose a framework, a hosting provider, a database, or a package. Those were decided once, in the foundation, by people. The model's job is narrower and more like a designer's: structure, layout, components, copy, colour, type.</p>",
+    "<p>Narrow is the point. Most of the horror stories about AI-generated code come from agents given wide latitude over systems they can't verify. An agent that can only edit React components in a project that gets compiled and type-checked every single time has a very small blast radius.</p>",
+
+    "<h2>Where it genuinely goes wrong</h2>",
+    "<ul><li><strong>Vague prompts.</strong> The model fills gaps with the average of everything it has seen, which reads as generic. <a href=\"/blog/how-to-write-a-prompt-for-an-ai-website-builder\">Specificity is the fix.</a></li><li><strong>Asking for the impossible.</strong> Requests for a database, a login, a working contact form or stock photography can't be satisfied, so you get either nothing or a decorative approximation.</li><li><strong>Over-editing.</strong> Ten vague follow-ups tend to drift a design somewhere worse than round two. Roll back to a checkpoint — that's free — and make one precise change instead.</li></ul>",
+
+    "<h2>The short version</h2>",
+    "<p>Fixed foundation, agent with two file tools, real server-side compile, one repair attempt, zero charge on failure, static publish under a locked-down policy. No magic anywhere in the chain — just a narrow job, done in a place where being wrong is caught immediately.</p>",
+    "<p><a href=\"/signup\">Try it with 750 free credits</a>, or read <a href=\"/blog/do-ai-website-builders-give-you-real-code\">whether you actually get real code at the end</a>.</p>"
+  ]
+}

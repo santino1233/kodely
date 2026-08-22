@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -39,7 +40,20 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: NO_FLASH_THEME_SCRIPT }} />
+        {/* next/script, not a bare <script> tag: React 19 warns ("Scripts
+            inside React components are never executed when rendering on the
+            client") because a plain script element rendered by a component is
+            not specially tracked the way next/script's `beforeInteractive`
+            strategy is — Next hoists and injects THIS one directly into the
+            initial HTML outside React's own render/hydration path, which is
+            what actually guarantees it runs before paint. A bare script tag
+            worked by coincidence on first load; it was never the documented
+            way to do this. */}
+        <Script
+          id="no-flash-theme"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: NO_FLASH_THEME_SCRIPT }}
+        />
       </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

@@ -1,0 +1,45 @@
+{
+  "slug": "ai-website-builder-vs-hiring-a-web-designer",
+  "title": "AI Builder vs Hiring a Web Designer",
+  "metaDescription": "An honest look at what a designer gives you that an AI builder cannot, what the AI route genuinely does better, and how to combine them.",
+  "category": "Comparisons",
+  "targetKeyword": "ai website builder vs web designer",
+  "body": [
+    "<p>We build an AI website builder, so treat this the way you'd treat any comparison written by one side. What follows is what we'd tell a friend deciding between the two, including the cases where we'd tell them to hire someone.</p>",
+
+    "<h2>What a designer gives you that we can't</h2>",
+    "<p><strong>Judgement about your business.</strong> A good designer asks why you think the price list is the problem, discovers it's actually that nobody knows you do commercial work, and rearranges the whole argument. That's consulting, not production. No prompt gets you that, and it's frequently the most valuable part of the engagement.</p>",
+    "<p><strong>Photography and brand assets.</strong> A designer can shoot your premises, commission illustration, or build you a real visual identity. Kodely can't place a photograph at all — published sites can't load anything from another host, and there's no image upload today.</p>",
+    "<p><strong>Everything past the front end.</strong> Stores, bookings, logins, forms that deliver, a CMS your staff can use, integrations with your existing systems. Kodely does none of it. <a href=\"/blog/what-kodely-cannot-build-yet\">The full list is here.</a></p>",
+    "<p><strong>Accountability.</strong> Someone whose name is on the outcome, who you can call when it's wrong. That's worth real money and it's not something software provides.</p>",
+    "<p><strong>Multi-page structure.</strong> If your plan is fifteen service pages each targeting a different search term, that's a designer-and-developer project. Kodely builds one page.</p>",
+
+    "<h2>What the AI route genuinely does better</h2>",
+    "<p><strong>The feedback loop.</strong> This is the real difference. \"Move the price list above the about section and make the headings larger\" takes a minute, not a scheduled revision round. Most sites get better through twenty small adjustments, and twenty small adjustments is expensive when each one is an email.</p>",
+    "<p><strong>Starting cost.</strong> New Kodely accounts get 750 credits free with no card. You can have a real first version on screen before you've had the conversation about budget.</p>",
+    "<p><strong>Nothing hangs on availability.</strong> Changing your opening hours doesn't depend on whether anyone is free this week. That matters more than people expect over a site's actual lifetime.</p>",
+    "<p><strong>Trying an idea is free.</strong> Wondering whether the page reads better with the testimonials cut? Try it. Every successful build is a checkpoint, and rolling back costs nothing.</p>",
+
+    "<h2>The thing people get wrong about cost</h2>",
+    "<p>The comparison isn't \"designer\" against \"free\". It's the total cost of getting and keeping a site that works.</p>",
+    "<p>A designer is a larger cost up front and usually an ongoing one for changes. An AI builder is a smaller ongoing cost and a larger investment of <em>your</em> time — because you're now the person deciding what the page should say, which is the job you were partly paying a designer to do.</p>",
+    "<p>If your time is scarce and the site directly drives revenue, hiring is often just correct. If you have time and no budget, the arithmetic flips. Neither answer is universal.</p>",
+
+    "<h2>Where our own limits are the deciding factor</h2>",
+    "<p>Concretely, hire someone if: your site needs to sell things, take bookings, or have logins; your business is fundamentally visual and needs photography; you need many indexable pages; you need a non-technical member of staff to edit content regularly; or you need your own domain today, since custom domains aren't supported yet.</p>",
+    "<p>Those aren't things we'd like to talk you into doing badly with the wrong tool.</p>",
+
+    "<h2>Where we'd say use the builder</h2>",
+    "<p>One page that has to be good and has to exist this week. A local service business whose site is a credibility check. A launch or event page. A text-led portfolio. A prototype of a page you're going to argue about internally before committing budget. Anything where the content is more important than the imagery.</p>",
+
+    "<h2>The combination that works well</h2>",
+    "<p>These aren't mutually exclusive, and the middle path is genuinely good.</p>",
+    "<p>Build a version yourself first. Iterate until the page says what you actually mean — sections in the right order, real copy, real prices. Then hand that to a designer as the brief.</p>",
+    "<p>You can do this concretely because you own the code. Kodely projects are Vite + React + TypeScript + Tailwind applications, and you can download the whole source as a zip for free. A developer can open it, run it locally, and build on it — no proprietary format to reverse-engineer, no export negotiation. <a href=\"/blog/do-ai-website-builders-give-you-real-code\">More on what that means in practice.</a></p>",
+    "<p>Briefing with a working page instead of a document is a real saving. You've already made the decisions that usually take two rounds of revisions, and the designer spends their time on the part that needs judgement.</p>",
+
+    "<h2>How to decide in two minutes</h2>",
+    "<ul><li>Does the site need to <em>do</em> anything — sell, book, log people in, store a submission? Hire someone.</li><li>Is the site mainly photographs? Hire someone.</li><li>Do you need many pages targeting many search terms? Hire someone.</li><li>Is it one page that needs to say the right things clearly, soon? Build it yourself and see how far you get.</li></ul>",
+    "<p><a href=\"/signup\">750 free credits, no card required</a> — enough to have something real to compare against a quote.</p>"
+  ]
+}

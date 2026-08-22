@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { FOUNDATION_FILES } from "@/lib/foundation";
+import { track, EVENTS } from "@/lib/events";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +49,8 @@ export async function POST(req: Request) {
       kind: "source",
     })),
   });
+
+  track(EVENTS.projectCreated, { userId: user.id, props: { projectId: project.id } });
 
   return Response.json({ project });
 }

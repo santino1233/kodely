@@ -1,0 +1,40 @@
+{
+  "slug": "publishing-and-indexing-an-ai-built-site",
+  "title": "Publishing and Indexing an AI-Built Site",
+  "metaDescription": "What Kodely does for your SEO automatically when you publish, what it deliberately does not do, and the parts that are still your job.",
+  "category": "Explainers",
+  "targetKeyword": "publish ai website seo",
+  "body": [
+    "<p>A site that nobody can find is a slideshow. Here's exactly what Kodely handles for you when you press Publish, what it doesn't, and the parts that remain your job no matter which builder you use.</p>",
+
+    "<h2>What Publish actually does</h2>",
+    "<p>Publishing takes the compiled output of your most recent successful build and copies it to the published tree, served at a <code>kodely.site</code> subdomain. What a visitor gets is that pre-compiled output — HTML, CSS and JavaScript — with a small serving-time pass over the HTML head, described below. Nothing is generated per request and there's nothing for a crawler to wait on.</p>",
+    "<p>Before anything goes live, the files are scanned for anything resembling a real API key or secret, and the publish is blocked if one is found. Republishing later is free and unlimited.</p>",
+
+    "<h2>The head tags, and the backstop behind them</h2>",
+    "<p>The builder is instructed to write a real <code>&lt;head&gt;</code> for every new site: a title under about 60 characters using your actual business name, a description of roughly 150 characters describing what <em>this</em> business offers, matching Open Graph title and description, and the correct <code>lang</code> attribute if the content isn't English.</p>",
+    "<p>A prompt is guidance, though, not a guarantee. So there's a second layer that runs when a page is served: if the title is still the starter placeholder or missing, it's replaced with your project name. Missing or empty description, canonical link, <code>og:title</code>, <code>og:description</code>, <code>og:type</code>, <code>og:url</code> and <code>twitter:card</code> tags are filled in.</p>",
+    "<p>Two properties of that design are worth calling out. It only fills gaps — anything the builder wrote itself is left exactly as it is, because the builder had your actual content in view and the backstop doesn't. And because it runs when the page is served rather than when it's built, it also repairs sites that were published before it existed, with no regeneration.</p>",
+    "<p>The practical upshot: no Kodely site can go live with a placeholder title in the browser tab, in a search result, or in a link preview.</p>",
+
+    "<h2>robots.txt and sitemap.xml, generated for you</h2>",
+    "<p>Both are generated on request rather than baked into your build. <code>robots.txt</code> allows crawling and points at your sitemap. <code>sitemap.xml</code> lists your site's pages with the date you published, served with the correct XML content type — a sitemap served as a generic binary type is ignored by crawlers, which is a surprisingly common way for this to silently not work.</p>",
+    "<p>They're generated rather than stored because the correct URL inside them depends on the host the visitor actually used. A file baked at build time would be wrong on one of them. And if your site ships its own <code>robots.txt</code>, yours wins.</p>",
+    "<p>Because Kodely builds single-page sites, your sitemap will usually contain one URL. That's correct, not a bug — but it does mean the sitemap is doing less work for you here than it would on a fifty-page site, and it's worth understanding <a href=\"/blog/single-page-vs-multi-page-websites\">what a single-page site can and can't rank for</a>.</p>",
+
+    "<h2>Canonical and og:url point at the right place</h2>",
+    "<p>Your site is reachable at its <code>kodely.site</code> subdomain, and the canonical and <code>og:url</code> tags are generated from the host the visitor actually used, always over HTTPS. Getting this wrong is easy and invisible — a link-preview URL that points somewhere the visitor's browser never went will look fine in a local test and be wrong in the wild.</p>",
+
+    "<h2>What it doesn't do, honestly</h2>",
+    "<ul><li><strong>Custom domains aren't supported yet.</strong> Your site lives on a <code>kodely.site</code> subdomain. If putting it on your own domain is a hard requirement today, download the source zip and host it yourself — it's a standard Vite project.</li><li><strong>No analytics.</strong> Published sites can't load third-party scripts of any kind, so there's no way to drop in an analytics tag. That's a real trade-off, and it comes with genuinely no third-party tracking on your visitors.</li><li><strong>No structured data generation.</strong> Nothing automatically emits schema markup for a local business, a menu, or an FAQ.</li><li><strong>No keyword research, rank tracking or content suggestions.</strong> Kodely builds the site; it doesn't run your SEO programme.</li></ul>",
+
+    "<h2>What's still your job</h2>",
+    "<p>This part is true of every website builder, and skipping it is why plenty of well-built sites get no traffic.</p>",
+    "<ol><li><strong>Say what you do and where.</strong> The single biggest on-page factor for a local business is whether the page states the service and the location in plain words. \"Emergency plumber covering Sheffield S6, S10 and S11\" is worth more than any technical tag. Put it in your prompt.</li><li><strong>Claim your business listing.</strong> For anything local, your listing on the major maps and search directories drives more discovery than the site does. Claim it, fill it in completely, and point it at your published URL.</li><li><strong>Get linked to.</strong> Your suppliers, your trade body, the local directory, the association you belong to. A handful of real links from places that already exist beats any amount of on-page tuning.</li><li><strong>Write the specifics.</strong> Prices, coverage, hours, the exact services. People search for those things; generic \"quality service\" copy matches nothing.</li></ol>",
+
+    "<h2>The realistic timeline</h2>",
+    "<p>A brand-new domain doesn't rank the week it's published, whatever built it. Expect to be findable by name reasonably quickly and to be competitive for anything contested only with time and links. Anyone promising otherwise is selling something.</p>",
+    "<p>What Kodely removes is the technical excuse: your page will be static, fast, correctly titled and described, with a valid sitemap and robots file, with no render-blocking third-party scripts, from the moment you publish.</p>",
+    "<p><a href=\"/signup\">Start with 750 free credits</a>, or read <a href=\"/blog/how-to-write-a-prompt-for-an-ai-website-builder\">how to write a prompt that gets the head tags right first time</a>.</p>"
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "slug": "how-to-build-a-tradesman-website-with-ai",
+  "title": "How to Build a Tradesman Website With AI",
+  "metaDescription": "Plumbers, electricians, builders: get a one-page site online yourself in an afternoon. What to write, how quotes work, and what AI can't do here.",
+  "category": "Guides",
+  "targetKeyword": "website builder for tradesmen",
+  "body": [
+    "<p>If you're a plumber, electrician, roofer, joiner or landscaper, your website has one job: make someone who already found your name believe you're real, competent and reachable. Not a brochure. A credibility check that ends in a phone call.</p>",
+    "<p>That page is a good fit for an AI builder, and this guide walks through it — including the parts where you'll need something other than a website.</p>",
+
+    "<h2>What actually converts on a trade site</h2>",
+    "<p>Almost everyone landing on your page is on a phone, mid-problem, comparing you against two other numbers. What they're looking for, in order:</p>",
+    "<ol><li>Do you do the specific thing I need? (Say the job names out loud: boiler repair, consumer unit upgrade, flat roof, bathroom fit.)</li><li>Do you cover where I live? (Name the towns and postcodes. This is also what people type into search.)</li><li>Are you legitimate? (Trade registration numbers, years in business, insurance, DBS if relevant.)</li><li>How fast can I speak to a human? (Phone number. Big. Tappable.)</li></ol>",
+    "<p>A page that answers those four things beats a beautiful page that doesn't.</p>",
+
+    "<h2>Quotes and callbacks: link out, don't fake it</h2>",
+    "<p>Kodely builds the front end of a website. There's no server behind it, no database, no email sending. So a \"request a quote\" form on a generated site would collect nothing and send nothing — the enquiry would just vanish.</p>",
+    "<p>So don't ask for one. Request a quote form and you may well get a good-looking one that throws away every enquiry. What you do instead:</p>",
+    "<ul><li>Phone number as a <code>tel:</code> link, at the top and repeated at the bottom, so one tap dials.</li><li>Email as a <code>mailto:</code> link.</li><li>A WhatsApp link if that's how customers actually reach you.</li><li>If you use a job-management or quoting tool that has a public request page, point a button straight at it.</li></ul>",
+    "<p>Outbound links are normal navigations, so they work fine. Put the destinations in your prompt and you'll get real buttons rather than decorative ones.</p>",
+
+    "<h2>Write the prompt</h2>",
+    "<p>Everything factual on the page has to come from you. The builder is told to write real, specific copy rather than placeholders, so anything you leave out gets filled in with something plausible — and a plausible invented registration number on a trade site is a serious problem, not a cosmetic one. Bring your real details.</p>",
+    "<blockquote><p>A one-page site for R. Bell Plumbing &amp; Heating, a one-man plumbing and heating business covering Sheffield and the S6, S10 and S11 postcodes. Gas Safe registered, number [put yours here], 14 years in the trade. Services: boiler repair and servicing, boiler replacement, bathroom installation, leaks and burst pipes, radiator and valve work, emergency callouts. No call-out fee for jobs booked in advance. Phone-first: the number at the very top as a tap-to-call button, repeated at the bottom, plus a WhatsApp link. Sections: hero with name, area covered and the phone button; services list; why me — Gas Safe, 14 years, fixed quotes before work starts; areas covered; hours including out-of-hours; footer with the Gas Safe number. Plain, sturdy design — navy and white, big readable type, nothing fancy.</p></blockquote>",
+    "<p>Don't have the patience for a paragraph that long? Write one line and hit <strong>Enhance</strong> — it expands your idea into a brief you can read and edit before anything gets built, and it costs no credits.</p>",
+
+    "<h2>What it will and won't look like</h2>",
+    "<p>There will be no photographs — not of your van, not of your work. Published Kodely sites run under a security policy that blocks requests to any other host, so there's no stock photography and no way to place image files today. Colour, type, spacing and inline SVG icons do the work instead.</p>",
+    "<p>For a trade site that's a smaller loss than you'd think: a stock photo of somebody else's boiler doesn't persuade anyone. What persuades is the registration number, the postcodes and the phone button. If you want photos of your own jobs later, you can download the full source as a zip and have someone add them.</p>",
+    "<p>Every generated site is responsive down to a 380px phone screen, which for this audience matters more than anything else on the page.</p>",
+
+    "<h2>The reviews question</h2>",
+    "<p>You'll be tempted to ask for a testimonials section. Be careful what you ask for: if you request one without supplying any actual reviews, you will get invented ones — plausible names, plausible praise, entirely fictional. Publishing those is a real problem, not a stylistic one.</p>",
+    "<p>What you can do is paste real quotes you actually received into the prompt, with the customer's first name and town, and have them laid out properly. What you can't do is embed a live feed of your Google or Checkatrade reviews — that would be a request to another site, which the security policy blocks. Link out to your review profile instead, which is more credible anyway because it's verifiable.</p>",
+
+    "<h2>Getting it live</h2>",
+    "<p>Publishing puts the compiled site on a <code>kodely.site</code> subdomain in one click, with a generated <code>robots.txt</code> and <code>sitemap.xml</code> and a proper page title and description — so a search result shows your business name and trade rather than a blank line.</p>",
+    "<p>One thing to be clear about: a website alone doesn't get you found locally. Your business listing on the major maps and search directories does most of that work. Build the page, then point your listing at it.</p>",
+
+    "<h2>Cost</h2>",
+    "<p>750 free credits on signup, no card required. Credits come off measured model usage after a build succeeds; a build that fails to compile is charged zero. You can set your own rolling 30-day cap in Settings. <a href=\"/blog/how-kodely-credits-work\">The full billing model is here.</a></p>",
+    "<p><a href=\"/signup\">Start with your trade, your postcodes and your phone number</a> — that's genuinely enough for a first version.</p>"
+  ]
+}

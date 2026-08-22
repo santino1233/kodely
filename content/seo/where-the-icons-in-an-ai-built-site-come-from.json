@@ -1,0 +1,36 @@
+{
+  "slug": "where-the-icons-in-an-ai-built-site-come-from",
+  "title": "Where an AI Site's Icons and Artwork Come From",
+  "metaDescription": "No icon font, no CDN, no npm package. Inside the built-in catalogue of icons, gradients, flags and textures a Kodely site draws from.",
+  "category": "Explainers",
+  "targetKeyword": "ai website builder icons",
+  "body": [
+    "<p>A published Kodely site cannot load anything from another host. No icon font, no CDN, no image URL, no npm package added at build time. And yet the pages have icons, textures, gradients and dividers in them.</p>",
+    "<p>Where do those come from? It is a more interesting answer than \"the model draws them\", and it explains a visible change in how generated sites look.</p>",
+
+    "<h2>The problem with a model drawing its own icons</h2>",
+    "<p>Left to itself, a language model asked for a phone icon writes SVG path data from scratch. Sometimes that works. Often it produces something that is recognisably phone-shaped and subtly wrong: inconsistent stroke weights across a set, an optical size that does not match its neighbours, a curve that kinks.</p>",
+    "<p>It is also expensive. Path data is dense, arbitrary numbers — some of the most token-hungry text a model can generate, and every one of those tokens is metered as part of what your build costs.</p>",
+    "<p>So hand-drawn geometry was the worst of both: less consistent than a real icon set, and dearer than one.</p>",
+
+    "<h2>A catalogue the builder searches</h2>",
+    "<p>Instead, Kodely ships a catalogue of inlinable assets and gives the builder a tool to search it in plain words. Ask for \"plumber wrench icon\", \"warm sunset gradient\" or \"wave divider\" and it gets back paste-ready source it drops straight into a component.</p>",
+    "<p>What is in it:</p>",
+    "<ul><li><strong>147 icons</strong>, categorised — contact, social, commerce, food, trades and interface — drawn as a consistent set with a shared stroke weight, and coloured by <code>currentColor</code> so they inherit the text colour around them.</li><li><strong>250 countries</strong>, 55 of them with hand-drawn inline SVG flags and the rest as flag characters.</li><li><strong>30 gradients</strong> and <strong>30 mesh backgrounds</strong>, which do the job a hero photograph would do elsewhere.</li><li><strong>12 section dividers</strong> — waves, angles, torn edges — for the transitions between bands of colour.</li><li><strong>12 CSS patterns</strong> and <strong>3 grain textures</strong>, for surfaces that need not to be flat.</li><li><strong>Initials avatars</strong>, generated from a name, for the places a headshot would normally sit.</li></ul>",
+    "<p>Every one of those is markup, CSS or a <code>data:</code> URI. Nothing fetches anything, which is what makes them safe under a policy that blocks every other host.</p>",
+
+    "<h2>What this changes about the output</h2>",
+    "<p>Three things, in rough order of how much you will notice them:</p>",
+    "<ol><li><strong>Consistency.</strong> Six icons from one set look like a set. Six improvised ones look like six decisions.</li><li><strong>Cost.</strong> Pasting a catalogue entry is dramatically fewer tokens than generating path data, and builds are charged from measured token usage rather than a flat fee — so this shows up in what you pay.</li><li><strong>Ambition.</strong> Mesh backgrounds, grain and dividers are the difference between a page of white boxes and a page with a designed surface. They are also exactly the things a model will not improvise well.</li></ol>",
+
+    "<h2>You can ask for specific things</h2>",
+    "<p>Since the builder searches the catalogue in plain words, your prompt can steer it. Useful things to say:</p>",
+    "<ul><li>\"Use a wave divider between the hero and the services section.\"</li><li>\"Put a subtle grain texture over the dark sections.\"</li><li>\"Icons for each service — spanner, boiler, radiator.\"</li><li>\"A warm mesh gradient behind the hero instead of a flat colour.\"</li></ul>",
+    "<p>And things worth avoiding: asking for a specific commercial icon set by name, or for a brand logo. Neither is in the catalogue and neither can be fetched.</p>",
+
+    "<h2>What it still does not solve</h2>",
+    "<p>Being clear about the boundary: this is artwork, not photography. There is no photograph of your shop, your food, your team or your work, because <a href=\"/blog/why-ai-generated-sites-have-no-stock-photos\">no image can be loaded from another host and there is no upload path</a>. A catalogue of icons and gradients does not change that.</p>",
+    "<p>What it does change is how good the alternative looks. A page built from real typography, a considered palette, a mesh background and a coherent icon set is a designed page. That is a different thing from a page that is visibly missing its photographs.</p>",
+    "<p><a href=\"/signup\">Build one and look at the source</a> — 750 free credits, no card required. See also: <a href=\"/blog/what-a-published-ai-site-is-allowed-to-load\">exactly what a published site is allowed to load</a>.</p>"
+  ]
+}

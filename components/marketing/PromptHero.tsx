@@ -1,9 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import { ArrowUp, Paperclip, Mic, X, Gift } from "lucide-react";
-import { motion } from "framer-motion";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { ArrowUp, Paperclip, Mic, X, Gift, Sparkles } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import { PENDING_PROMPT_KEY, PENDING_PROMPT_IMAGE_KEY } from "@/lib/pending-prompt";
 import { SIGNUP_GRANT } from "@/lib/credits";
 
@@ -56,36 +57,131 @@ async function downscaleImage(file: File, maxDim = 1400, quality = 0.82): Promis
   return canvas.toDataURL("image/jpeg", quality);
 }
 
+// The Web Speech API has no types in TypeScript's DOM lib, so this is a
+// minimal hand-written shim covering exactly the surface used below —
+// narrower than the real spec on purpose, so it can't quietly drift into
+// asserting support for members this component never touches.
+type SpeechRecognitionAlternativeLike = { readonly transcript: string };
+type SpeechRecognitionResultLike = {
+  readonly length: number;
+  readonly [index: number]: SpeechRecognitionAlternativeLike;
+};
+type SpeechRecognitionEventLike = {
+  readonly results: {
+    readonly length: number;
+    readonly [index: number]: SpeechRecognitionResultLike;
+  };
+};
 type SpeechRecognitionLike = {
   continuous: boolean;
   interimResults: boolean;
   lang: string;
   start: () => void;
   stop: () => void;
-  onresult: ((e: any) => void) | null;
+  onresult: ((e: SpeechRecognitionEventLike) => void) | null;
   onend: (() => void) | null;
   onerror: (() => void) | null;
 };
+type SpeechRecognitionCtor = new () => SpeechRecognitionLike;
 
-function getSpeechRecognition(): (new () => SpeechRecognitionLike) | null {
+// Narrowed locally rather than via `declare global`: augmenting Window would
+// collide with the (differently-shaped) definitions any future TS DOM lib
+// ships for this API.
+type SpeechCapableWindow = {
+  SpeechRecognition?: SpeechRecognitionCtor;
+  webkitSpeechRecognition?: SpeechRecognitionCtor;
+};
+
+function getSpeechRecognition(): SpeechRecognitionCtor | null {
   if (typeof window === "undefined") return null;
-  return (window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition ?? null;
+  const w = window as unknown as SpeechCapableWindow;
+  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
+
+// Feature detection is *external* state: it is unknowable while rendering on
+// the server, and rendering the mic button in the server HTML would be a
+// hydration mismatch. useSyncExternalStore is the sanctioned way to express
+// that — getServerSnapshot() feeds both SSR and the hydration render, and
+// React re-reads getSnapshot() only once hydration has finished. Support
+// never changes within a page's life, so subscribe is a no-op.
+const NEVER_CHANGES = () => () => {};
+const readSpeechSupported = () => getSpeechRecognition() !== null;
+const speechUnsupportedOnServer = () => false;
 
 export function PromptHero() {
   const router = useRouter();
+  const reduced = useReducedMotion();
   const [value, setValue] = useState("");
   const [focused, setFocused] = useState(false);
   const [image, setImage] = useState<string | null>(null);
   const [listening, setListening] = useState(false);
-  const [speechSupported, setSpeechSupported] = useState(false);
+  const speechSupported = useSyncExternalStore(
+    NEVER_CHANGES,
+    readSpeechSupported,
+    speechUnsupportedOnServer,
+  );
+  const [enhanceSupported, setEnhanceSupported] = useState(false);
+  const [enhancing, setEnhancing] = useState(false);
+  // The prompt as typed, kept only while an enhanced spec is on screen — this
+  // is what "Revert" restores, and its presence is what tells the composer it
+  // is currently showing a spec rather than a one-liner.
+  const [enhancedFrom, setEnhancedFrom] = useState<string | null>(null);
+  const [enhanceError, setEnhanceError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const baseValueRef = useRef("");
 
+  // /api/enhance is auth-gated, and most people meeting this hero are signed
+  // out — so the button appears only once we know it would work, the same way
+  // the mic waits on feature detection above. Failing closed is the point:
+  // an affordance that 401s on click is worse than no affordance.
   useEffect(() => {
-    setSpeechSupported(getSpeechRecognition() !== null);
+    let alive = true;
+    fetch("/api/auth/me")
+      .then((res) => res.json())
+      .then((body) => {
+        if (alive && body?.user) setEnhanceSupported(true);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
   }, []);
+
+  async function enhance() {
+    const text = value.trim();
+    if (!text || enhancing) return;
+
+    setEnhancing(true);
+    setEnhanceError(null);
+    try {
+      const res = await fetch("/api/enhance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // Always the ORIGINAL one-liner, never a spec we already produced —
+        // enhancing an enhancement compounds invention instead of adding
+        // detail, and the round trip would drift further from what was asked.
+        body: JSON.stringify({ prompt: enhancedFrom ?? text }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok || !body?.spec) throw new Error(body?.error ?? "Couldn't expand that.");
+      setEnhancedFrom(enhancedFrom ?? text);
+      setValue(body.spec);
+    } catch (err) {
+      // Nothing is destroyed on failure: `value` still holds what they typed,
+      // and the build button beside this was never disabled.
+      setEnhanceError(err instanceof Error ? err.message : "Couldn't expand that.");
+    } finally {
+      setEnhancing(false);
+    }
+  }
+
+  function revert() {
+    if (enhancedFrom === null) return;
+    setValue(enhancedFrom);
+    setEnhancedFrom(null);
+    setEnhanceError(null);
+  }
 
   function submit() {
     const text = value.trim();
@@ -122,7 +218,7 @@ export function PromptHero() {
     rec.lang = "en-US";
     baseValueRef.current = value ? value.trim() + " " : "";
 
-    rec.onresult = (e: any) => {
+    rec.onresult = (e: SpeechRecognitionEventLike) => {
       let transcript = "";
       for (let i = 0; i < e.results.length; i++) transcript += e.results[i][0].transcript;
       setValue((baseValueRef.current + transcript).trimStart());
@@ -272,20 +368,70 @@ export function PromptHero() {
           </div>
         )}
 
+        {/* The spec is not a modal or a preview pane — it lands straight in the
+            composer's own textarea, which is already editable and already the
+            thing the send button reads. So "accept" is just pressing send,
+            "edit" is typing, and "discard" is Revert. No new pattern, and no
+            state where the user is stuck looking at something they can't
+            change. */}
+        {enhancedFrom !== null && (
+          <div className="flex items-center justify-between gap-2 px-6 pt-4">
+            <span className="inline-flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400">
+              <Sparkles size={13} style={{ color: "var(--accent)" }} />
+              Expanded spec — edit anything before you build
+            </span>
+            <button
+              type="button"
+              onClick={revert}
+              className="text-xs text-neutral-500 underline underline-offset-2 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
+            >
+              Revert
+            </button>
+          </div>
+        )}
+
+        {/* role="alert" so a failed Enhance is spoken rather than appearing
+            silently above a textarea the user is looking away from. */}
+        {enhanceError && (
+          <p role="alert" className="px-6 pt-4 text-xs text-neutral-500 dark:text-neutral-400">
+            {enhanceError}
+          </p>
+        )}
+
+        {/* The placeholder was the only label, and it disappears on the first
+            keystroke. A visible one would change the design, so this is a
+            sr-only label tied to the field by id. */}
+        <label htmlFor="prompt-hero-input" className="sr-only">
+          Describe the site you want to build
+        </label>
         <textarea
+          id="prompt-hero-input"
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
+            // Enter sends a one-liner, but while a spec is on screen this box
+            // is a multi-line editor — there, Enter has to make a newline or
+            // the first paragraph break the user types starts a build of a
+            // half-edited spec. The send button still works either way.
+            if (e.key === "Enter" && !e.shiftKey && enhancedFrom === null) {
               e.preventDefault();
               submit();
             }
           }}
-          rows={2}
+          // A ~200-word spec in a two-row box is unreviewable, and an
+          // unreviewed spec defeats the whole feature — grow to fit it.
+          rows={enhancedFrom !== null ? 12 : 2}
           placeholder={listening ? "Listening…" : "Describe the site you want to build…"}
-          className="w-full resize-none bg-transparent px-6 pb-14 pt-5 text-[15px] leading-relaxed text-neutral-900 outline-none placeholder:text-neutral-500 dark:text-white dark:placeholder:text-neutral-400"
+          // `outline-none` left the composer's own border shift as the only
+          // focus signal, and that shift (a 25% -> 55% accent tint of white)
+          // is about 1.5:1 against its own unfocused state — under the 3:1
+          // WCAG 2.4.11 asks of a focus indicator. A focus-visible outline is
+          // drawn INSIDE (negative offset) because the composer clips
+          // overflow, and the matching radius keeps it hugging the rounded
+          // box. Mouse clicks are unaffected: focus-visible, not focus.
+          className="w-full resize-none rounded-[1.6rem] bg-transparent px-6 pb-14 pt-5 text-[15px] leading-relaxed text-neutral-900 outline-none placeholder:text-neutral-500 focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-[var(--accent)] dark:text-white dark:placeholder:text-neutral-400"
         />
 
         <div className="absolute bottom-3 left-3 flex items-center gap-1">
@@ -310,8 +456,13 @@ export function PromptHero() {
               }`}
               style={listening ? { background: "var(--brand-gradient)" } : undefined}
             >
-              {listening && (
+              {/* Skipped under reduced motion — it's a framer-motion (JS)
+                  animation, so the CSS-only reduced-motion rule in
+                  globals.css doesn't reach it. The button's solid gradient
+                  fill still shows that recording is on. */}
+              {listening && !reduced && (
                 <motion.span
+                  aria-hidden
                   className="absolute inset-0 rounded-full"
                   style={{ background: "var(--brand-gradient)" }}
                   animate={{ opacity: [0.5, 0, 0.5], scale: [1, 1.6, 1] }}
@@ -319,6 +470,18 @@ export function PromptHero() {
                 />
               )}
               <Mic size={16} strokeWidth={2} className="relative" />
+            </button>
+          )}
+          {enhanceSupported && (
+            <button
+              type="button"
+              onClick={enhance}
+              disabled={enhancing || !value.trim()}
+              aria-label="Expand this into a fuller spec you can edit"
+              className="flex h-9 items-center gap-1.5 rounded-full px-3 text-xs font-medium text-neutral-500 transition-colors hover:bg-black/5 hover:text-neutral-900 disabled:pointer-events-none disabled:opacity-40 dark:text-neutral-400 dark:hover:bg-white/10 dark:hover:text-white"
+            >
+              <Sparkles size={14} strokeWidth={2} />
+              {enhancing ? "Enhancing…" : "Enhance"}
             </button>
           )}
         </div>
@@ -351,6 +514,21 @@ export function PromptHero() {
           </button>
         ))}
       </div>
+
+      {/* The side door to /wizard. That page existed with nothing linking to
+          it, so it was reachable only by typing the URL.
+          Deliberately a quiet line BELOW the composer rather than a button
+          beside it: the raw box stays the default, and the plan is explicit
+          that the wizard is a side door and never a gate. */}
+      <p className="mt-4 text-center text-xs text-neutral-500 dark:text-neutral-400">
+        Not sure what to write?{" "}
+        <Link
+          href="/wizard"
+          className="underline underline-offset-4 transition-colors hover:text-neutral-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] dark:hover:text-white"
+        >
+          Answer two questions instead
+        </Link>
+      </p>
     </div>
   );
 }

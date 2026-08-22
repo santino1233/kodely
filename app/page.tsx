@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
+import { SIGNUP_GRANT } from "@/lib/credits";
 import { HeroMock } from "@/components/marketing/HeroMock";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
@@ -11,6 +12,7 @@ import { LogoCarousel } from "@/components/marketing/LogoCarousel";
 import { PromptHero } from "@/components/marketing/PromptHero";
 import { Reveal } from "@/components/marketing/Reveal";
 import { ShineButton } from "@/components/marketing/ShineButton";
+import { SkipLink } from "@/components/marketing/SkipLink";
 import { TrustBento } from "@/components/marketing/TrustBento";
 
 export default async function Home() {
@@ -19,9 +21,18 @@ export default async function Home() {
 
   return (
     <div className="relative min-h-screen bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-50">
+      <SkipLink />
       <Aura />
-      <MarketingNav />
+      {/* Always false: the redirect above means a signed-in visitor never
+          reaches this render. Passed explicitly anyway so the home page is
+          AUTHORITATIVE about it and can never fall back to a stale hint
+          cookie — this is the one marketing page with a hero. */}
+      <MarketingNav signedIn={false} />
 
+      {/* The page had no <main> at all, so every landmark-based jump (and
+          the skip link above) had nowhere to land and the body content sat
+          outside any region. Purely a wrapper — no layout of its own. */}
+      <main id="main-content" tabIndex={-1}>
       {/* Hero */}
       <section className="relative mx-auto max-w-7xl px-6 pb-28 pt-40 text-center sm:pt-52">
         <Reveal>
@@ -52,12 +63,16 @@ export default async function Home() {
           <div className="mt-10">
             <PromptHero />
           </div>
-          <p className="mt-5 font-mono text-xs text-neutral-400 dark:text-neutral-600">
+          {/* Contrast: was text-neutral-400 / dark:text-neutral-600 — 2.5:1
+              against the page in BOTH themes, well under the 4.5:1 AA needs
+              for body text. Moved one step in each direction (4.7:1 light,
+              7.9:1 dark); same palette, same visual role. */}
+          <p className="mt-5 font-mono text-xs text-neutral-500 dark:text-neutral-400">
             No credit card · Failed builds are free · Real React, not a template
           </p>
           <Link
             href="/pricing"
-            className="mt-3 inline-block text-xs font-medium text-neutral-500 underline underline-offset-4 hover:text-neutral-900 dark:text-neutral-500 dark:hover:text-white"
+            className="mt-3 inline-block text-xs font-medium text-neutral-500 underline underline-offset-4 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
           >
             See pricing
           </Link>
@@ -76,8 +91,8 @@ export default async function Home() {
           example brands, not real customers — Kodely has none to name yet) */}
       <section className="border-t border-neutral-100 pb-20 pt-16 dark:border-neutral-900">
         <Reveal>
-          <p className="text-center text-xs font-medium uppercase tracking-[0.18em] text-neutral-400 dark:text-neutral-600">
-            The range of sites people build with Kodely
+          <p className="text-center text-xs font-medium uppercase tracking-[0.18em] text-neutral-500 dark:text-neutral-400">
+            The range of sites you can build with Kodely
           </p>
         </Reveal>
         <Reveal delay={0.08}>
@@ -120,8 +135,8 @@ export default async function Home() {
           </Reveal>
           <Reveal delay={0.06}>
             <p className="mx-auto mt-5 max-w-md text-base leading-relaxed text-neutral-600 dark:text-neutral-400">
-              750 free credits on signup — enough for a real site and a few
-              changes. Pay only for what you build; a failed build is never
+              {SIGNUP_GRANT} free credits on signup — enough to build a real
+              site. Pay only for what you build; a failed build is never
               charged.
             </p>
           </Reveal>
@@ -138,15 +153,16 @@ export default async function Home() {
           <Reveal delay={0.16}>
             <Link
               href="/pricing"
-              className="mt-5 flex items-center justify-center gap-1.5 text-xs font-medium text-neutral-500 underline underline-offset-4 hover:text-neutral-900 dark:text-neutral-500 dark:hover:text-white"
+              className="mt-5 flex items-center justify-center gap-1.5 text-xs font-medium text-neutral-500 underline underline-offset-4 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
             >
               See full pricing <ArrowRight size={12} />
             </Link>
           </Reveal>
         </div>
       </section>
+      </main>
 
-      <MarketingFooter />
+      <MarketingFooter signedIn={false} />
     </div>
   );
 }

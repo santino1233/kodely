@@ -1,0 +1,138 @@
+{
+  "group": "credit-figure",
+  "gate": null,
+  "why": "Removes the published \"a typical first build runs 100-150 credits\" figure from every live post. Not replaced with another number: lib/credits.ts estimateCredits() says the two measurements we have are ~144 and ~472 credits, so the published range understates the observed high by more than 3x. On a product whose headline promise is no bill shock, quoting low and charging high is the one direction it must never be wrong in. Sufficiency claims derived from the figure (\"enough for a first build plus several rounds of edits\") are removed with it — they inherit the same bad arithmetic.",
+  "detect": [
+    "100\\s*(?:-|\\u2013|\\u2014|to)\\s*150",
+    "\\b\\d{2,4}\\s*(?:-|\\u2013|to)\\s*\\d{2,4}\\s*credits?\\b",
+    "(?:typical|typically|roughly|about|around|usually)[^.<]{0,60}\\b\\d{2,4}\\s*credits?\\b"
+  ],
+  "edits": [
+    {
+      "slug": "kodely-vs-rocket-new",
+      "find": "Credits don't expire. A typical first build runs roughly 100–150 credits, and a follow-up change is usually in the same range, so the free tier is enough to actually build and iterate on something before you have to decide whether to pay.",
+      "replace": "Credits don't expire. What a build costs is metered from its real model usage rather than charged as a flat fee, and a build that fails to compile is never charged at all — so you can start building before deciding whether to pay.",
+      "note": "Metered-not-flat is lib/credits.ts costMicros(); zero-on-failure is creditsCharged: 0 on the FAILED branch of app/api/generate/route.ts."
+    },
+    {
+      "slug": "kodely-vs-lovable",
+      "find": "A first build typically runs <strong>100–150 credits</strong>, and a follow-up change is usually in the same range, so the free tier covers several real iterations before you need to pay anything.",
+      "replace": "What a build costs is metered from its <strong>real model usage</strong> rather than charged as a flat fee, so a small change to one section genuinely costs less than building a page from scratch — and a build that fails to compile is never charged at all.",
+      "note": "Same grounding. Keeps the <strong> so the paragraph's emphasis rhythm survives."
+    },
+    {
+      "slug": "build-a-booking-appointment-website-with-ai",
+      "find": "A first build like the Riverbend example above typically runs somewhere in the 100–150 credit range, and a follow-up change is usually similar. You get 750 credits free on signup with no credit card required, which is normally enough to build and refine a site like this several times over.",
+      "replace": "You are charged from the build's own measured token usage after it succeeds, so a small refinement genuinely costs less than a full build. You get 750 credits free on signup with no credit card required, and a build that fails to compile is never charged.",
+      "note": "750 is SIGNUP_GRANT in lib/credits.ts. The \"several times over\" sufficiency claim goes with the number that produced it."
+    },
+    {
+      "slug": "build-a-online-store-with-ai",
+      "find": "A typical first build runs roughly 100–150 credits, and a follow-up change is usually in that same range, so a handful of rounds of refinement is a normal, affordable part of the process.",
+      "replace": "Each request is charged from its own measured usage rather than a flat per-build fee, so a small refinement genuinely costs less than a full rebuild.",
+      "note": "costMicros() prices real input/output/cache tokens, so cost tracks the size of the work."
+    },
+    {
+      "slug": "build-a-online-store-with-ai",
+      "find": "You start with 750 free credits, no credit card required, which is typically enough for a first build (roughly 100–150 credits) plus several rounds of changes.",
+      "replace": "You start with 750 free credits, no credit card required. Builds are charged from measured model usage after they succeed, and a build that fails to compile is never charged.",
+      "note": "Second occurrence in the same post — the FAQ answer."
+    },
+    {
+      "slug": "website-builder-for-dentists",
+      "find": "New accounts get 750 free credits with no card required, and a typical first build for a site like this runs roughly 100-150 credits — enough for several iterations while you get the sections right.",
+      "replace": "New accounts get 750 free credits with no card required. Builds are charged from measured model usage after they succeed rather than a flat per-build fee, and a build that fails to compile is never charged.",
+      "note": "This post uses an ASCII hyphen in \"100-150\", not an en dash."
+    },
+    {
+      "slug": "website-builder-for-chiropractors",
+      "find": "New accounts get 750 free credits, no card needed, and a typical first build for a site like this runs roughly 100–150 credits — enough to build and iterate on the whole thing a few times over. A build that fails to compile is never charged.",
+      "replace": "New accounts get 750 free credits, no card needed. Builds are charged from measured model usage after they succeed rather than a flat per-build fee, and a build that fails to compile is never charged.",
+      "note": "Keeps the never-charged-on-failure sentence, drops the figure and the iteration-count claim."
+    },
+    {
+      "slug": "website-builder-for-chiropractors",
+      "find": "New accounts start with 750 free credits and no card is required. A first build for a chiropractic site typically costs around 100–150 credits, which leaves plenty of room to try a few directions before you'd need to top up.",
+      "replace": "New accounts start with 750 free credits and no card is required. What you're charged comes from the build's own measured model usage rather than a flat fee, and a build that fails to compile costs nothing.",
+      "note": "Second occurrence — the FAQ answer."
+    },
+    {
+      "slug": "how-to-build-a-website-with-ai",
+      "find": "You don't need a credit card — every new account starts with 750 free credits, which is enough for a full first build (a typical first site runs about 100–150 credits) plus room to make changes afterward.",
+      "replace": "You don't need a credit card — every new account starts with 750 free credits, and a build that fails to compile is never charged.",
+      "note": "\"Enough for a full first build plus room to make changes\" is exactly the claim the 3x measurement spread cannot support."
+    },
+    {
+      "slug": "how-to-build-a-website-with-ai",
+      "find": "Free accounts start with 750 credits and a first build typically costs 100–150, so most people can iterate for a while before topping up. Check current pack sizes before assuming you need more than you do.",
+      "replace": "Free accounts start with 750 credits, credits don't expire, and you can top up at any point — including part-way through a project. Check current pack sizes before assuming you need more than you do.",
+      "note": "There is no expiry mechanism anywhere in the CreditLedger model or lib/credits.ts, so \"don't expire\" is safe; the sufficiency claim is not."
+    },
+    {
+      "slug": "how-to-build-a-website-with-ai",
+      "find": "Yes. New accounts get 750 credits with no card required, which covers a typical first build (roughly 100–150 credits) with room left over for revisions.",
+      "replace": "Yes. New accounts get 750 credits with no card required, and you are only ever charged for a build that actually compiles.",
+      "note": "Third occurrence — the FAQ answer."
+    },
+    {
+      "slug": "free-ai-website-builder",
+      "find": "Sign up and you get <strong>750 free credits</strong> immediately — enough for a first real build, which typically runs 100-150 credits.",
+      "replace": "Sign up and you get <strong>750 free credits</strong> immediately, with no card on file — and a build that fails to compile is never charged.",
+      "note": "ASCII hyphen in \"100-150\" on this post."
+    },
+    {
+      "slug": "kodely-vs-webflow",
+      "find": "A first build typically costs roughly 100 to 150 credits, and a follow-up change in chat usually costs about the same.",
+      "replace": "A build is charged from its own measured model usage rather than a flat fee, so a small change in chat genuinely costs less than a full build.",
+      "note": "This post spells the range out in words rather than using a dash."
+    },
+    {
+      "slug": "kodely-vs-v0",
+      "find": "A first build typically costs 100 to 150 credits, and a follow-up change usually costs about the same.",
+      "replace": "A build is charged from its own measured model usage rather than a flat fee, so a small change usually costs less than a full build.",
+      "note": "Spelled-out range again."
+    },
+    {
+      "slug": "kodely-vs-bolt-new",
+      "find": "A first build typically runs 100–150 credits, and a follow-up change is usually in the same range — so 750 free credits covers several real builds before you need to pay anything.",
+      "replace": "A build is charged from its own measured model usage rather than a flat fee, and a build that fails to compile is never charged — so the 750 free credits go on work that actually compiled.",
+      "note": "\"Covers several real builds\" is the strongest sufficiency overclaim of the set; it goes with the figure."
+    },
+    {
+      "slug": "ai-website-builder-with-transparent-pricing",
+      "find": "A typical first build, the initial site generated from your description, runs roughly 100 to 150 credits.",
+      "replace": "What a build costs comes from its own measured token usage — input, output and cache — priced at the model's published rate, not from a flat per-build fee.",
+      "note": "costMicros() in lib/credits.ts prices exactly those four token classes. On a page titled 'transparent pricing', an understated figure is the worst possible error."
+    },
+    {
+      "slug": "ai-website-builder-with-transparent-pricing",
+      "find": "That means the free 750-credit signup allowance covers a first build plus several rounds of edits before you need to top up, and every paid tier below is sized around multiples of that same real usage.",
+      "replace": "The free 750-credit signup allowance is real money's worth of generation — one credit is a fixed $0.002 of underlying model spend — and every paid tier below is priced from that same unit.",
+      "note": "MICROS_PER_CREDIT = 2_000 in lib/credits.ts, i.e. 500 credits to the dollar of model cost. Replaces a sufficiency claim with a definition that is checkable."
+    },
+    {
+      "slug": "build-a-saas-landing-page-with-ai",
+      "find": "A typical first build for a landing page like this runs roughly 100 to 150 credits.",
+      "replace": "A build is charged from its own measured model usage rather than a flat per-project fee.",
+      "note": "First of two occurrences on this post."
+    },
+    {
+      "slug": "build-a-saas-landing-page-with-ai",
+      "find": "New accounts get 750 free credits with no credit card required — enough for a first landing page build and several rounds of edits, since a build typically runs 100 to 150 credits.",
+      "replace": "New accounts get 750 free credits with no credit card required, and a build that fails to compile is never charged.",
+      "note": "Second occurrence — the pricing paragraph."
+    },
+    {
+      "slug": "build-a-portfolio-website-with-ai",
+      "find": "A first build typically runs 100–150 credits, and a follow-up change is usually in the same range.",
+      "replace": "A build is charged from its own measured model usage rather than a flat fee, so a follow-up change usually costs less than the build that preceded it.",
+      "note": "En dash on this post."
+    },
+    {
+      "slug": "build-a-portfolio-website-with-ai",
+      "find": "New accounts get 750 credits free, no card required, which covers a first build with room for several rounds of edits.",
+      "replace": "New accounts get 750 credits free, no card required, and a build that fails to compile is never charged.",
+      "note": "Sufficiency claim inherited from the figure removed above."
+    }
+  ]
+}

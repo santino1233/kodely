@@ -1,0 +1,38 @@
+{
+  "slug": "how-to-build-a-wedding-website-with-ai",
+  "title": "How to Build a Wedding Website With AI",
+  "metaDescription": "Details, timings and travel on one page your guests can actually read. What an AI-built wedding site can do, and why RSVPs must link out.",
+  "category": "Guides",
+  "targetKeyword": "wedding website builder",
+  "body": [
+    "<p>A wedding website exists to stop eighty people asking you the same six questions. Where is it, when should I arrive, what do I wear, where do I sleep, can I bring the children, and how do I tell you I am coming.</p>",
+    "<p>That is a single page, and it is a page your guests will open on a phone while standing somewhere. Kodely builds exactly that kind of page — with one thing you have to route elsewhere.</p>",
+
+    "<h2>The six questions, in order</h2>",
+    "<ol><li><strong>Names and date.</strong> Immediately, at the top, with the year — people search their inbox in March for a September wedding.</li><li><strong>Where and when.</strong> Venue name, full address as text, ceremony time, and what time to actually arrive.</li><li><strong>The day's shape.</strong> A simple timeline: arrival, ceremony, photos, food, dancing, carriages.</li><li><strong>Travel and stay.</strong> Nearest station, parking, taxi numbers, two or three hotels at different prices.</li><li><strong>Dress code and the awkward bits.</strong> What to wear, children or no children, gifts or no gifts. Say it plainly once and you will never be asked again.</li><li><strong>RSVP.</strong> One button. See below.</li></ol>",
+
+    "<h2>RSVPs have to link out</h2>",
+    "<p>This is the one thing to get right, and it is not negotiable.</p>",
+    "<p>A Kodely site is front-end only: no server, no database, no mail. An RSVP form on the page would have nowhere to send anything. Your guests would fill it in, see a confirmation, and be certain they had replied. You would have no list. You would find out in the week of the wedding.</p>",
+    "<p>So use something that has a backend and link to it hard: a form tool, a shared spreadsheet form, or simply an email link with the subject line prefilled. A <code>mailto:</code> link is unglamorous and completely reliable, which for this particular job is the correct trade.</p>",
+    "<p><a href=\"/blog/why-ai-built-sites-have-no-contact-form\">Why forms cannot work on a generated site</a>, and <a href=\"/blog/how-to-add-a-booking-button-to-an-ai-built-site\">how to make the link-out button obvious</a>.</p>",
+
+    "<h2>There will not be a photograph of you</h2>",
+    "<p>Worth saying early, because for a wedding page it is the thing people most expect. Published Kodely sites cannot load an image from any other host, and there is no upload, so there is no engagement photo and no venue shot.</p>",
+    "<p>What you get instead is typography, colour, generous spacing, gradients and inline SVG ornament — which, for a wedding page, can genuinely look better than a photograph squeezed into a hero. A beautifully set pair of names in a warm palette is not a downgrade. But if the photograph is the point, this is the wrong tool. <a href=\"/blog/why-ai-generated-sites-have-no-stock-photos\">The reasoning in full</a>.</p>",
+
+    "<h2>Write the prompt</h2>",
+    "<blockquote><p>A one-page wedding site for [name] and [name], [date], at [venue, full address]. Sections: names and date at the top; the day's timeline (arrival [time], ceremony [time], dinner [time], dancing until [time]); travel and parking, nearest station [station], two hotel suggestions [hotels]; dress code [dress code]; a plain line saying [children / no children] and [gifts line]; and an RSVP button linking out to [your RSVP form link], repeated at the top and the bottom. No RSVP form on the page itself. Style: warm and unfussy — deep olive and cream, a serif for the names, plenty of space, one repeating leaf motif. Must be easy to read on a phone.</p></blockquote>",
+    "<p>Everything in brackets is a fact only you know. Left out, it comes back as a bracketed placeholder rather than an invented venue or a made-up time — which is exactly what you want on a page that eighty people are going to act on.</p>",
+    "<p>Type one line and press <strong>Enhance</strong> if you would rather start from a draft brief. Enhance costs no credits.</p>",
+
+    "<h2>Refining it</h2>",
+    "<ul><li>\"Move the travel section above the timeline — people ask about parking most.\"</li><li>\"Add: the ceremony is outdoors, bring a coat.\"</li><li>\"Make the RSVP button stick to the bottom of the screen on mobile.\"</li><li>\"The serif is too formal — something warmer for the names.\"</li></ul>",
+    "<p>Every successful build is saved as a checkpoint you can roll back to for free, so you can try three palettes without losing the one you liked.</p>",
+
+    "<h2>Publishing and sharing</h2>",
+    "<p>One click publishes to a <code>kodely.site</code> subdomain. The page ships with a real title and description and link-preview tags, so when you paste the URL into a family group chat it shows your names and the date rather than a blank card. That is most of what this site is for.</p>",
+    "<p>You cannot point your own domain at it yet, so the subdomain is the address you will share. Pick the name carefully — it is going on the invitations.</p>",
+    "<p><a href=\"/signup\">Start with your date, your venue and your RSVP link</a>. See also: <a href=\"/blog/how-to-build-an-event-website-with-ai\">the same approach for an event</a>.</p>"
+  ]
+}

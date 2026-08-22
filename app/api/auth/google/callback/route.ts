@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import { createSession } from "@/lib/auth";
 import { grantCredits, SIGNUP_GRANT } from "@/lib/credits";
 import { createSeedProject } from "@/lib/seed-project";
+import { track, EVENTS } from "@/lib/events";
+import { FLAGS, isEnabled } from "@/lib/flags";
 
 export const dynamic = "force-dynamic";
 
@@ -77,11 +79,45 @@ export async function GET(req: Request) {
       if (existing) {
         user = await db.user.update({ where: { id: existing.id }, data: { googleId: info.sub } });
       } else {
+        // ── Kill switch — the NEW ACCOUNT branch only ────────────────────────
+        // Scope is the whole point of putting it here rather than at the top of
+        // the route. Everything above this line is an existing user signing in:
+        // matched on googleId, or matched on email and linked a line earlier.
+        // Both fall through to createSession below and are completely
+        // unaffected while signups are off, which is what the flag's own
+        // description promises ("existing users are unaffected"). Only the
+        // branch that mints a brand new account is gated.
+        //
+        // Before db.user.create, and therefore before the SIGNUP_GRANT, the
+        // seed project, the signedUp event and the session — a refused
+        // first-time sign-in leaves nothing behind. The Google OAuth code was
+        // already spent by the time this route ran; nothing from it is stored.
+        //
+        // ANONYMOUS, exactly like the password signup route: no account exists
+        // yet, so there is no subject id to bucket on and any rolloutPct below
+        // 100 resolves to false (see lib/flags.ts). Operate this flag at 100%
+        // and toggle `enabled`.
+        //
+        // The redirect carries a specific code rather than reusing
+        // `google_failed`, which would be a lie — Google worked perfectly and
+        // telling the user to "try again or use email" would send them at a
+        // signup route that is also off. NOTE: app/(auth)/login/page.tsx maps
+        // only the two google_* codes and falls back to "Something went wrong."
+        // for anything else, so today this shows a generic banner. Adding
+        // `signups_paused` to GOOGLE_ERRORS in the login and signup pages is
+        // the one-line follow-up that makes it read as well as it should.
+        if (!(await isEnabled(FLAGS.signups))) {
+          return Response.redirect(`${origin}/login?error=signups_paused`, 302);
+        }
+
         user = await db.user.create({
           data: { email, googleId: info.sub, name: info.name?.trim() || null },
         });
         await grantCredits(user.id, SIGNUP_GRANT, "signup_grant");
         await createSeedProject(user.id);
+        // Only on a genuinely new account — linking Google to an existing
+        // email/password user is not a signup and must not inflate the funnel.
+        track(EVENTS.signedUp, { userId: user.id, props: { method: "google" } });
       }
     }
 

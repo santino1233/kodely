@@ -1,0 +1,219 @@
+{
+  "version": 1,
+  "notes": "The golden set. Each entry is one first-build request (kind=create) run against a fresh foundation. `difficulty: awkward` marks prompts chosen because quality is known to collapse there — terse, non-English, or self-contradictory — not because they are unrealistic. `expect` carries per-fixture scoring context so a check can be relaxed or added for that one prompt (see score.mjs).",
+  "fixtures": [
+    {
+      "id": "restaurant-italian",
+      "category": "restaurant",
+      "difficulty": "standard",
+      "prompt": "A website for Trattoria Nonna Bea, a family-run Italian restaurant in Portland, Maine. Warm and a bit rustic. Needs the story of the family, a sample menu with a few antipasti, pastas and desserts with prices, opening hours, and a phone number for reservations: (207) 555-0134.",
+      "notes": "The single most common real request. Menu + hours + phone is the bar."
+    },
+    {
+      "id": "coffee-roastery",
+      "category": "cafe",
+      "difficulty": "standard",
+      "prompt": "Landing page for Meridian Coffee Roasters. We roast single-origin beans and run one cafe in Austin. Show our three current coffees with tasting notes, where to find us, and a newsletter signup.",
+      "notes": "Product-grid plus form. Tests labelled form controls."
+    },
+    {
+      "id": "barber-shop",
+      "category": "local-service",
+      "difficulty": "standard",
+      "prompt": "Make a site for Clipper & Co, a barber shop. Dark, masculine, a little bit old-school. Services and prices (cut $35, cut and beard $50, hot towel shave $45), the barbers, and a big Book Now button.",
+      "notes": "Explicit prices and a strong CTA — checks whether the given facts survive."
+    },
+    {
+      "id": "saas-landing",
+      "category": "saas",
+      "difficulty": "standard",
+      "prompt": "A landing page for Cadence, a B2B SaaS that turns customer support tickets into a prioritised product backlog. Target audience is heads of product at 50-500 person software companies. Hero with a clear value proposition, three feature blocks, a short how-it-works, social proof, and pricing at $49/$149/custom per month.",
+      "notes": "The archetypal SaaS page. Tests whether pricing tiers render as real structure."
+    },
+    {
+      "id": "product-launch",
+      "category": "product",
+      "difficulty": "standard",
+      "prompt": "A launch page for the Hemlock Pocket Notebook — a hardcover A6 notebook with a dot grid and a lay-flat binding, $18. One product, sold direct. Big beautiful photography-style hero (no real photos, obviously), specs, and a pre-order call to action.",
+      "notes": "Explicitly asks for a photographic look with no photos available — tests the inline-SVG/gradient constraint under pressure."
+    },
+    {
+      "id": "portfolio-designer",
+      "category": "portfolio",
+      "difficulty": "standard",
+      "prompt": "Personal portfolio for Ines Okafor, a product designer with 8 years of experience, currently at a fintech. Show six case studies as cards, a short about section, and a way to get in touch. Confident and typographic, not corporate.",
+      "notes": "Design-quality-dominant fixture. Card grid plus strong type."
+    },
+    {
+      "id": "photographer",
+      "category": "portfolio",
+      "difficulty": "standard",
+      "prompt": "Website for Dana Ruiz, a wedding and portrait photographer based in Santa Fe. Mostly a gallery — let the work breathe. Also pricing packages, an about page section, and an enquiry form.",
+      "notes": "A gallery site with no images available is the hardest version of the no-external-requests constraint."
+    },
+    {
+      "id": "gym-strength",
+      "category": "fitness",
+      "difficulty": "standard",
+      "prompt": "Site for Ironhold Strength, a barbell gym. Membership tiers ($59 drop-in month, $99 unlimited, $159 with coaching), class schedule, coach bios, and a free trial signup. Should feel serious and heavy, not a boutique fitness studio.",
+      "notes": "Schedule table plus tiers. Tests table/grid responsiveness."
+    },
+    {
+      "id": "yoga-studio",
+      "category": "fitness",
+      "difficulty": "standard",
+      "prompt": "A calm, airy website for Still Point Yoga in Burlington, Vermont. Class types, the teachers, the schedule, and new-student offer of two weeks for $30.",
+      "notes": "Same shape as the gym with an opposite aesthetic brief — catches template-y sameness."
+    },
+    {
+      "id": "law-firm",
+      "category": "professional",
+      "difficulty": "standard",
+      "prompt": "Website for Hartwell & Reyes LLP, a three-partner employment law firm in Chicago. Practice areas, attorney profiles, a results section, and a confidential consultation request form. Must read as trustworthy and established.",
+      "notes": "Conservative-professional register. Very easy to produce something generic."
+    },
+    {
+      "id": "dental-clinic",
+      "category": "healthcare",
+      "difficulty": "standard",
+      "prompt": "A friendly website for Brightleaf Family Dental. Services, meet the dentists, insurance we accept, new patient information, and appointment booking. Include the office hours and address: 412 Willow Street, Raleigh NC.",
+      "notes": "Healthcare trust signals plus a real address."
+    },
+    {
+      "id": "nonprofit",
+      "category": "nonprofit",
+      "difficulty": "standard",
+      "prompt": "Website for River Keepers Coalition, a small nonprofit that restores urban waterways. We need the mission, our impact in numbers (4 rivers, 118 volunteer days, 22 tons of debris removed last year), ways to help, and a donate call to action.",
+      "notes": "Stat blocks with real numbers — a common place for invented placeholder figures."
+    },
+    {
+      "id": "wedding",
+      "category": "event",
+      "difficulty": "standard",
+      "prompt": "A wedding website for Maya and Tom, getting married on 14 June 2026 at Fern Hollow Barn in the Hudson Valley. Our story, schedule for the day, travel and accommodation, registry links, and an RSVP form. Soft and romantic but not twee.",
+      "notes": "Date/venue fidelity plus an RSVP form."
+    },
+    {
+      "id": "conference",
+      "category": "event",
+      "difficulty": "standard",
+      "prompt": "Site for Signal Conf 2026, a two-day conference on developer tooling in Lisbon, 8-9 October. Speakers, agenda by day, ticket tiers, venue, and a sponsor section.",
+      "notes": "Multi-day agenda is a real information-density test."
+    },
+    {
+      "id": "personal-blog",
+      "category": "blog",
+      "difficulty": "standard",
+      "prompt": "A minimal personal blog for someone who writes about urbanism and public transit. Reverse-chronological list of eight posts with dates and short excerpts, an about section, and a subscribe box. Reading-first, quiet design.",
+      "notes": "Long-form typography. Tests restraint rather than decoration."
+    },
+    {
+      "id": "real-estate-agent",
+      "category": "local-service",
+      "difficulty": "standard",
+      "prompt": "Website for Priya Raman, a residential real estate agent in Seattle. Featured listings with prices and details, neighbourhood guides, testimonials from past clients, and a contact form for a free home valuation.",
+      "notes": "Listing cards with structured data."
+    },
+    {
+      "id": "plumber",
+      "category": "local-service",
+      "difficulty": "standard",
+      "prompt": "Simple website for Dalton Plumbing & Heating, family owned since 1994, serving greater Manchester. Emergency callouts 24/7, services list, service area, and the phone number front and centre: 0161 555 0198.",
+      "notes": "Blue-collar local trade — the largest real-world segment and the one most often produced as a generic startup page."
+    },
+    {
+      "id": "bakery",
+      "category": "restaurant",
+      "difficulty": "standard",
+      "prompt": "A website for Saltwren Bakery, a sourdough and pastry bakery. What we bake each day, where to pre-order, our two market stalls and their times, and a bit about the sourdough starter. Handmade and warm.",
+      "notes": "Second restaurant-adjacent fixture at a different scale."
+    },
+    {
+      "id": "consulting-agency",
+      "category": "professional",
+      "difficulty": "standard",
+      "prompt": "Website for Northbound Partners, a boutique operations consultancy for logistics companies. What we do, three case studies with outcomes, the team of five, and a way to book an intro call.",
+      "notes": "B2B services page with case-study structure."
+    },
+    {
+      "id": "online-course",
+      "category": "education",
+      "difficulty": "standard",
+      "prompt": "Sales page for an online course, 'Ship It: Technical Writing for Engineers'. Six modules, self-paced, $240 or $1,200 for a team of ten. Include the curriculum, who it's for, the instructor bio, an FAQ, and a money-back guarantee.",
+      "notes": "FAQ accordion plus curriculum list — tests interactive components and semantics."
+    },
+    {
+      "id": "music-band",
+      "category": "arts",
+      "difficulty": "standard",
+      "prompt": "Website for Hollow Coast, a four-piece indie rock band from Glasgow. Upcoming tour dates with venues and ticket links, the new album 'Low Tide Radio' out in March, band bios, and links to streaming.",
+      "notes": "Tour-date list plus external links — the one fixture where outbound <a href> links are legitimate and should not be confused with external asset requests."
+    },
+    {
+      "id": "ecommerce-shop",
+      "category": "product",
+      "difficulty": "standard",
+      "prompt": "A small online shop front page for Kiln & Co, handmade ceramics. Eight products in a grid with names and prices, a bit about the studio, shipping info, and a cart button in the header. No checkout needed, just the storefront.",
+      "notes": "Dense product grid; tests whether the agent invents a fake backend."
+    },
+    {
+      "id": "coming-soon",
+      "category": "utility",
+      "difficulty": "standard",
+      "prompt": "A coming soon page for Verity, an app launching in spring. Just the logo wordmark, one line about what it is (a private journal that answers back), an email capture, and a launch countdown feel. Keep it to one screen.",
+      "expect": { "allowComingSoon": true },
+      "notes": "The one fixture where 'coming soon' is the brief, not a placeholder failure — and the one where a small component count may be correct. Present to catch a scoring rubric that punishes the right answer."
+    },
+    {
+      "id": "veterinary-clinic",
+      "category": "healthcare",
+      "difficulty": "standard",
+      "prompt": "Website for Two Rivers Veterinary Clinic. Small animals and exotics, our vets, services and prices for routine care, emergency information, and an appointment request. Reassuring, for worried pet owners.",
+      "notes": "Second healthcare fixture with an emotional register in the brief."
+    },
+    {
+      "id": "terse-a-website",
+      "category": "adversarial",
+      "difficulty": "awkward",
+      "prompt": "a website",
+      "notes": "The floor case. With no subject at all the model has nothing specific to write, so this is where placeholder copy and a 'Kodely Site' title actually appear. If the harness never regresses here, the prompt is doing its job."
+    },
+    {
+      "id": "terse-make-it-nice",
+      "category": "adversarial",
+      "difficulty": "awkward",
+      "prompt": "portfolio. make it nice",
+      "notes": "Slightly above the floor: a subject but no facts. Tests whether the model invents specific, plausible content or falls back to 'Your Name Here'."
+    },
+    {
+      "id": "non-english-spanish",
+      "category": "adversarial",
+      "difficulty": "awkward",
+      "prompt": "Necesito una página web para mi taller mecánico en Valencia. Se llama Talleres Bermúdez, llevamos 30 años reparando coches. Reparación general, cambio de aceite, ITV y neumáticos. Horario de lunes a viernes de 8 a 19 y sábados de 9 a 14. Teléfono 963 55 01 22.",
+      "expect": { "lang": "es" },
+      "notes": "Non-English brief. Two distinct failure modes: replying in the wrong language, and leaving <html lang=\"en\"> on a Spanish page."
+    },
+    {
+      "id": "non-english-japanese",
+      "category": "adversarial",
+      "difficulty": "awkward",
+      "prompt": "東京の下町にある小さな和菓子屋「玉椿堂」のウェブサイトを作ってください。創業は1948年。季節の生菓子ともなかが看板商品です。店舗案内、営業時間（10時〜18時、水曜定休）、お問い合わせを入れてください。落ち着いた和風のデザインで。",
+      "expect": { "lang": "ja" },
+      "notes": "CJK content stresses both the language handling and the system font stack, since no web font may be loaded."
+    },
+    {
+      "id": "contradictory-minimal-everything",
+      "category": "adversarial",
+      "difficulty": "awkward",
+      "prompt": "I want an extremely minimal, clean, almost empty website for my architecture studio — but it needs a full portfolio of 12 projects, team bios, a services list, press mentions, an awards timeline, a blog feed, and a contact form. Minimal though.",
+      "notes": "Self-contradictory brief. Tests whether the model resolves the tension deliberately or produces a cluttered page that satisfies neither half."
+    },
+    {
+      "id": "contradictory-no-scroll",
+      "category": "adversarial",
+      "difficulty": "awkward",
+      "prompt": "Landing page for a productivity app called Tempo. Absolutely no scrolling, everything must fit on one screen, but include the hero, features, testimonials, pricing, FAQ and footer. Also make it work on mobile.",
+      "notes": "The 'fits on one screen' demand is impossible with that content on a 380px viewport, and the responsive check is the one most likely to break here."
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "slug": "what-a-published-ai-site-is-allowed-to-load",
+  "title": "What a Published AI Site Is Allowed to Load",
+  "metaDescription": "The exact security policy every published Kodely site runs under, what each directive rules out, and why that is mostly good news.",
+  "category": "Explainers",
+  "targetKeyword": "ai website builder security policy",
+  "body": [
+    "<p>Most of the surprising limits of an AI-built site trace back to a single line of configuration. Rather than explain them one at a time, here is the line itself, and what each part of it means for a page you publish.</p>",
+    "<p>Every published Kodely site is served with this content security policy:</p>",
+    "<blockquote><p><code>default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; frame-ancestors 'self'</code></p></blockquote>",
+    "<p>Six directives. Between them they decide almost everything about what your site can be.</p>",
+
+    "<h2>Reading it directive by directive</h2>",
+    "<ul><li><strong><code>default-src 'self'</code></strong> — the fallback for everything not named below. Resources may only come from the site's own origin. No CDN, no third-party host, ever.</li><li><strong><code>style-src</code> and <code>script-src</code>, both <code>'self' 'unsafe-inline'</code></strong> — the site's own CSS and JavaScript run, including inline. A compiled React app needs this.</li><li><strong><code>img-src 'self' data:</code></strong> — images may come from the site itself or be embedded as <code>data:</code> URIs. This is why inline SVG works and a remote image URL does not.</li><li><strong><code>connect-src 'none'</code></strong> — the strongest one. The page may make no network requests at all. No fetch, no XHR, no WebSocket, to anywhere, including its own origin.</li><li><strong><code>frame-ancestors 'self'</code></strong> — nobody else can embed your site in a frame on their page.</li></ul>",
+
+    "<h2>What each one rules out in practice</h2>",
+    "<p><strong>No form can submit anything.</strong> That is <code>connect-src 'none'</code> doing its job, on top of the more basic fact that there is no server behind the site to receive a submission. Even wiring a form by hand to a third-party endpoint would fail in the browser. <a href=\"/blog/why-ai-built-sites-have-no-contact-form\">The consequences, and what to build instead.</a></p>",
+    "<p><strong>No analytics, no chat widget, no tracking pixel.</strong> All of those are a script from another host, a network request, or both.</p>",
+    "<p><strong>No photographs from anywhere else.</strong> <code>img-src</code> permits the site's own files and <code>data:</code> URIs only, and there is no upload path to make a photo one of the site's own files. <a href=\"/blog/why-ai-generated-sites-have-no-stock-photos\">Why that is the case.</a></p>",
+    "<p><strong>No embedded video or streaming player.</strong> Same reason.</p>",
+    "<p><strong>No map embed.</strong> A map is a script and a stream of image tiles from another host. Put the address on the page as text instead — which is better for search anyway — and link out to a maps app.</p>",
+
+    "<h2>The font one, which surprises everybody</h2>",
+    "<p>There is no <code>font-src</code> directive in that policy. That does not mean fonts are unrestricted; it means fonts fall back to <code>default-src 'self'</code>.</p>",
+    "<p>So a font from a hosting service is blocked, which people expect. But a font embedded as a base64 <code>data:</code> URI is <em>also</em> blocked, which almost nobody expects — because <code>img-src</code> explicitly allows <code>data:</code> and <code>default-src</code> does not.</p>",
+    "<p>The practical result: type comes from the system font stack. On a Mac or iPhone that is the Apple system face; on Windows it is Segoe UI; elsewhere it falls back sensibly. Those are good typefaces, and they load instantly because they are already on the device. But if your brand depends on a specific licensed font, this is the constraint to weigh before you start.</p>",
+
+    "<h2>Why have the policy at all</h2>",
+    "<p>Because the alternative is worse in ways that are easy to miss.</p>",
+    "<p>A site generated from a prompt is code written by a model. Most of the time that code is fine. The policy is what makes \"most of the time\" acceptable: even if something got through that tried to load a remote script, the browser refuses it. A published site cannot exfiltrate what a visitor types, cannot pull in a script from a host that gets compromised next year, and cannot quietly start tracking people.</p>",
+    "<p>It also makes the sites genuinely fast, for the unglamorous reason that a page which cannot make requests has nothing to wait for. No render-blocking font, no analytics on the critical path, no third-party script deciding your load time.</p>",
+
+    "<h2>Deciding whether this suits you</h2>",
+    "<p>The honest test is one question: does your site's job depend on something outside itself?</p>",
+    "<p>If it needs photography, live data, payments, analytics or an embedded booking widget in the page, the answer is yes, and you should know that before you build rather than after. If its job is to be a fast, credible page that says who you are and sends people to the right place — which is most small sites — the policy costs you very little and buys you a lot.</p>",
+    "<p><a href=\"/signup\">Build one and see</a> — 750 free credits, no card required. See also: <a href=\"/blog/what-kodely-cannot-build-yet\">the full list of what Kodely cannot build yet</a>, and <a href=\"/blog/where-the-icons-in-an-ai-built-site-come-from\">what it uses for artwork instead</a>.</p>"
+  ]
+}

@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { billingEnabled, getPack, stripe } from "@/lib/stripe";
 import { grantCredits } from "@/lib/credits";
+import { track, EVENTS } from "@/lib/events";
 import type Stripe from "stripe";
 
 export const dynamic = "force-dynamic";
@@ -52,6 +53,13 @@ export async function POST(req: Request) {
       // attacker-writable in principle if the integration ever changes.
       if (userId && pack) {
         await grantCredits(userId, pack.credits, `stripe:${session.id}`);
+        // Fires only after the grant lands, so the event can never claim a
+        // purchase the ledger doesn't show. The StripeEvent idempotency guard
+        // above means a webhook retry won't double-count this either.
+        track(EVENTS.creditsPurchased, {
+          userId,
+          props: { packId: pack.id, credits: pack.credits, priceUsdCents: pack.priceUsdCents },
+        });
       } else {
         console.error("[kodely] stripe webhook: missing/invalid metadata", session.id);
       }

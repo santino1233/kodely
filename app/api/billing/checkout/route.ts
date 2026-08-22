@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { billingEnabled, getPack, stripe } from "@/lib/stripe";
+import { track, EVENTS } from "@/lib/events";
 
 export const dynamic = "force-dynamic";
 
@@ -50,6 +51,14 @@ export async function POST(req: Request) {
     ],
     success_url: `${APP_URL}/dashboard?topup=success`,
     cancel_url: `${APP_URL}/dashboard?topup=cancelled`,
+  });
+
+  // Started, not completed. Paired with credits.purchased in the webhook, this
+  // is what makes checkout abandonment visible — the gap between the two is
+  // the number that matters.
+  track(EVENTS.checkoutStarted, {
+    userId: user.id,
+    props: { packId: pack.id, credits: pack.credits, priceUsdCents: pack.priceUsdCents },
   });
 
   return Response.json({ url: session.url });

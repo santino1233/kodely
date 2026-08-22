@@ -1,0 +1,37 @@
+{
+  "slug": "how-to-build-a-nonprofit-website-with-ai",
+  "title": "How to Build a Nonprofit Website With AI",
+  "metaDescription": "A credible one-page site for a charity or community group, with donations linking out to a real payment platform. The prompt and the limits.",
+  "category": "Guides",
+  "targetKeyword": "nonprofit website builder",
+  "body": [
+    "<p>Small charities and community groups tend to have the same website problem: the site was built by a volunteer in 2016, that volunteer has moved away, and nobody can edit it. So it says the wrong hours, lists a trustee who left, and links to a donation page that no longer exists.</p>",
+    "<p>The fix is usually not a better website. It is a smaller one that somebody can actually maintain. This guide covers building that with Kodely — one page, honest about money, and editable by describing a change in a sentence.</p>",
+
+    "<h2>What the page has to do</h2>",
+    "<ol><li><strong>Say what you do, concretely.</strong> Not \"empowering our community\" — \"we run a food pantry on Tuesdays and Fridays at [address]\".</li><li><strong>Say who it is for and how to get help.</strong> If you serve people, this is the most important thing on the page and it usually is not at the top.</li><li><strong>Say how to help.</strong> Donate, volunteer, donate goods, come to a thing.</li><li><strong>Establish legitimacy.</strong> Registered charity number, the trustees, where the money goes, when you were founded.</li><li><strong>Contact.</strong> A real email link and a phone number if you have one.</li></ol>",
+
+    "<h2>Donations must link out — and that is fine</h2>",
+    "<p>A Kodely site is front-end only. There is no server, no database and no payment processing, so it cannot take a donation, and a donate form on it would collect nothing while looking exactly like one that works. For a charity that is not just a broken feature; it is money a supporter believes they gave you.</p>",
+    "<p>So the donate button links out to whatever platform actually processes your donations — your fundraising page, your payment provider, a text-to-donate line. That platform handles cards, receipts, and Gift Aid or its local equivalent, which you would not want a static page attempting anyway.</p>",
+    "<p>Label the button with its destination: \"Donate via [your platform]\". A visitor who knows where they are going trusts the click. <a href=\"/blog/why-ai-built-sites-have-no-contact-form\">Why nothing on the page can submit anywhere</a>, and <a href=\"/blog/how-to-add-a-booking-button-to-an-ai-built-site\">how to make a link-out call to action work hard</a>.</p>",
+
+    "<h2>Never let it invent your numbers</h2>",
+    "<p>Charity copy is full of figures — meals served, people supported, percentage of donations reaching the front line, years running. Every one of those is a factual claim to a donor, and some of them are regulated.</p>",
+    "<p>The builder will not fabricate them. Leave a figure out of your prompt and you get a bracketed placeholder such as <code>[number of people supported last year]</code> rather than a plausible number. That is the correct behaviour and you should not work around it — put your real figures in the prompt, or leave the claim off the page. <a href=\"/blog/why-an-ai-builder-should-leave-blanks\">Why a blank is the safe default</a>.</p>",
+    "<p>The same applies to your registered charity number, your trustees' names, and any accreditation. Real, or absent.</p>",
+
+    "<h2>Write the prompt</h2>",
+    "<blockquote><p>A one-page site for [organisation name], a registered charity ([charity number]) in [place] running [what you actually do]. Sections: what we do, in plain language; how to get help — [how someone accesses your service], with a tap-to-call number and an email link; how to help — a \"Donate\" button linking out to [your donation page], plus a volunteering section with an email link; who we are — trustees [names], founded [year], and a line on where the money goes; and contact details. No donation form or contact form on the page. Warm, plain and credible rather than glossy: white, one deep accent colour, large readable type, generous spacing. Must work well on an old phone.</p></blockquote>",
+    "<p>\"Must work well on an old phone\" is not decoration. If your users are the people you serve rather than the people who fund you, that is the device the site has to be good on.</p>",
+    "<p>If a volunteer is doing this and the prompt looks daunting, type one line and press <strong>Enhance</strong> — it expands it into a brief to read and edit before building, and costs no credits.</p>",
+
+    "<h2>What it will look like</h2>",
+    "<p>No photographs, of your team or your work. Published sites cannot load images from another host and there is no upload path. Colour, type, spacing and inline SVG do the work instead.</p>",
+    "<p>For a small charity this is a mixed blessing worth thinking about honestly: photographs of the people you help are often the most persuasive thing you have, and also the thing most likely to be used without proper consent. A type-led page sidesteps that entirely. <a href=\"/blog/why-ai-generated-sites-have-no-stock-photos\">Why the constraint exists</a>.</p>",
+
+    "<h2>Keeping it alive</h2>",
+    "<p>The reason this approach suits volunteer-run organisations is the maintenance story. Changing the page is a sentence — \"the pantry now opens Wednesdays too\" — and republishing is one click and costs nothing. Every successful build is a free checkpoint, so a new volunteer cannot permanently break it.</p>",
+    "<p><a href=\"/signup\">Start with what you do, when, and your donation link</a> — 750 free credits, no card required. See also: <a href=\"/blog/how-to-build-an-event-website-with-ai\">a page for a fundraising event</a>.</p>"
+  ]
+}

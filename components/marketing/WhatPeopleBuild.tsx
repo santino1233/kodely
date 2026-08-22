@@ -3,13 +3,19 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
+// The `cta` on each card is the call-to-action of a SIMULATED generated site,
+// so it has to be one Kodely would really produce. Generated sites have no
+// backend — no bookings, no accounts, no forms that submit anywhere (see the
+// "never build something that only pretends to work" rule in lib/agent.ts) —
+// so these are the tel:/mailto:/in-page kind the builder is actually told to
+// use, not "Reserve a table" or "Start free trial".
 const EXAMPLES = [
   {
     url: "harlan-law",
     category: "Law firm",
     name: "Harlan & Cole",
     tagline: "Family law, personal injury, estate planning.",
-    cta: "Request a consultation",
+    cta: "Call the office",
     bg: "from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950",
     ink: "text-slate-900 dark:text-slate-50",
     sub: "text-slate-500 dark:text-slate-400",
@@ -20,7 +26,7 @@ const EXAMPLES = [
     category: "SaaS landing page",
     name: "FlowTrack",
     tagline: "Ship faster, together — project management for remote teams.",
-    cta: "Start free trial",
+    cta: "See pricing",
     bg: "from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900",
     ink: "text-blue-950 dark:text-blue-50",
     sub: "text-blue-600 dark:text-blue-300",
@@ -31,7 +37,7 @@ const EXAMPLES = [
     category: "Restaurant",
     name: "Mesa Verde",
     tagline: "Modern Mexican in Austin. Tacos worth the drive.",
-    cta: "Reserve a table",
+    cta: "Call to reserve",
     bg: "from-orange-50 to-red-100 dark:from-orange-950 dark:to-red-950",
     ink: "text-red-950 dark:text-orange-50",
     sub: "text-orange-700 dark:text-orange-300",
@@ -42,7 +48,7 @@ const EXAMPLES = [
     category: "Photography",
     name: "Maren Lucas",
     tagline: "Wedding & portrait photography, Portland.",
-    cta: "Book a session",
+    cta: "Email Maren",
     bg: "from-stone-100 to-stone-200 dark:from-stone-900 dark:to-stone-950",
     ink: "text-stone-900 dark:text-stone-50",
     sub: "text-stone-500 dark:text-stone-400",
@@ -61,7 +67,7 @@ const EXAMPLES = [
   },
 ];
 
-/** One browser-frame object that cycles through real example sites — an
+/** One browser-frame object that cycles through illustrative example sites — an
  * honest, on-brand substitute for a "companies we work with" logo cloud
  * (no real customers to name yet) that still follows the site's own rule
  * of one hero object at a time, not a row of small skeleton chips. */

@@ -1,0 +1,38 @@
+{
+  "slug": "how-to-build-a-gym-website-with-ai",
+  "title": "How to Build a Gym or Studio Website With AI",
+  "metaDescription": "Class timetables, memberships and trial bookings — what an AI-built gym site can do, what it cannot, and the prompt that gets it right.",
+  "category": "Guides",
+  "targetKeyword": "gym website builder",
+  "body": [
+    "<p>Someone looking at a gym or studio website is almost always deciding one thing: is this place for me, or for people who are already good at this. Everything on the page either answers that or gets in the way.</p>",
+    "<p>This guide covers building a one-page site for a gym, a yoga or pilates studio, a climbing wall or a martial arts club with Kodely — and it is direct about the two things you must not try to build into it.</p>",
+
+    "<h2>What the page needs</h2>",
+    "<ol><li>What kind of place this is, in one line, aimed at the person who is nervous rather than the person who already trains.</li><li>What you actually offer: classes, open gym, one-to-one, beginners' courses.</li><li>The timetable — with a caveat, below.</li><li>Prices. Publishing them filters out the wrong enquiries and reassures the right ones.</li><li>Your coaches, by name, with real qualifications.</li><li>A single obvious way to start: book a trial class, or come to a free taster.</li></ol>",
+
+    "<h2>The timetable question</h2>",
+    "<p>A Kodely site is static: no server, no database, no admin panel. You change it by describing a change and republishing. So a timetable on the page is only as fresh as your last edit.</p>",
+    "<p>That is fine if your schedule is genuinely stable — the same six classes at the same times every week, changed twice a year. Put it on the page as a table; it is one of the most useful things you can show, and it saves people a click.</p>",
+    "<p>It is wrong if your schedule moves weekly, or if class capacity matters. In that case put a summary on the page — \"classes most weekday evenings and Saturday mornings\" — and link out to your booking system for the live version. Do not publish a schedule you will not maintain.</p>",
+
+    "<h2>Bookings and memberships: link out</h2>",
+    "<p>Two things a generated site cannot do, at all:</p>",
+    "<ul><li><strong>Take a class booking.</strong> There is no server behind the page, so a booking form has nowhere to send anything. It would look convincing and discard every booking.</li><li><strong>Take a membership payment.</strong> No payment processing, no accounts, no subscriptions.</li></ul>",
+    "<p>Both of those already live in whatever gym management or booking platform you use. The site's job is to get a nervous person to that platform having already decided to try a class. Send them there with a real button: <a href=\"/blog/how-to-add-a-booking-button-to-an-ai-built-site\">how to wire a booking button up properly</a>, and <a href=\"/blog/why-ai-built-sites-have-no-contact-form\">why a form is not the answer</a>.</p>",
+
+    "<h2>Write the prompt</h2>",
+    "<blockquote><p>A one-page site for Anchor Strength, a small barbell gym in [your area] for people who have never lifted before. Tone: welcoming and unpretentious, definitely not hardcore — no chains, no skulls, no shouting. Sections: what we are, our coaching (a beginners' course, small-group sessions, open gym), a weekly timetable table, prices, coaches [your coaches' names and qualifications], and a big \"Book a free trial\" button linking out to our booking page, repeated top and bottom. Phone number as a tap-to-call link. Warm and solid: charcoal, off-white, one ochre accent, heavy type for headings, plenty of breathing room. No contact form.</p></blockquote>",
+    "<p>Bring the real prices, real class times and real coach names. Anything factual you leave out comes back as a bracketed placeholder — the builder writes <code>[your price]</code> rather than inventing one, which is what you want on a page people will hold you to.</p>",
+    "<p>Short on time? Type one line and press <strong>Enhance</strong>, which expands it into a full brief you edit before building, for no credits.</p>",
+
+    "<h2>What it will look like</h2>",
+    "<p>No photographs of your gym. Published sites cannot load images from any other host and there is no upload, so type, colour, spacing and inline SVG carry the design. Every site is responsive down to a 380px-wide phone and ships with a dark-mode treatment by default.</p>",
+    "<p>For a gym this cuts both ways honestly: photographs of a real room full of ordinary people are genuinely persuasive, and you will not have them. What you can have is a page that is specific, calm and legible, which beats a stock photo of a model doing a deadlift. <a href=\"/blog/why-ai-generated-sites-have-no-stock-photos\">The constraint explained</a>.</p>",
+
+    "<h2>Refining it</h2>",
+    "<ul><li>\"Put the trial-class button above the timetable.\"</li><li>\"The timetable is unreadable on a phone — stack it by day.\"</li><li>\"Add a line: no minimum contract, cancel any time.\"</li><li>\"Make the beginners' course the most prominent thing on the page.\"</li></ul>",
+    "<p>Every successful build is a free checkpoint you can restore, and a build that fails to compile is never charged.</p>",
+    "<p><a href=\"/signup\">Start with your timetable and your prices</a>. See also: <a href=\"/blog/how-to-build-a-tradesman-website-with-ai\">the same approach for a trade business</a>.</p>"
+  ]
+}

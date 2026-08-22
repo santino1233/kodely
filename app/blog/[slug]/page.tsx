@@ -10,6 +10,7 @@ import { ArticleProgress } from "@/components/marketing/ArticleProgress";
 import { Reveal } from "@/components/marketing/Reveal";
 import { MotionLift } from "@/components/marketing/FloatCard";
 import { ShineButton } from "@/components/marketing/ShineButton";
+import { SkipLink } from "@/components/marketing/SkipLink";
 
 export const dynamic = "force-static";
 export const revalidate = 3600;
@@ -58,10 +59,15 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
   return (
     <div className="relative min-h-screen bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-50">
+      <SkipLink />
       <Aura />
       <ArticleProgress />
       <MarketingNav />
 
+      {/* <article> is semantic but is not a landmark, so on its own it gave the
+          skip link nowhere to land. Wrapping rather than replacing keeps the
+          article semantics intact. */}
+      <main id="main-content" tabIndex={-1}>
       <article className="relative mx-auto max-w-3xl px-6 pb-24 pt-36 sm:pt-44">
         <Reveal>
           <Link
@@ -162,6 +168,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           </Reveal>
         )}
       </article>
+      </main>
 
       <MarketingFooter />
     </div>

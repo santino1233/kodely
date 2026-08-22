@@ -1,0 +1,55 @@
+{
+  "slug": "how-to-write-a-prompt-for-an-ai-website-builder",
+  "title": "How to Write a Prompt for an AI Website Builder",
+  "metaDescription": "The difference between a generic first build and a good one is the prompt. Six rules, with before-and-after examples you can copy.",
+  "category": "Guides",
+  "targetKeyword": "ai website builder prompt",
+  "body": [
+    "<p>Everyone's first prompt is some version of \"a website for my bakery\". You get back a competent, forgettable page and conclude the tool is mediocre. It isn't — you gave it nothing to work with. Six rules, each with the before and after.</p>",
+
+    "<h2>1. Describe the business, not the website</h2>",
+    "<p>The most common mistake is briefing the layout instead of the subject. The builder is good at layout. What it can't know is what makes your thing specific.</p>",
+    "<p><strong>Before:</strong> \"A modern website for a bakery with a hero, three feature boxes and a contact section.\"</p>",
+    "<p><strong>After:</strong> \"A site for Thorn &amp; Rye, a sourdough bakery that sells out by 11am. Two products done properly — a 48-hour country loaf and a rye — plus whatever pastry the baker felt like that morning. Regulars order the night before by text.\"</p>",
+    "<p>The second version tells the model there's a scarcity story, a two-product menu and a texting habit worth building the page around. The first version describes a template.</p>",
+
+    "<h2>2. Bring the facts, because gaps get filled in</h2>",
+    "<p>This is the one that bites people. The builder is instructed to write real, specific copy — never \"Lorem ipsum\", never \"Your Headline Here\". That's what makes the output feel like a finished site rather than a wireframe. It also means any fact you don't supply will be replaced with a plausible invention: an address, a price, a set of opening hours, a testimonial from someone who does not exist.</p>",
+    "<p>So bring them all: hours, prices, service list, coverage area, registration numbers, real review quotes. And where you genuinely don't have a fact yet, write a bracketed placeholder in the prompt — <code>[your address]</code>, <code>[Gas Safe number]</code> — and say you want it left visible. A blank you can see is much safer than a fabrication you can't.</p>",
+    "<p>Then proofread the result against reality before you publish. Every number on the page is your responsibility, not the model's.</p>",
+
+    "<h2>3. Name one visual idea, not three moods</h2>",
+    "<p>\"Modern, clean and professional\" describes roughly every website ever made, so it steers nothing. One concrete idea steers everything.</p>",
+    "<p><strong>Before:</strong> \"Clean, modern, professional, trustworthy.\"</p>",
+    "<p><strong>After:</strong> \"Editorial, like a printed menu — cream paper background, a deep ink colour, serif headings with generous letterspacing, thin rules between sections, and a single oversized number for each price.\"</p>",
+    "<p>Colour, type and one structural gesture is usually enough. You can always adjust afterwards.</p>",
+
+    "<h2>4. Say what the visitor should do</h2>",
+    "<p>Every page has one action. Booking, calling, joining a waitlist, reading the menu, hiring you. Name it, and say where it goes — the phone number, the booking platform, your email.</p>",
+    "<p>This matters more on Kodely than on most builders, because of what the platform does and doesn't do. Generated sites have no backend, so a contact form would collect nothing and send nothing. Don't ask for one — ask for a link instead: a tap-to-call number, a mailto link, a button pointing at the booking tool you already use. Links are ordinary navigations and work normally, so you get a real, working call to action rather than a decorative one.</p>",
+
+    "<h2>5. List the sections in order</h2>",
+    "<p>You know your customer's questions better than any model does. Listing the sections in the order you want them answered is the single cheapest improvement you can make to a prompt.</p>",
+    "<blockquote><p>Sections in this order: hero with the shop name, the neighbourhood and a tap-to-call button; what we make; this week's bread; how ordering works; hours and address; footer.</p></blockquote>",
+    "<p>One thing to know: Kodely builds <strong>single-page</strong> sites. Those sections are parts of one page you scroll, not separate URLs. Don't brief a five-page structure and expect five pages.</p>",
+
+    "<h2>6. Don't ask for things the sandbox can't do</h2>",
+    "<p>Published Kodely sites run under a strict security policy that blocks every request to another host, and the project can only use the packages it ships with. So the following will not appear no matter how you phrase it:</p>",
+    "<ul><li>Photographs and stock imagery — no remote images of any kind.</li><li>Custom web fonts. Type comes from the system font stack.</li><li>Embedded maps, video embeds, social feeds, live prices, analytics scripts.</li><li>Databases, logins, dashboards, carts, checkout, or anything that stores a submission.</li></ul>",
+    "<p>Asking for them wastes a build. Design around them instead: colour and type instead of photography, a linked address instead of an embedded map, a link to your store instead of a cart. <a href=\"/blog/what-kodely-cannot-build-yet\">The full list of what isn't possible is here</a>, kept deliberately blunt.</p>",
+
+    "<h2>Use Enhance if you'd rather not write all this</h2>",
+    "<p>There's an Enhance button next to the prompt box. It takes a one-liner and expands it into a structured brief — audience, goal, tone, sections, key content — that you read and edit <em>before</em> you build.</p>",
+    "<p>Two things make it worth using. It knows the platform's limits, so it won't write you a brief promising a booking system or a photo gallery that can't exist. And where a real-world fact is clearly needed, it's instructed to write a bracketed placeholder like <code>[your address]</code> rather than inventing one — which turns the brief into a checklist of the facts you still need to supply.</p>",
+    "<p>Enhance is free and is never billed as a build. That's on purpose: a preview of what you're about to spend on shouldn't itself cost anything.</p>",
+
+    "<h2>Then iterate — that's where the quality is</h2>",
+    "<p>Nobody's first build is their last. The second prompt is where a site gets good, and specific beats vague every time:</p>",
+    "<ul><li>Vague: \"make it look better\". Specific: \"increase the space between sections, and make the headings about 30% larger\".</li><li>Vague: \"the colours are off\". Specific: \"the green is too dark and cold — go lighter and warmer, closer to olive\".</li><li>Vague: \"add more content\". Specific: \"add a section after the menu called 'How ordering works' with three numbered steps\".</li></ul>",
+    "<p>Every successful build is saved as a checkpoint in the History tab, and rolling back to an earlier one is free — it restores a snapshot rather than generating anything. So a bold edit is a cheap experiment, not a risk.</p>",
+
+    "<h2>The short version</h2>",
+    "<p>Tell it what the business really is. Bring your own facts. Name one visual idea. Say what the visitor should do and where that goes. List the sections in order. Stay inside what the platform can actually build.</p>",
+    "<p><a href=\"/signup\">750 free credits, no card</a> — and a build that fails to compile is never charged, so a first attempt is a genuinely low-stakes thing to make.</p>"
+  ]
+}

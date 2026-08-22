@@ -1,0 +1,38 @@
+{
+  "slug": "why-an-ai-builder-should-leave-blanks",
+  "title": "Why an AI Builder Should Leave Blanks",
+  "metaDescription": "An invented phone number belongs to a real stranger. Why Kodely writes a bracketed placeholder instead of a plausible fact about your business.",
+  "category": "Explainers",
+  "targetKeyword": "ai website builder makes up information",
+  "body": [
+    "<p>Give an AI website builder one line about your business and it will hand back a finished-looking page. Somewhere on that page there will usually be an address, a phone number, a set of opening hours, and three warm testimonials from people with first names and last initials.</p>",
+    "<p>None of it is true. All of it looks true. That combination is the problem.</p>",
+
+    "<h2>The failure is not \"it wrote something wrong\"</h2>",
+    "<p>Language models fill gaps. That is close to what they are for. Ask for a website for a plumber in Leeds and the model has seen thousands of plumbers' websites, so it knows the shape: a number in the header, hours in the footer, a review that says the engineer was punctual and tidied up afterwards. Producing that shape is not a malfunction.</p>",
+    "<p>It becomes one the moment the page goes on a real business's real domain. Then:</p>",
+    "<ul><li>An invented phone number is somebody's actual phone number. Someone with a burst pipe rings a stranger.</li><li>Invented opening hours send a real customer to a locked door on a Sunday.</li><li>An invented testimonial is a fabricated endorsement attributed to a person who does not exist — a thing with legal weight in most advertising regimes, not just a taste problem.</li><li>An invented price is one you either honour or explain away.</li></ul>",
+    "<p>And the reason these survive to publication is precisely that they look right. Nobody proofreads a plausible detail. You proofread the heading you did not like.</p>",
+
+    "<h2>What Kodely does instead</h2>",
+    "<p>The builder is instructed never to fabricate a fact about a real business: no street addresses, phone numbers, email addresses, opening hours, prices, staff names, years in business, customer counts, awards, certifications, review scores or testimonials.</p>",
+    "<p>Where it does not know one, it writes a clearly bracketed placeholder — <code>[your phone number]</code>, <code>[your address]</code>, <code>[your opening hours]</code> — and moves on.</p>",
+    "<p>A bracket is deliberately ugly. It is an obvious instruction to fill something in, visible from across the room in a preview, and impossible to publish by accident without noticing. A plausible-looking invention is the opposite: it is designed, by its nature, to be overlooked.</p>",
+
+    "<h2>This deliberately overrides \"no placeholder text\"</h2>",
+    "<p>There is a tension here worth naming, because it is the interesting part.</p>",
+    "<p>Generated sites are also told, firmly, never to ship <em>Lorem ipsum</em> or headings that say \"Your Title Here\". Placeholder copy is what makes an AI-built page feel like a draft rather than a site, and it is one of the main reasons <a href=\"/blog/why-your-ai-website-looks-generic\">generated pages read as generic</a>.</p>",
+    "<p>So the two rules pull against each other, and the ordering matters: not knowing a fact does not license inventing one. Invent freely where invention is a design decision — headlines, section copy, taglines, colour, layout, the visual idea of the page. Never where it is a claim about the world.</p>",
+
+    "<h2>What this means for your prompt</h2>",
+    "<p>It means the facts you supply are the facts you get, so bring them. A prompt with your real service list, real hours and real prices produces a page you can publish. A prompt without them produces a page with brackets in it, which is a to-do list rather than a failure.</p>",
+    "<p>Two things worth doing:</p>",
+    "<ul><li><strong>Paste real quotes if you want testimonials.</strong> Write the words you want on the page. Do not ask for testimonials and let the model write them — whatever comes back is an endorsement nobody gave you.</li><li><strong>Give the destination, not the intent.</strong> \"A booking button\" gets a bracketed link. \"A booking button linking to [your real booking URL]\" gets a working one.</li></ul>",
+    "<p>If writing all that out feels like effort, type one line and press <strong>Enhance</strong>. It expands your idea into a fuller brief you read and edit before building, with brackets where real-world facts belong — and it costs no credits, because a preview of what you are about to spend on should not itself cost anything.</p>",
+
+    "<h2>The test for any builder</h2>",
+    "<p>If you are evaluating AI website tools, this is a cheap and revealing thing to check. Describe a business, deliberately omit the phone number and the hours, and look at what comes back.</p>",
+    "<p>If there is a phone number on the page, the tool made it up, and it will make up other things you are less likely to catch.</p>",
+    "<p><a href=\"/signup\">Try it with 750 free credits</a> — bring your real details and see how much of the page you can publish unedited. See also: <a href=\"/blog/how-to-write-a-prompt-for-an-ai-website-builder\">how to write a prompt that gets a good first build</a>.</p>"
+  ]
+}

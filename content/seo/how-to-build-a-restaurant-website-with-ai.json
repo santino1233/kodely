@@ -1,0 +1,51 @@
+{
+  "slug": "how-to-build-a-restaurant-website-with-ai",
+  "title": "How to Build a Restaurant Website With AI",
+  "metaDescription": "Describe your restaurant, get a real React site, publish it. A step-by-step walkthrough with an honest account of what Kodely can and cannot do.",
+  "category": "Guides",
+  "targetKeyword": "build a restaurant website with ai",
+  "body": [
+    "<p>Most restaurants need one page. Where you are, when you're open, what you serve, how to get a table, and enough of a feel for the room that someone decides to come. That page is exactly what Kodely is good at, and this walkthrough goes through it end to end — including the two or three things you'll have to solve outside the site itself.</p>",
+
+    "<h2>What you get at the end</h2>",
+    "<p>A single-page website, published on the web, that you can send to anyone. Underneath it is a real Vite + React + TypeScript + Tailwind project — actual component files you can open, read, and download as a zip. It is not a screenshot, an HTML mockup, or a proprietary page format.</p>",
+    "<p>It is one page. Kodely builds single-page sites: your menu, your story and your contact details are sections you scroll to, not separate URLs. For a restaurant that is usually the right shape anyway, but it is worth knowing before you start planning a five-page structure.</p>",
+
+    "<h2>Before you type anything, collect your facts</h2>",
+    "<p>The builder is told to write real, specific copy rather than \"Your Text Here\" placeholders — which is what makes the result feel designed, and also means that anything factual you leave out will be filled in with something plausible and wrong. It has no way of knowing your closing time. So the quality of what you get back depends almost entirely on what you bring to the prompt, and every fact you don't supply is a fact you'll have to correct.</p>",
+    "<p>Have these ready:</p>",
+    "<ul><li>The restaurant's name, and one sentence describing it the way you'd say it out loud.</li><li>Your address and phone number.</li><li>Opening hours, including the days you're closed.</li><li>Eight to fifteen dishes with short descriptions, grouped the way your menu is grouped.</li><li>Where bookings actually happen — your phone, or the link to whatever reservation service you already use.</li><li>Your social links, if you have them.</li></ul>",
+
+    "<h2>Write the prompt</h2>",
+    "<p>Describe the restaurant, not the website. You are briefing someone who has never eaten there. Specifics about the food, the room and the neighbourhood do far more for the result than adjectives about the design.</p>",
+    "<blockquote><p>A one-page site for Osteria Nove, a small twelve-table Italian place in the old market quarter. Warm and unfussy, not fine dining. Hand-rolled pasta, a short menu that changes weekly, natural wine. Sections: hero with the name and a line about the weekly menu, a short story about the two brothers who run it, the current menu grouped into Antipasti / Pasta / Secondi / Dolci, opening hours and address, and a footer. Bookings are by phone only — make the phone number a large tappable link. Warm cream and deep green palette, generous spacing, serif headings.</p></blockquote>",
+    "<p>If you'd rather not write all that yourself, there's an <strong>Enhance</strong> button next to the prompt box. It expands a one-liner into a fuller brief that you read and edit <em>before</em> you build anything. Enhance is free — it never costs credits, because a preview you pay for isn't a preview.</p>",
+
+    "<h2>The menu is page content, not a database</h2>",
+    "<p>Your menu becomes text and layout inside the site's source files. There is no admin panel and no database behind it. To change a dish, you ask for the change in the same chat box — \"swap the cacio e pepe for a wild mushroom tagliatelle at 16\" — and Kodely edits the file and rebuilds.</p>",
+    "<p>That is genuinely fine for a menu that changes weekly. It is a poor fit if you need a non-technical person editing it three times a day, or if you want the menu to come out of your POS system. Know which one you are before you commit.</p>",
+
+    "<h2>Bookings and orders: link out, don't fake it</h2>",
+    "<p>This is the part where a lot of AI-built restaurant sites lie to you. A generated site can show a beautiful reservation form — and that form will do nothing, because there is no server behind it to send the request anywhere.</p>",
+    "<p>So don't ask for one. If you request a reservation form you may well get a nicely designed one, and it will quietly discard every booking. What works instead is a link out:</p>",
+    "<ul><li>A phone number as a <code>tel:</code> link, so a phone visitor taps once and calls.</li><li>An email address as a <code>mailto:</code> link.</li><li>A \"Book a table\" button pointing at the reservation platform you already pay for.</li><li>A \"Order delivery\" button pointing at your delivery partner's page.</li></ul>",
+    "<p>A link is a navigation, not something the page loads, so it works normally. Ask for it explicitly in your prompt and you'll get a big, obvious, working call-to-action rather than a decorative form.</p>",
+
+    "<h2>There are no photographs</h2>",
+    "<p>Worth saying plainly: your generated site will contain no food photography. Published Kodely sites run under a strict security policy that blocks every request to another host, so there is no stock photo library and no image search. Everything visual is drawn in the page itself — CSS gradients, colour, type, inline SVG shapes.</p>",
+    "<p>In practice a confident type-led design with a strong palette reads better than three generic pasta stock photos. But if photography of your own room is the whole point, plan on adding it after export. <a href=\"/blog/why-ai-generated-sites-have-no-stock-photos\">Here's the longer explanation of why that limit exists.</a></p>",
+
+    "<h2>Review, then iterate</h2>",
+    "<p>The first build lands in a live preview. Read it as a customer would. The usual second-round asks are small and specific, and specific requests get much better results than \"make it nicer\":</p>",
+    "<ul><li>\"Move the address and hours above the menu.\"</li><li>\"The green is too dark — go a couple of shades lighter and warm it up.\"</li><li>\"Add a line under the hero: 'Kitchen closes at 22:00, last orders 21:30'.\"</li><li>\"Make the phone number sticky at the bottom of the screen on mobile.\"</li></ul>",
+    "<p>Every successful build is saved as a checkpoint under the History tab. If a round of edits makes things worse, you roll back to the previous version, and rolling back is free — it restores a snapshot you already paid for rather than generating anything new.</p>",
+
+    "<h2>Publish</h2>",
+    "<p>Publishing puts the compiled site on the web at a <code>kodely.site</code> subdomain. It also generates a <code>robots.txt</code> and a <code>sitemap.xml</code> for you, and makes sure the page has a real title, description and link-preview tags — so when someone shares the URL in a group chat it shows your restaurant's name, not a blank card.</p>",
+    "<p>Before it goes live, Kodely scans the files for anything that looks like a leaked API key and blocks the publish if it finds one.</p>",
+
+    "<h2>What it costs</h2>",
+    "<p>New accounts get 750 credits free, no card required. Credits are metered against real model usage after a build succeeds, and a build that fails to compile is charged zero — that rule is enforced in the billing code, not just promised in marketing copy. You can also set your own rolling 30-day spending ceiling in Settings. <a href=\"/blog/how-kodely-credits-work\">The full billing model is here.</a></p>",
+    "<p><a href=\"/signup\">Start with your restaurant's name and one sentence about the food</a> — that is genuinely enough to get a first version on screen.</p>"
+  ]
+}

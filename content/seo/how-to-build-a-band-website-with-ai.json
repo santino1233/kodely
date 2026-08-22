@@ -1,0 +1,37 @@
+{
+  "slug": "how-to-build-a-band-website-with-ai",
+  "title": "How to Build a Band Website With AI",
+  "metaDescription": "One page for a band or solo artist: who you sound like, where to hear you, where to see you. What AI can build and what has to link out.",
+  "category": "Guides",
+  "targetKeyword": "band website builder",
+  "body": [
+    "<p>A band's website is not where people listen to your music. They listen on streaming platforms. It is not where they follow you either — that is social. So what is it for?</p>",
+    "<p>It is the one page you control, that outranks nothing else for your name, and that a promoter, a venue booker or a journalist can open and immediately get what they need. Built with that job in mind it takes an afternoon.</p>",
+
+    "<h2>The page, in order</h2>",
+    "<ol><li><strong>Name and what you sound like.</strong> One line, specific. Two reference points beat any amount of adjective.</li><li><strong>Listen.</strong> Buttons out to the streaming platforms, not an embedded player — see below.</li><li><strong>Live dates.</strong> With a caveat, below.</li><li><strong>Bookings and press.</strong> A real email link. This is the section promoters actually come for and most band sites hide it.</li><li><strong>The bio.</strong> Short. Two paragraphs, one for a listener and one a journalist can lift.</li></ol>",
+
+    "<h2>Why there is no embedded player</h2>",
+    "<p>Published Kodely sites run under a strict content security policy: the page may only load from itself, and it may not make network requests anywhere else. That rules out an embedded streaming player, a video embed, and a hosted audio file.</p>",
+    "<p>It also rules out photographs, because there is no way to load an image from another host and no upload path. So no press shot, no album artwork.</p>",
+    "<p>What you get instead is a page carried by typography, colour and inline SVG — which for a band is a more workable constraint than for most businesses. A strong wordmark treatment in a distinctive palette reads more like a record sleeve than a stock photo would. But if your visual identity is the photograph, know that going in. <a href=\"/blog/why-ai-generated-sites-have-no-stock-photos\">The constraint explained in full</a>.</p>",
+    "<p>Links out to streaming platforms work perfectly — a link is a navigation, not a request the page makes. Make them big buttons, not footer icons.</p>",
+
+    "<h2>Live dates: link out unless they are stable</h2>",
+    "<p>A generated site is static. You change it by describing a change and republishing, which is quick but manual. So a tour list on the page is only as current as your last edit, and an out-of-date gig list is worse than none — someone travels to a show that moved.</p>",
+    "<p>If you play occasionally, put the dates on the page and update them when they change. If you tour properly, put the next two or three on the page and link out to the ticketing or listings page that is always right.</p>",
+
+    "<h2>Write the prompt</h2>",
+    "<blockquote><p>A one-page site for [band name], a [genre] band from [place]. First line says what we sound like: [one specific sentence, two reference points]. Sections: big \"Listen\" buttons linking out to [your streaming links]; live dates — [dates, venues, ticket links]; a bookings section with a mailto link to [your booking email] with the subject line prefilled, clearly labelled for promoters and press; a short two-paragraph bio [your bio facts]; and links to [your social accounts]. No contact form, no embedded player. Look: [describe it — e.g. high-contrast black and acid yellow, heavy condensed type set very large, a hard diagonal divider]. Must look right on a phone.</p></blockquote>",
+    "<p>The look section is where a band page is won or lost, and it is the one part you should over-specify. \"Make it cool\" produces the average of every band site ever made — which is exactly <a href=\"/blog/why-your-ai-website-looks-generic\">why generated pages come out generic</a>. Name colours, name a type feeling, name one structural idea.</p>",
+    "<p>Everything factual — members, label, release dates, quotes from reviews — has to come from you. Left out, it comes back as a bracketed placeholder rather than an invented review from a magazine that never wrote about you.</p>",
+
+    "<h2>Refining it</h2>",
+    "<ul><li>\"Set the band name twice as large and let it run off the edge of the screen.\"</li><li>\"Move the bookings email above the bio.\"</li><li>\"Add the new single: [title], out [date], with a link to [your link].\"</li><li>\"The yellow is too clean — make it dirtier.\"</li></ul>",
+    "<p>Every successful build is a free checkpoint, so you can push a visual idea hard and roll back if it does not land. A build that fails to compile is never charged.</p>",
+
+    "<h2>Publishing</h2>",
+    "<p>One click puts it on a <code>kodely.site</code> subdomain with a real title, description and link-preview tags — so the URL pasted into a message shows your band name rather than a blank card. Custom domains are not supported yet, so if your own domain is the whole point, that is worth knowing now.</p>",
+    "<p><a href=\"/signup\">Start with your name, your streaming links and your booking email</a>. See also: <a href=\"/blog/how-to-build-a-portfolio-website-with-ai\">the same approach for a portfolio</a>.</p>"
+  ]
+}

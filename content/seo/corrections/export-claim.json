@@ -1,0 +1,237 @@
+{
+  "group": "export-claim",
+  "gate": "export-shipped",
+  "gateWhy": "app/api/projects/[id]/export/route.ts, lib/zip.ts and the Download .zip button in app/projects/[id]/Editor.tsx are all UNTRACKED in git — built, not deployed. Every sentence below is TRUE in production right now. Applying these before the deploy replaces a true statement with a false one; applying them long after leaves 30+ live pages telling people a shipped feature does not exist. There is no safe ordering other than the same window.",
+  "why": "Inverts the \"there is no zip or full-project download\" claim across every live post, for the deploy that ships the export route. Ground truth after the deploy: the editor has a Download .zip button that calls GET /api/projects/[id]/export, which streams the draft source tree (kind: \"source\") nested under one folder named for the project slug. It is the source project, not the compiled build output, and there is still no GitHub sync — replacements must not promise either.",
+  "detect": [
+    "no (?:one-click )?(?:full-?project |project |zip |code )?(?:zip|export|download)",
+    "(?:zip|export|download)[^.<]{0,40}(?:isn't|is not|aren't|are not) available",
+    "no zip",
+    "not as a zip",
+    "there is nothing to hand off as a file"
+  ],
+  "edits": [
+    {
+      "slug": "kodely-vs-rocket-new",
+      "find": "<tr><td>Export / download code</td><td>Not yet — view and copy in-app only</td><td>Varies by plan; check current terms before assuming</td></tr>",
+      "replace": "<tr><td>Export / download code</td><td>Yes — one-click zip of the full source project</td><td>Varies by plan; check current terms before assuming</td></tr>",
+      "note": "Comparison table row. The competitor cell is left exactly as it was — we only ever restate our own side."
+    },
+    {
+      "slug": "kodely-vs-rocket-new",
+      "find": "One honest limitation: Kodely doesn't yet support exporting or downloading your project as a zip. You can view and copy the source from inside the app, but there's no one-click full-project export today. If a portable, downloadable codebase is a hard requirement for you right now, that's a real gap worth weighing.",
+      "replace": "You can also take it with you: a Download .zip button in the editor hands you the whole source project — package.json, vite.config.ts, every component file — nested in one folder named for your site, the way a repository download behaves. There is no GitHub sync yet, so pushing it to a repo is a manual first commit.",
+      "note": "entryPath() in the export route nests everything under the slug; the file list is lib/foundation.ts plus whatever the agent wrote."
+    },
+    {
+      "slug": "kodely-vs-rocket-new",
+      "find": "Not as a zip file. You can view and copy the actual generated source files from inside the app, but there's no full-project export or download today.",
+      "replace": "Yes. Download .zip in the editor gives you the complete source project as a single archive, and you can also read and copy individual files from the in-app code view.",
+      "note": "FAQ answer."
+    },
+    {
+      "slug": "kodely-vs-lovable",
+      "find": "<tr><td>Download/export code</td><td>Not yet — view and copy only</td><td>Yes, GitHub sync and export</td></tr>",
+      "replace": "<tr><td>Download/export code</td><td>Yes, zip download — no GitHub sync</td><td>Yes, GitHub sync and export</td></tr>",
+      "note": "Still an honest loss on GitHub sync; the row should say so rather than claim parity."
+    },
+    {
+      "slug": "kodely-vs-lovable",
+      "find": "Kodely, today, lets you view and copy source files from the code view, but there's no zip export or GitHub sync yet.",
+      "replace": "Kodely lets you download the whole project as a zip and view or copy individual files from the code view; what it doesn't have is GitHub sync.",
+      "note": "Keeps the true half of the original sentence intact."
+    },
+    {
+      "slug": "kodely-vs-lovable",
+      "find": "Not yet. You can view and copy the actual source files from Kodely's in-app code view, but there's no zip download or GitHub export at this time. Lovable does support exporting your project.",
+      "replace": "Yes — Download .zip gives you the full source project, and you can view and copy individual files from Kodely's in-app code view. There's no GitHub sync yet, so the first commit into your own repo is a manual one.",
+      "note": "FAQ answer. Drops the competitor sentence because it now reads as a contrast that no longer exists."
+    },
+    {
+      "slug": "build-a-booking-appointment-website-with-ai",
+      "find": "and there's no zip or full-project download, so if you need to hand the code to another developer or hosting platform, that export path isn't available right now. You can still view and copy individual source files from the in-app code view.",
+      "replace": "and if you need to hand the code to another developer or hosting platform, Download .zip in the editor gives you the whole source project as one archive. You can also view and copy individual source files from the in-app code view.",
+      "note": ""
+    },
+    {
+      "slug": "build-a-online-store-with-ai",
+      "find": "and there's no zip or full-project download, just the in-app code view.",
+      "replace": "and the code is yours to take — Download .zip in the editor, or read and copy individual files in the in-app code view.",
+      "note": ""
+    },
+    {
+      "slug": "website-builder-for-dentists",
+      "find": "<strong>Code view.</strong> You can see and copy the generated source directly in the app. Full project export as a downloadable zip isn't available yet.",
+      "replace": "<strong>Code view and export.</strong> You can see and copy the generated source directly in the app, or download the whole project as a zip.",
+      "note": ""
+    },
+    {
+      "slug": "website-builder-for-dentists",
+      "find": "Not yet — there's no zip download or export option today. You can view and copy source from the in-app code view, and publish directly to your free kodely.site address.",
+      "replace": "Yes — Download .zip gives you the full source project, which is a standard Vite + React app you or a developer can host anywhere. You can also view and copy source from the in-app code view, or publish directly to your free kodely.site address.",
+      "note": "The stack claim is lib/foundation.ts: vite, @vitejs/plugin-react, react 19, tailwind v4."
+    },
+    {
+      "slug": "website-builder-for-chiropractors",
+      "find": "<strong>Code view.</strong> You can see and copy the generated source directly in the app. There's no zip download or full project export yet, so plan to keep working inside Kodely for now.",
+      "replace": "<strong>Code view and export.</strong> You can see and copy the generated source directly in the app, or download the whole project as a zip and take it elsewhere.",
+      "note": ""
+    },
+    {
+      "slug": "website-builder-for-chiropractors",
+      "find": "Not yet — there's no zip download or full project export at this stage. You can view and copy source from the in-app code view, but ongoing edits are made through Kodely's chat interface.",
+      "replace": "Yes — Download .zip gives you the whole source project. You can also view and copy source from the in-app code view; edits made inside Kodely still go through the chat interface.",
+      "note": ""
+    },
+    {
+      "slug": "how-to-build-a-website-with-ai",
+      "find": "You can open the code view at any point to see the actual generated source files. There's no export or download yet — code view is for looking and copying snippets, not shipping a zip file.",
+      "replace": "You can open the code view at any point to see the actual generated source files, and Download .zip hands you the whole project when you want it off the platform.",
+      "note": ""
+    },
+    {
+      "slug": "how-to-build-a-website-with-ai",
+      "find": "<strong>Assuming you can export the code today.</strong> You can view and copy source from the code view, but there's no zip download or repo export yet. If you need to hand code off elsewhere, plan around copying the pieces you need rather than exporting the whole project.",
+      "replace": "<strong>Assuming a zip is a migration.</strong> Download .zip gives you the real source project, but it is the source, not a running site — someone still has to <code>npm install</code>, build it, and host it somewhere.",
+      "note": "The export route streams source files only (published: false, kind: \"source\"), never the compiled dist output. Rewriting the mistake rather than deleting the bullet keeps the list's shape."
+    },
+    {
+      "slug": "how-to-build-a-website-with-ai",
+      "find": "You can view and copy the generated source from the in-app code view. A full project export or zip download isn't available yet.",
+      "replace": "You can view and copy the generated source from the in-app code view, or download the whole project as a zip.",
+      "note": "FAQ answer."
+    },
+    {
+      "slug": "how-to-build-a-saas-app-with-ai",
+      "find": "<strong>A code view</strong> where you can read and copy the generated source. There's no zip export yet, so treat Kodely as where the page lives and runs, not a step before you download it elsewhere.",
+      "replace": "<strong>A code view</strong> where you can read and copy the generated source, plus a Download .zip button that hands you the whole project if you'd rather build and host it yourself.",
+      "note": ""
+    },
+    {
+      "slug": "free-ai-website-builder",
+      "find": "Not yet. You can view and copy the generated source files from code view inside Kodely, but there's no full-project zip export or download yet.",
+      "replace": "Yes. Download .zip gives you the full source project, and you can also view and copy individual files from code view inside Kodely.",
+      "note": ""
+    },
+    {
+      "slug": "ai-saas-builder",
+      "find": "<li>No project export or zip download. You can view and copy code from inside the app, but there's no one-click download of the full project.</li>",
+      "replace": "<li>Project export is a one-click zip of the full source tree. You can also view and copy individual files from inside the app.</li>",
+      "note": "This bullet sits in a list of current limits — it no longer belongs there, but the list reads fine with a positive entry."
+    },
+    {
+      "slug": "ai-website-builder-for-agencies",
+      "find": "There's no backend, database, auth, or payment generation, no custom domain connection, and no project export or zip download — you view and copy code in-app.",
+      "replace": "There's no backend, database, auth, or payment generation and no custom domain connection. The code itself you can take: view and copy it in-app, or download the whole project as a zip.",
+      "note": "Backend/domain limits are still true — only the export clause moves."
+    },
+    {
+      "slug": "kodely-vs-webflow",
+      "find": "What Kodely does not yet offer is a full project export or zip download, so today the code lives inside Kodely until that export ships.",
+      "replace": "Kodely also offers a full project export: Download .zip hands you the source tree as a single archive.",
+      "note": "This sentence literally anticipates the deploy — it must not survive it."
+    },
+    {
+      "slug": "kodely-vs-webflow",
+      "find": "Not yet. You can view and copy the generated source files in-app, but there is no zip or full-project download at this time.",
+      "replace": "Yes. You can view and copy the generated source files in-app, or download the whole project as a zip.",
+      "note": "FAQ answer."
+    },
+    {
+      "slug": "kodely-vs-v0",
+      "find": "What Kodely does not have yet is a zip or full-project export - there is no download button for the whole codebase.",
+      "replace": "Kodely also has a zip export - a Download .zip button that hands you the whole codebase as one archive.",
+      "note": "This post uses spaced ASCII hyphens rather than em dashes; the replacement matches its house style."
+    },
+    {
+      "slug": "kodely-vs-bolt-new",
+      "find": "What you cannot do yet is export the whole project as a zip or push it to your own Git repository.",
+      "replace": "You can export the whole project as a zip; what you cannot do yet is push it to your own Git repository from inside Kodely.",
+      "note": "There is no git integration anywhere in the codebase, so the second half stays."
+    },
+    {
+      "slug": "kodely-vs-bolt-new",
+      "find": "Not today. You can view and copy individual source files from the in-app code view, but there is no full-project export yet.",
+      "replace": "Yes. You can download the full project as a zip, or view and copy individual source files from the in-app code view.",
+      "note": "FAQ answer."
+    },
+    {
+      "slug": "do-you-own-the-code-from-ai-website-builders",
+      "find": "What Kodely does not have yet is a one-click export of the whole project - no zip download, no push-to-GitHub button.",
+      "replace": "Kodely now has a one-click export of the whole project as a zip. What it does not have is a push-to-GitHub button.",
+      "note": "On a post titled 'do you own the code', this is the single most load-bearing sentence of the whole correction."
+    },
+    {
+      "slug": "do-you-own-the-code-from-ai-website-builders",
+      "find": "Not yet. You can view and copy every generated source file individually inside the app. A full-project export is not available today.",
+      "replace": "Yes. Download .zip gives you the whole project as one archive, and you can still view and copy every generated source file individually inside the app.",
+      "note": "FAQ answer."
+    },
+    {
+      "slug": "ai-website-builder-with-hosting-included",
+      "find": "There is no zip export yet, so if you need to take the codebase to another host today, plan around that limitation.",
+      "replace": "If you need to take the codebase to another host, Download .zip gives you the source project to build and deploy yourself.",
+      "note": ""
+    },
+    {
+      "slug": "ai-website-builder-with-transparent-pricing",
+      "find": "You can view and copy the generated source files directly in the app's code view, but there's no zip export or download option today.",
+      "replace": "You can view and copy the generated source files directly in the app's code view, or download the whole project as a zip.",
+      "note": ""
+    },
+    {
+      "slug": "ai-website-builder-with-no-credit-card-required",
+      "find": "You can view and copy the generated source files inside the app, but there's no zip export or download option today.",
+      "replace": "You can view and copy the generated source files inside the app, or download the whole project as a zip.",
+      "note": "FAQ answer; the same post carries a second, near-identical sentence — see the sweep output."
+    },
+    {
+      "slug": "ai-website-builder-for-freelancers",
+      "find": "There is no zip export or code download today - you can see and copy the source in-app, but there is nothing to hand off as a file.",
+      "replace": "There is a zip export - Download .zip gives you the source project as a single file to hand off, and you can also see and copy individual files in-app.",
+      "note": "Spaced-hyphen house style on this post."
+    },
+    {
+      "slug": "ai-website-builder-for-developers-fast-prototyping",
+      "find": "No export yet. You can see and copy the generated code in-app, but there is no one-click zip download or repo push. If your plan is to pull the output into your own codebase, you will be copying files by hand today — that is a real gap if you were hoping to treat this as a scaffolding step for production work.",
+      "replace": "Export, yes. Download .zip gives you the whole source project in one click, so treating a Kodely build as a scaffolding step is a real workflow. There is no repo push, so the first commit into your own codebase is manual.",
+      "note": "This is the post whose whole audience cares about the answer."
+    },
+    {
+      "slug": "build-a-agency-website-with-ai",
+      "find": "There is no zip export or project download yet — code view is for reading and copying, not downloading a full project — but nothing is hidden from you.",
+      "replace": "Code view is for reading and copying; Download .zip is for taking the whole project with you. Nothing is hidden from you.",
+      "note": ""
+    },
+    {
+      "slug": "build-a-link-in-bio-page-with-ai",
+      "find": "There is no zip export yet — viewing and copying in-app is how you get at the code today.",
+      "replace": "You can download the whole project as a zip, or read and copy it in-app.",
+      "note": ""
+    },
+    {
+      "slug": "build-a-personal-website-with-ai",
+      "find": "You can view and copy your source files from within the app's code view, but there's no full-project export or zip download yet.",
+      "replace": "You can view and copy your source files from within the app's code view, or download the full project as a zip.",
+      "note": ""
+    },
+    {
+      "slug": "build-a-saas-landing-page-with-ai",
+      "find": "You can view and copy individual source files from the in-app code view, but there is no zip export or full-project download yet.",
+      "replace": "You can view and copy individual source files from the in-app code view, or download the full project as a zip.",
+      "note": ""
+    },
+    {
+      "slug": "website-builder-for-law-firms",
+      "find": "You can view and copy the generated source files from inside Kodely, but there is no full-project export or zip download yet.",
+      "replace": "You can view and copy the generated source files from inside Kodely, or download the full project as a zip.",
+      "note": ""
+    },
+    {
+      "slug": "build-a-podcast-website-with-ai",
+      "find": "Not yet, there is no code export or zip download today.",
+      "replace": "Yes, Download .zip gives you the whole source project.",
+      "note": ""
+    }
+  ]
+}

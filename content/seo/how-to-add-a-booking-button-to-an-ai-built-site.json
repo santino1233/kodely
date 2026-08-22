@@ -1,0 +1,40 @@
+{
+  "slug": "how-to-add-a-booking-button-to-an-ai-built-site",
+  "title": "How to Add a Booking Button That Works",
+  "metaDescription": "Your site cannot take bookings, but it can send people somewhere that can. How to wire a real booking call to action into an AI-built page.",
+  "category": "Guides",
+  "targetKeyword": "add booking button to website",
+  "body": [
+    "<p>If your business runs on appointments, the whole site has one job: get somebody to the thing that takes the appointment. Not to a form. To the actual booking page, or to your phone.</p>",
+    "<p>A Kodely site cannot take a booking itself — there is no server behind it, so <a href=\"/blog/why-ai-built-sites-have-no-contact-form\">a form on the page would discard every request</a>. What it can do is be the best possible on-ramp to a booking tool that already works. This is how to build that properly.</p>",
+
+    "<h2>Decide the destination first</h2>",
+    "<p>Before you write a prompt, pick exactly one primary destination. Most businesses have one already:</p>",
+    "<ul><li>A booking platform page — the direct link to your own scheduling page, not the platform's homepage.</li><li>Your phone number, as a <code>tel:</code> link, if bookings mostly happen by call.</li><li>A messaging profile — WhatsApp, Instagram, Facebook — if that is genuinely where enquiries arrive.</li><li>An email address as a <code>mailto:</code> link, with a subject line prefilled.</li></ul>",
+    "<p>Have the exact URL or number in front of you. A prompt that says \"a booking button\" without a destination produces a bracketed placeholder such as <code>[your booking link]</code>, which is correct behaviour but leaves you a job to finish.</p>",
+
+    "<h2>Ask for it in the prompt, precisely</h2>",
+    "<p>Say what the button says, where it goes, and where it appears. All three:</p>",
+    "<blockquote><p>The main call to action is a \"Book an appointment\" button linking out to my booking page. Put it in the header, at the end of the hero, and again at the bottom of the page. On mobile, make it a bar fixed to the bottom of the screen so it is always reachable. The phone number in the header should be a tap-to-call link. No contact form anywhere on the page.</p></blockquote>",
+    "<p>That last sentence earns its place. Left unsaid, a page for a business that takes appointments tends to grow a form, because that is what those pages usually have.</p>",
+
+    "<h2>Why a link beats a form here anyway</h2>",
+    "<p>This is worth saying even if your site did have a backend. A booking link hands the visitor to a system that knows your real availability, sends its own confirmation, adds the appointment to your calendar, and reminds them the day before. A form hands you a message that you then have to turn into all of that by hand.</p>",
+    "<p>Sending someone straight to the tool is not the compromise. It is the better flow, and it is one fewer step where someone drops out.</p>",
+
+    "<h2>Make it impossible to miss</h2>",
+    "<p>Most visitors are on a phone, deciding in seconds. Things that measurably help:</p>",
+    "<ul><li><strong>One primary action, repeated.</strong> The same button, same wording, several places down the page. Competing calls to action split attention.</li><li><strong>A sticky bar on mobile.</strong> A fixed bottom bar with \"Book\" and \"Call\" means the action is never more than a thumb away.</li><li><strong>Say what happens next.</strong> \"Book online — takes about a minute\" reassures more than \"Book now\".</li><li><strong>Tap targets big enough to hit.</strong> Every generated site is responsive down to a 380px-wide phone, but you should still check the button at that width in the preview.</li></ul>",
+    "<p>What does not help: a button labelled \"Submit\", or one whose destination is a mystery until you press it.</p>",
+
+    "<h2>Refining it after the first build</h2>",
+    "<p>The first build lands in a live preview, and every change after that is a sentence in the same box:</p>",
+    "<ul><li>\"Make the Book button stick to the bottom of the screen on mobile.\"</li><li>\"Move the phone number into the header next to the logo.\"</li><li>\"Add 'Walk-ins welcome before 11am' under the booking button.\"</li><li>\"The Book button and the Call button are competing — make Call secondary.\"</li></ul>",
+    "<p>Every successful build is saved as a checkpoint, and rolling back to one is free — it restores a snapshot you already paid for rather than generating anything new. You are never one bad edit away from losing a version that worked.</p>",
+
+    "<h2>One thing to check before you publish</h2>",
+    "<p>Press the button in the preview. It sounds obvious; it is the step people skip. Confirm it goes to the exact page you meant, that the phone number dials the right number, and that the email link has your address and not a bracket.</p>",
+    "<p>Then publish — one click puts the site on a <code>kodely.site</code> subdomain with <code>robots.txt</code> and <code>sitemap.xml</code> generated for it, and a real title and description so it looks right when someone shares the link.</p>",
+    "<p><a href=\"/signup\">Start with 750 free credits</a> and build the page around your real booking link. See also: <a href=\"/blog/publishing-and-indexing-an-ai-built-site\">what happens when you publish</a>.</p>"
+  ]
+}

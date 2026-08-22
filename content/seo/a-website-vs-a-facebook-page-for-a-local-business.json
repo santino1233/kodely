@@ -1,0 +1,37 @@
+{
+  "slug": "a-website-vs-a-facebook-page-for-a-local-business",
+  "title": "A Website vs a Social Page for a Local Business",
+  "metaDescription": "Plenty of local businesses run on a social profile alone. What that costs, what a one-page site adds, and when you honestly need both.",
+  "category": "Comparisons",
+  "targetKeyword": "do i need a website for my small business",
+  "body": [
+    "<p>A large number of small local businesses have no website. They have a social profile, a phone number, and a listing on a maps app, and they do fine.</p>",
+    "<p>So the question is not \"is a social page enough\" — clearly it can be. The question is what specifically you are giving up, and whether any of it matters for your business. Here is an honest accounting, including what a website does not fix.</p>",
+
+    "<h2>What a social profile does better</h2>",
+    "<p>Genuinely better, not grudgingly:</p>",
+    "<ul><li><strong>Frequency.</strong> Posting today's specials takes twelve seconds. No website workflow beats that.</li><li><strong>Photographs.</strong> Your phone, your food, your finished job, posted in the moment.</li><li><strong>Messaging.</strong> People already have the app, and they will message a profile when they would not fill in a form.</li><li><strong>Distribution.</strong> Posts reach people who were not looking for you. A website reaches people who were.</li></ul>",
+    "<p>Nothing in this article suggests dropping it.</p>",
+
+    "<h2>What it costs you</h2>",
+    "<ol><li><strong>Search.</strong> Someone typing \"[your trade] near me\" gets a maps listing and websites. A social profile is a weak third. The words on a page — your services, your area, your qualifications — are how a search engine understands what you do.</li><li><strong>The stuff nobody posts.</strong> Prices, hours, service area, insurance, what you do not do. On a profile it is buried in a post from March. On a page it is a section.</li><li><strong>Credibility with the cautious.</strong> For a purchase involving a key to a house, a child, or four figures, a lot of people still check for a website. Fair or not, its absence reads as smaller.</li><li><strong>Control.</strong> Your profile's reach, layout and rules belong to a platform. A page does not.</li><li><strong>Something to print.</strong> A URL on a van or a card should be yours.</li></ol>",
+
+    "<h2>What a website does not fix</h2>",
+    "<p>The part these comparisons usually skip.</p>",
+    "<p>A website will not bring you traffic on its own. For a local business the thing that drives enquiries is your maps listing — claimed, complete, with correct hours and real reviews. A site supports that listing; it does not replace it. If you only have time for one, do the listing.</p>",
+    "<p>A website will also not post your specials, and it will not have photographs of your work if you build it with Kodely — <a href=\"/blog/what-a-published-ai-site-is-allowed-to-load\">published sites cannot load an image from any other host and there is no upload path</a>. Your social feed remains your gallery. The site links to it.</p>",
+
+    "<h2>What the site actually needs to contain</h2>",
+    "<p>Less than people think. One page, in this order:</p>",
+    "<ul><li>What you do and where, in the first sentence, using the words people search for.</li><li>Services with real prices or from-prices.</li><li>The trust facts: how long, qualifications, insurance, checks.</li><li>Hours and area covered, as text.</li><li>One obvious action — a tap-to-call button — repeated top and bottom.</li><li>Links out to your social profile and your maps listing.</li></ul>",
+    "<p>No contact form: a generated site has no server behind it, so a form would silently discard every enquiry. A phone link converts better for local work anyway. <a href=\"/blog/why-ai-built-sites-have-no-contact-form\">The reasoning</a>, and <a href=\"/blog/how-to-add-a-booking-button-to-an-ai-built-site\">how to build the call to action instead</a>.</p>",
+
+    "<h2>The two objections, answered</h2>",
+    "<p><strong>\"It'll take weeks.\"</strong> It takes an afternoon. You describe the business in plain English, a real page is generated, and you refine it by describing changes. Publishing is one click to a <code>kodely.site</code> subdomain.</p>",
+    "<p><strong>\"I'll never update it.\"</strong> Probably true, and mostly fine — a page listing your services, area and hours goes stale far more slowly than a feed does. When something does change, it is one sentence and a republish, and republishing costs nothing.</p>",
+
+    "<h2>Deciding</h2>",
+    "<ul><li><strong>Profile only</strong> — if you are booked out, your work is entirely visual, and everyone finds you by word of mouth.</li><li><strong>Add a one-page site</strong> — if strangers search for what you do, if people ask the same questions about price and area, or if you want the URL on a van.</li><li><strong>Either way, do the maps listing.</strong> It is free and it does more for a local business than either of them.</li></ul>",
+    "<p><a href=\"/signup\">Build the page with 750 free credits</a>, no card required. See also: <a href=\"/blog/how-to-build-a-tradesman-website-with-ai\">a worked example for a trade business</a>.</p>"
+  ]
+}

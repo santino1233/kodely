@@ -14,7 +14,10 @@ export function Mark({ size = 26 }: { size?: number }) {
   const reduced = useReducedMotion();
 
   return (
-    <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
+    // Decorative: the mark always sits beside the "kodely" wordmark (or
+    // inside the hero mock), so it carries no information of its own. Left
+    // exposed it appeared in the accessibility tree as an unnamed graphic.
+    <svg width={size} height={size} viewBox="0 0 40 40" fill="none" aria-hidden>
       <defs>
         <linearGradient id={gradId} x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#F72570" />

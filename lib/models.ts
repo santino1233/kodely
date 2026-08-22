@@ -14,6 +14,15 @@ export const MODELS = {
   builder: process.env.KODELY_MODEL_BUILDER ?? "claude-sonnet-5",
   /** Reserved for planning and repair of builds the workhorse couldn't fix. */
   planner: process.env.KODELY_MODEL_PLANNER ?? "claude-opus-5",
+  /**
+   * Expands a one-line prompt into an editable spec (lib/enhance.ts). This is
+   * a few hundred words of prose, not code and not a design problem, so the
+   * "design quality is the product" argument for Sonnet does not apply — Haiku
+   * is a third of the price and the user edits the result anyway. Enhance is
+   * also unbilled, so it comes straight off margin: the cheap model is the
+   * only one that makes the feature free to offer.
+   */
+  enhancer: process.env.KODELY_MODEL_ENHANCER ?? "claude-haiku-4-5",
 } as const;
 
 // Effort moves spend more than the model choice does — Sonnet 5 at `medium` is

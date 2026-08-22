@@ -51,6 +51,21 @@ function headerSafe(value: string, max = 200): string {
   return value.replace(/[\r\n]+/g, " ").trim().slice(0, max);
 }
 
+/**
+ * Send a transactional message through the one configured transport.
+ *
+ * Exists so lib/notifications/ doesn't have to rebuild a transporter from the
+ * same env vars — two independent copies of the secure/port logic would drift,
+ * and the connection pool would be duplicated for no reason. `from` is always
+ * ours: the envelope sender must be a domain this server is allowed to send
+ * for, or SPF/DMARC fails. Callers may override every other field.
+ */
+export async function sendMail(msg: nodemailer.SendMailOptions): Promise<void> {
+  // `from` LAST so it always wins. Spreading it first would let a caller
+  // override the envelope sender, which is the one field that must stay ours.
+  await transporter().sendMail({ ...msg, from: FROM });
+}
+
 export async function sendContactEmail(input: {
   name: string;
   email: string;

@@ -1,0 +1,40 @@
+{
+  "slug": "how-to-build-a-coffee-shop-website-with-ai",
+  "title": "How to Build a Coffee Shop Website With AI",
+  "metaDescription": "A one-page coffee shop site that answers where, when and what — built in an afternoon, with the prompt to use and the honest limits.",
+  "category": "Guides",
+  "targetKeyword": "coffee shop website builder",
+  "body": [
+    "<p>Almost nobody reads a coffee shop's website. They glance at it, on a phone, on a pavement, deciding whether to walk another two minutes. The site has to answer three questions before they lose interest: where are you, are you open, and is this the kind of coffee I want.</p>",
+    "<p>That is a one-page job, which is convenient, because a one page is what Kodely builds.</p>",
+
+    "<h2>The shape of the page</h2>",
+    "<ol><li>Name, one line on what you are, and the address — visible without scrolling.</li><li>Hours, unambiguously. Including the day you close.</li><li>What you actually serve: the roaster, the milk options, whether there is food, whether there is decent decaf.</li><li>The room: seats, wifi, laptops welcome or not, dogs, pushchairs, outdoor tables.</li><li>A big tappable phone number and a link to your Instagram, which is where your regulars actually live.</li></ol>",
+    "<p>That is the whole thing. Resist the urge to add an About section about the founder's journey; nobody standing on a pavement is reading it.</p>",
+
+    "<h2>The one honest limit: there are no photographs</h2>",
+    "<p>Published Kodely sites run under a security policy that blocks requests to every other host, and there is no image upload. So there will be no photograph of your flat white, your counter, or your corner window.</p>",
+    "<p>For most businesses that is a real loss. For a coffee shop it is a smaller one than it feels: every coffee shop photograph on the internet looks like every other coffee shop photograph. What actually distinguishes you on a phone screen is a confident palette, real typography, and specifics — the roaster's name, the fact that you do a proper cortado, the fact that you open at six.</p>",
+    "<p>Colour, type, spacing, gradients and inline SVG do the visual work. <a href=\"/blog/why-ai-generated-sites-have-no-stock-photos\">Why that constraint exists</a> is worth ten minutes if you are weighing it up. If photography is genuinely the whole pitch, this is the wrong tool and you should know that before you start rather than after.</p>",
+
+    "<h2>Write the prompt</h2>",
+    "<p>Specificity is the whole game. Anything factual you leave out comes back as a bracketed placeholder for you to fill in, so bring the facts:</p>",
+    "<blockquote><p>A one-page site for Third Rail, a small speciality coffee shop on Gilbert Street. We serve [your roaster] beans, oat and whole milk, proper decaf, and a short food menu — pastries in the morning, toasties until 2. Open Mon-Fri 7-4, Sat-Sun 8-4. Twelve seats, two outside, dogs welcome, no laptops after midday at weekends. Address and hours right at the top. Big tap-to-call phone number and a link to our Instagram. Warm and plain rather than industrial: deep green, cream, one warm red accent, generous type, no distressed textures.</p></blockquote>",
+    "<p>Note the laptop rule. Odd, specific, true details are what stop the page reading like every other generated site — and they are exactly what a model cannot invent for you.</p>",
+    "<p>If writing that feels like work, type one line and press <strong>Enhance</strong>. It expands your idea into a fuller brief you read and edit before building, and it costs no credits.</p>",
+
+    "<h2>Do not ask for an order form</h2>",
+    "<p>There is no server behind a generated site, so a form has nowhere to send anything. An order form on your page would look convincing and throw every order away.</p>",
+    "<p>If you do takeaway orders through a platform, link out to it with a real button. If you take them by phone, make the number a <code>tel:</code> link. <a href=\"/blog/why-ai-built-sites-have-no-contact-form\">The reasoning in full</a>, and <a href=\"/blog/how-to-add-a-booking-button-to-an-ai-built-site\">how to wire the button up</a>.</p>",
+
+    "<h2>Iterate in plain English</h2>",
+    "<p>The first build appears in a live preview. From there you just describe changes:</p>",
+    "<ul><li>\"Put the hours above the food menu — that's what people actually want.\"</li><li>\"The green is too dark on a phone. Lift it a couple of shades.\"</li><li>\"Add a line under the address: two minutes from the station.\"</li><li>\"Make the Instagram link a proper button, not a footer link.\"</li></ul>",
+    "<p>Every successful build is a checkpoint in the History tab, and rolling back is free.</p>",
+
+    "<h2>Going live</h2>",
+    "<p>One click publishes to a <code>kodely.site</code> subdomain. Kodely generates <code>robots.txt</code> and <code>sitemap.xml</code>, and guarantees the page has a real title and description rather than a placeholder — so a search result and a shared link both show your shop's name.</p>",
+    "<p>Put your address in the copy as text, not only in a heading image you cannot have anyway. And keep your Google Business Profile hours identical to the ones on the page; a mismatch is the fastest way to annoy someone standing outside a closed door.</p>",
+    "<p><a href=\"/signup\">Start with your name, your hours and your roaster</a> — that is enough for a first version. See also: <a href=\"/blog/how-to-build-a-restaurant-website-with-ai\">the same job for a restaurant</a>.</p>"
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "group": "capability-claims",
+  "gate": null,
+  "why": "Corrects live posts that promise things a generated site cannot do, and cannot be made to do by any prompt. The permanent facts: there is no server, database or mail path behind a published site, so a form on one delivers nothing (lib/foundation.ts ships react and react-dom only; there is no generated backend anywhere); it is ONE page — lib/agent.ts SYSTEM, 'Multi-page: this is a single-page app' — a rule that is already deployed; and app/api/site/[slug]/[[...path]]/route.ts serves every site under default-src 'self'; img-src 'self' data:; connect-src 'none', which rules out uploaded photography, remote galleries and map embeds. NOTE ON WORDING: the working tree's lib/agent.ts adds two rules — never invent facts about a real business, and never build a control that only pretends to work — that HEAD does not have, so they are not deployed yet. Every replacement below is deliberately written to be true both before and after that ships: it states what a form on the site does (nothing), never what the builder currently agrees to draw. These are the highest-severity errors of the three groups — a reader acts on them by pointing real patients at a form that throws their appointment away.",
+  "detect": [
+    "collects the request and sends it to you",
+    "(?:gives you|builds?|generates?|get) a[^.<]{0,40}\\bworking\\b[^.<]{0,20}form",
+    "form with working input state",
+    "submissions? (?:actually )?land",
+    "(?:generates?|turns that into|you get)[^.<]{0,40}multi-?page",
+    "(?:swap|replace|add)[^.<]{0,50}your own (?:real )?(?:photos|photography|images)",
+    "map-style block",
+    "placeholder (?:images|visuals|photos)"
+  ],
+  "ignore": [
+    "can't be satisfied",
+    "cannot be satisfied",
+    "Pick a template if",
+    "won't write you a brief"
+  ],
+  "edits": [
+    {
+      "slug": "website-builder-for-dentists",
+      "find": "A simple form where a patient enters their name, contact info, preferred day/time, and reason for the visit. Kodely can build you a genuinely good-looking, professional appointment-request page and contact form. To be clear about what that means today: it collects the request and sends it to you — it does not yet sync automatically to a calendar or scheduling system. Most small practices are fine with this as a starting point: the request comes in, your front desk confirms by phone or email, same as an inquiry from any other channel.",
+      "replace": "One obvious, impossible-to-miss way to get in touch. Be precise about what that is, because it is the one thing on this page you must not get wrong: a Kodely site is front-end only. There is no server behind it, no database, and no mail path — so a form on it has nowhere to send anything, and an appointment typed into one is gone. What works with no server is a large tap-to-call <code>tel:</code> button, an email link, and a prominent \"Book online\" button pointing at whatever scheduling system you already use. Ask for those.",
+      "note": "The old text said the form 'collects the request and sends it to you'. Nothing receives it: a generated site has no server and no mail path."
+    },
+    {
+      "slug": "website-builder-for-dentists",
+      "find": "Kodely can build a professional, well-designed appointment-request page and contact form. It collects the patient's request — it doesn't yet connect to a real calendar or scheduling backend automatically, so your team confirms the appointment manually, the same way you'd handle a phone or email inquiry.",
+      "replace": "No — and you should not put a booking form on the site either. There is no backend behind a generated site, so a form has nothing to submit to and every request typed into one is silently discarded. Use the parts that work with no server: a tap-to-call number, an email link, and a button pointing at the booking system you already use.",
+      "note": "FAQ answer. Same grounding."
+    },
+    {
+      "slug": "website-builder-for-chiropractors",
+      "find": "A clear, prominent way to request an appointment — name, phone, preferred day, and what's bothering them. Worth being upfront here: a Kodely-built site gives you a genuinely good-looking, working request form and a clear \"Call Us\" path, but it doesn't connect to a calendar or booking database on its own yet. You'll want to point the form's contact info at whatever scheduling tool or front-desk process you already use, or simply have staff follow up on submissions.",
+      "replace": "A clear, prominent way to get in touch. Worth being upfront here: a Kodely-built site has no server behind it, so a request form on it would have nowhere to send a request — a form that silently discards an enquiry is worse for your patients than no form at all. What you want instead is a \"Call us\" button wired to a <code>tel:</code> link, an email link, and a \"Book online\" button pointing at whatever scheduling tool you already use.",
+      "note": "'Working request form' and 'follow up on submissions' both imply submissions exist. They do not."
+    },
+    {
+      "slug": "website-builder-for-chiropractors",
+      "find": "Not yet. Kodely builds a genuinely good-looking appointment request page and contact form, but it doesn't save bookings to a calendar or database on its own. Most practices point the form at their existing front desk process or scheduling tool, or simply have staff call back on new requests.",
+      "replace": "No — and don't ask for one. A generated site is front-end only, so there is nothing to receive a submission and nothing to notify you. Point people at your existing scheduling tool with a link-out button, or at your phone with a tap-to-call link; both work from the moment you publish.",
+      "note": "FAQ answer. States what the site does, not what the builder agrees to draw."
+    },
+    {
+      "slug": "website-builder-for-chiropractors",
+      "find": " Add a Services page listing Spinal Adjustments, Sports Injury Rehab, Prenatal Chiropractic, and Massage Therapy, each with a short description. Add an About page with Dr. Marsh's bio and credentials. Add a Location &amp; Hours page with our address at 482 Elm Street, Lakeview, IL, and hours Monday to Friday 8am–6pm, Saturday 9am–1pm. Add a Patient Reviews section with 3–4 short testimonials.",
+      "replace": " Add a Services section listing Spinal Adjustments, Sports Injury Rehab, Prenatal Chiropractic, and Massage Therapy, each with a short description. Add an About section with Dr. Marsh's bio and credentials. Add a Location and Hours section with our address at 482 Elm Street, Lakeview, IL, and hours Monday to Friday 8am–6pm, Saturday 9am–1pm. If you want patient reviews on the page, paste the real quotes into the prompt — do not ask for testimonials and let a language model write them, because whatever it writes will be an endorsement nobody gave you.",
+      "note": "Kodely builds ONE page — SYSTEM: 'this is a single-page app', already deployed. A prompt asking for four pages gets four sections. The testimonial line is changed because a real practice's reviews are facts nobody should be generating."
+    },
+    {
+      "slug": "build-a-booking-appointment-website-with-ai",
+      "find": "<li><strong>What you get:</strong> a genuinely good-looking, fully responsive booking page — services list, pricing, an appointment request form with proper fields and validation-style UI, hours and location, testimonials, and a working navigation and layout. It reads and behaves like a real booking flow.</li>",
+      "replace": "<li><strong>What you get:</strong> a genuinely good-looking, fully responsive booking page — services list, pricing, hours and location, and a prominent \"Book now\" button that links out to the scheduling tool you already use, plus tap-to-call and email links. Every call to action on it is a real, working navigation.</li>",
+      "note": "Both the form and the testimonials drop out of the list of what you get: one has nothing behind it, and the other would be an endorsement nobody gave the business."
+    },
+    {
+      "slug": "build-a-booking-appointment-website-with-ai",
+      "find": "<li><strong>What you don't get yet:</strong> a backend. There's no database behind the form, so a submitted appointment request doesn't get saved anywhere and no email or SMS notification goes out. The form is real UI — real inputs, real client-side behavior — but submissions aren't persisted or delivered yet. Wiring a form to actually save appointments and notify the business is coming in a future release, and it's the natural next step once you've got the front end looking right.</li>",
+      "replace": "<li><strong>What you don't get:</strong> a backend, and therefore nothing a form could talk to. A booking form on a generated site is a dead end: no database stores the request, no email or SMS goes out, and the person who filled it in has no way of knowing that. Anything needing a server has to be a link out to a tool that has one — that is not a temporary gap to design around, it is what a front-end-only site is.</li>",
+      "note": "The old copy described a form that is no longer built, and promised backend form delivery as 'coming in a future release' — a roadmap promise this correction removes rather than re-dates."
+    },
+    {
+      "slug": "build-a-booking-appointment-website-with-ai",
+      "find": "Not yet. Kodely generates a real, polished frontend — including a fully-designed appointment request form — but there's no backend, database, or notification system behind it today. The form looks and behaves like a working booking flow; it just doesn't persist submissions yet. That's on the roadmap.",
+      "replace": "No. Kodely generates a real, polished frontend, and there is no backend, database, or notification system behind it — so a booking form on the page would quietly lose every request. Use a \"Book now\" button pointing at your real scheduling tool, a tap-to-call number and an email link instead.",
+      "note": "FAQ answer."
+    },
+    {
+      "slug": "build-a-booking-appointment-website-with-ai",
+      "find": "<li>\"Make the hero section full-width with a background image instead of a solid color\"</li>",
+      "replace": "<li>\"Make the hero full-width with a warm gradient background instead of a solid color\"</li>",
+      "note": "Published sites run under img-src 'self' data:, with no upload path — there is no background photograph to ask for. Gradients, mesh backgrounds and grain textures are in the built-in asset catalogue (lib/assets/patterns.ts)."
+    },
+    {
+      "slug": "build-a-booking-appointment-website-with-ai",
+      "find": "<li>Social proof — a few real-sounding testimonials or a review count</li>",
+      "replace": "<li>Social proof — real quotes you paste in yourself, or a link out to your reviews profile</li>",
+      "note": "SYSTEM forbids inventing testimonials or review scores for a real business. 'Real-sounding' is precisely what it will not produce."
+    }
+  ]
+}

@@ -24,9 +24,365 @@ model User {
   stripeCustomerId String?
   createdAt        DateTime @default(now())
 
-  sessions Session[]
-  projects Project[]
-  ledger   CreditLedger[]
+  // Self-imposed ceiling on credits spent per rolling 30 days. NULL = no cap.
+  // This is the user's own guard against a runaway session, not a plan limit —
+  // bill shock is the category's deepest trust wound (one competitor billed
+  // $607 against a $25 plan in three days), and a cap the user sets themselves
+  // is the cheapest honest answer to it.
+  spendCapCredits Int?
+
+  // Set when the user asks for erasure, cleared if they cancel. The grace
+  // period is measured from here.
+  //
+  // Exists because the alternative was worse: the request was being recorded as
+  // marker-prefixed SupportNote rows, which then appeared in an operator-notes
+  // UI that describes itself as "operator-written, never customer-facing" — one
+  // of those rows was neither. A lifecycle fact belongs on the user, not
+  // smuggled into a table meant for something else.
+  deletionRequestedAt DateTime?
+
+  // ── Nxeon (domains / VPS / shared hosting), all optional ──────────────────
+  //
+  // @unique because two Kodely accounts silently sharing one Nxeon identity
+  // is a support incident waiting to happen (whose wallet, whose server?) —
+  // the callback treats a collision as a hard error, never a second link.
+  //
+  // Deliberately flat fields rather than a child table: Nxeon provisions AT
+  // MOST one of each product per Kodely account today (the checkout call
+  // carries no slot/index), so a one-row-per-user shape cannot under- or
+  // over-count. Revisit as a table only if Nxeon ever lets one account hold
+  // more than one server, domain or hosting account.
+  //
+  // IMPORTANT — what this does NOT do: buying a domain here does not point it
+  // at a Kodely site, and provisioning a VPS/hosting account here does not
+  // deploy the Kodely-built site onto it. Nxeon's API (see lib/nxeon.ts)
+  // covers identity linking, checkout and provisioning notification only —
+  // actually shipping generated files onto Nxeon infrastructure is unbuilt
+  // and is a separate piece of work.
+  nxeonUserId String? @unique
+
+  nxeonServerId       String?
+  nxeonServerIp       String?
+  nxeonServerHostname String?
+
+  nxeonDomain          String?
+  nxeonDomainExpiresAt DateTime?
+
+  nxeonHostingAccountId String?
+  nxeonHostingDomain    String?
+
+  sessions     Session[]
+  projects     Project[]
+  ledger       CreditLedger[]
+  events       Event[]
+  supportNotes SupportNote[]
+  supportTickets SupportTicket[]
+}
+
+// Idempotency guard for Nxeon's webhook, same shape and same reason as
+// StripeEvent: `id` is the primary key, so a retried or duplicated delivery
+// hits a P2002 conflict and is skipped rather than applied twice. An HMAC
+// signature proves the request came from Nxeon; it says nothing about whether
+// we have already handled this exact delivery.
+model NxeonEvent {
+  id        String   @id
+  type      String
+  createdAt DateTime @default(now())
+}
+
+// First-party analytics. Self-hosted deliberately: cheaper, keeps the data
+// ours, avoids another paid API on the critical path, and is privacy-clean.
+//
+// One wide table rather than a table per dashboard, because the activation
+// funnel, retention cohorts, per-user journey, attribution and the overview
+// tiles are all different queries over the same stream. Build it once, or
+// every dashboard invents its own tracking.
+model Event {
+  id     String  @id @default(cuid())
+  // Nullable so pre-signup events (landing view, prompt submitted) still land.
+  userId String?
+  /// Dotted, past-tense name — see EVENTS in lib/events.ts. Never free text.
+  name   String
+  /// Small, non-PII payload: ids, counts, enum-ish strings. Never prompt bodies.
+  props  Json?
+
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // Funnels scan by name over a window; journeys scan one user over a window.
+  @@index([name, createdAt])
+  @@index([userId, createdAt])
+}
+
+// A submission from a form on a PUBLISHED generated site.
+//
+// This is the one deliberate hole in "generated sites have no backend", and it
+// exists because the alternative is worse: the builder is currently forbidden
+// from drawing a contact form at all, because a form that silently discards a
+// real enquiry is worse than no form — and a live blog post already told dental
+// practices their appointment requests were arriving when they were not.
+//
+// Submissions land HERE, on Kodely's origin, never on the customer's site. The
+// generated page stays static; only the POST target is ours.
+model FormSubmission {
+  id        String   @id @default(cuid())
+  projectId String
+  /// Which form on the page, when a site has more than one.
+  formName  String   @default("contact")
+  /// The submitted fields. Untrusted public input — never rendered as HTML,
+  /// never interpolated into a query, and capped hard at write time.
+  fields    Json
+  /// For rate limiting and abuse triage only. Not shown to the site owner.
+  ipHash    String?
+  createdAt DateTime @default(now())
+
+  readAt DateTime?
+  /// Set when it looks like spam. Kept rather than dropped, so a false
+  /// positive is recoverable and the rate is measurable.
+  spam   Boolean @default(false)
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, createdAt])
+  @@index([createdAt])
+}
+
+// Pre-auth attempt counter for login and signup.
+//
+// Exists because the limiter that guards them cannot key on a user id — there
+// is no session yet — and every other limiter in lib/rate-limit.ts counts rows
+// the feature already writes (Build, Project). A failed login writes nothing,
+// so without this table the counter can only live in process memory, where it
+// resets on every deploy and multiplies by the process count.
+//
+// `key` is the bucket, already hashed by the caller: an IP, or a salted digest
+// of an email. Deliberately never the plaintext address — this table would
+// otherwise become a running list of every address anyone tried to log in as,
+// which is a worse thing to hold than the problem it solves.
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  key       String
+  /// "ip" | "account" | "signup" — so one table serves every pre-auth bucket
+  /// without the scopes colliding on a shared key.
+  scope     String
+  createdAt DateTime @default(now())
+
+  // The only query shape: count rows for one bucket inside a window, and prune
+  // everything older. Both are served by this index.
+  @@index([scope, key, createdAt])
+  @@index([createdAt])
+}
+
+// One row per transactional email actually sent.
+//
+// Without this, notification idempotency has to be derived from a time window,
+// which is at-most-once: a skipped cron run drops that window, and a process
+// restart mid-window can resend. The unique constraint below makes it
+// exactly-once — the insert IS the claim, so two workers racing produce one
+// email and one conflict.
+//
+// `dedupeKey` is the id of the thing that triggered it (the ledger row that
+// dropped someone into "low", the failed build, the project first published),
+// NOT a timestamp. That is what makes the guarantee independent of scheduling.
+model EmailLog {
+  id        String   @id @default(cuid())
+  userId    String
+  /// welcome | low_credits | build_failed | site_published
+  kind      String
+  dedupeKey String
+  sentAt    DateTime @default(now())
+
+  @@unique([kind, dedupeKey])
+  @@index([userId, sentAt])
+}
+
+// Who did what in the admin panel. Admin surfaces read cost, margin, customer
+// prompts and personal data; without a log, "who looked at this account" has no
+// answer. Append-only by convention — nothing in the app updates or deletes a row.
+model AdminAuditLog {
+  id         String   @id @default(cuid())
+  /// The admin who acted. Kept as a plain id, not a relation, so the record
+  /// survives that admin's account being deleted.
+  actorId    String
+  actorEmail String
+  /// Dotted, past-tense: "user.viewed", "site.taken_down", "flag.changed".
+  action     String
+  targetType String?
+  targetId   String?
+  /// Small, non-PII context. Never prompt bodies or generated content.
+  meta       Json?
+  createdAt  DateTime @default(now())
+
+  @@index([actorId, createdAt])
+  @@index([action, createdAt])
+  @@index([targetType, targetId])
+}
+
+// Runtime kill switches and gradual rollout. Deliberately a table rather than
+// env vars: flipping a flag must not require a deploy, which is the entire
+// point of having a kill switch.
+model FeatureFlag {
+  key         String   @id
+  enabled     Boolean  @default(false)
+  description String   @default("")
+  /// 0-100. Ignored when `enabled` is false. Bucketed by user id so a given
+  /// user's answer is stable rather than flickering between requests.
+  rolloutPct  Int      @default(100)
+  updatedAt   DateTime @updatedAt
+  updatedBy   String?
+}
+
+// One row per moderation finding per publish attempt. Sub-blocking findings
+// previously went only to console.warn — enough to reconstruct one site after
+// it is reported, not enough to query proactively, and not enough to ever
+// measure the false-positive rate that gates promoting a rule to blocking.
+model ModerationFinding {
+  id        String   @id @default(cuid())
+  projectId String
+  rule      String
+  severity  String // high | medium | low
+  path      String
+  evidence  String
+  /// "blocked" when this finding stopped the publish, "recorded" otherwise.
+  action    String
+  createdAt DateTime @default(now())
+
+  reviewedAt DateTime?
+  reviewedBy String?
+  /// Set on review: "true_positive" | "false_positive".
+  outcome    String?
+
+  @@index([projectId, createdAt])
+  @@index([severity, createdAt])
+  @@index([rule, createdAt])
+}
+
+// Operator-written notes about a customer, for support continuity. Never shown
+// to the customer, so it must never be used to store anything we would not
+// stand behind if disclosed in a data-subject access request.
+model SupportNote {
+  id          String   @id @default(cuid())
+  userId      String
+  authorEmail String
+  body        String
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+// ── Support tickets: a conversation WITH the customer ─────────────────────
+//
+// SupportNote (above) and SupportMessage (below) are NOT the same thing and
+// must never be merged, however similar the columns look:
+//
+//   SupportNote     operator prose ABOUT a person. Written by staff, read by
+//                   staff, NEVER rendered to the customer. It is disclosable
+//                   in a subject access request — the export returns its body
+//                   — but disclosure-on-request and publication-in-the-UI are
+//                   different things, and only the first one applies here.
+//   SupportMessage  one turn of a conversation WITH a person. Either side may
+//                   have written it, and EVERY row of it — including the ones
+//                   staff wrote — is rendered in that customer's own thread on
+//                   /support the moment it is created.
+//
+// So the safety property is: a staff SupportMessage is published to the
+// customer by construction, and a SupportNote never is. Anything an operator
+// would only write because the customer cannot see it belongs in a note. If a
+// note ever needs to become an answer, it has to be re-written as a message on
+// purpose; nothing in the app copies between the two tables, in either
+// direction, and nothing should.
+//
+// Both are destroyed on erasure (app/api/account/_deletion.ts) and both appear
+// in the data export.
+model SupportTicket {
+  id     String @id @default(cuid())
+  userId String
+
+  /// bug | feature | billing | help. Closed set — SUPPORT_CATEGORIES in
+  /// lib/support.ts is the contract, and the sidebar's "Bug or idea" menu
+  /// links straight at two of them via /support?topic=…
+  category String @default("help")
+  subject  String
+
+  /// OPEN | ANSWERED | RESOLVED. Three, because only three are real: OPEN and
+  /// ANSWERED are derived from who wrote last (nobody types them), and
+  /// RESOLVED is the one a human sets. There is deliberately no "pending", no
+  /// "escalated" and no priority column — nothing measures or acts on any of
+  /// them, and a status nobody sets is a status that lies.
+  status String @default("OPEN")
+
+  /// Which site this is about, when it is about one. SetNull rather than
+  /// Cascade: deleting a project must not destroy the ticket that explains why
+  /// it was deleted, and a thread whose site is gone still reads correctly.
+  projectId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// When the newest message on the thread landed. The list ORDER, kept
+  /// separate from `updatedAt` on purpose: `updatedAt` also moves when someone
+  /// merely opens the thread (the read marks below are updates), and a list
+  /// that reshuffles because a page was viewed is a list you cannot trust.
+  lastMessageAt DateTime @default(now())
+
+  /// When staff last replied. NULL means nobody has. Denormalised so "is there
+  /// an unread reply" is answerable for a whole page of tickets without a join
+  /// per row; written in the same transaction as the message it describes.
+  lastStaffMessageAt DateTime?
+
+  // ── Read state, both sides. Neither is derivable from the other. ──────────
+  /// When the customer last opened this thread. `lastStaffMessageAt` newer
+  /// than this is what puts "New reply" on their list.
+  customerReadAt DateTime?
+  /// When an operator last opened it. With status OPEN — which is exactly the
+  /// case where the last message is the customer's — this is what separates
+  /// "nobody has looked at this yet" from "seen, not yet answered".
+  staffReadAt DateTime?
+
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project  Project?         @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  messages SupportMessage[]
+
+  // The customer's own list, the admin's status filter, and the admin's
+  // unfiltered list. All three sort by lastMessageAt desc.
+  @@index([userId, lastMessageAt])
+  @@index([status, lastMessageAt])
+  @@index([lastMessageAt])
+}
+
+model SupportMessage {
+  id       String @id @default(cuid())
+  ticketId String
+
+  /// CUSTOMER | STAFF. A string rather than a boolean because "isStaff: false"
+  /// reads as an absence, and the one thing this column must never be is
+  /// ambiguous — it decides whose name goes on a message the customer reads.
+  author String
+
+  /// The operator's email AS IT WAS when they replied, denormalised the same
+  /// way AdminAuditLog.actorEmail is, so the record survives that admin's
+  /// account being deleted. NULL on a customer message: the ticket's userId
+  /// already identifies them, and a second copy of a customer's address is
+  /// personal data with no job.
+  ///
+  /// NEVER SHOWN TO THE CUSTOMER. Their thread says "Kodely support" — a staff
+  /// member's address is another person's contact detail, which is the same
+  /// reason the data export withholds SupportNote.authorEmail.
+  staffEmail String?
+
+  /// Plain text, capped at write time. Rendered with whitespace preserved and
+  /// never as HTML — customer input on one side, and on the other a string an
+  /// operator typed that lands in a customer's browser.
+  body String
+
+  createdAt DateTime @default(now())
+
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId, createdAt])
 }
 
 // Every processed Stripe webhook event, keyed by Stripe's own event id.
@@ -61,9 +417,13 @@ model Project {
   publishedAt DateTime?
 
   user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  files    ProjectFile[]
-  messages Message[]
-  builds   Build[]
+  files       ProjectFile[]
+  messages    Message[]
+  builds      Build[]
+  submissions FormSubmission[]
+  // SetNull, not Cascade — see SupportTicket.projectId. Deleting a site must
+  // not silently delete the conversation about why it was broken.
+  supportTickets SupportTicket[]
 
   @@index([userId])
 }
@@ -117,9 +477,27 @@ model Build {
   cacheWriteTokens Int @default(0)
   filesWritten     Int @default(0)
 
-  // Full draft file tree AFTER this build finished, as {path: content}. Small
-  // sites, so a JSON snapshot per successful build is cheap and makes rollback
-  // a plain restore instead of needing per-file version history.
+  // How many times the build had to be repaired before it compiled. 0 means it
+  // compiled first try. This is the instrument for "green-build-first-try",
+  // which the roadmap names as a kill-criterion gating the jump to backend
+  // work — and which, until now, nothing measured. Retries are also the
+  // clearest early signal of prompt or model regressions.
+  repairAttempts Int @default(0)
+
+  // Full draft file tree AFTER this build finished. Small sites, so a JSON
+  // snapshot per successful build is cheap and makes rollback a plain restore
+  // instead of needing per-file version history.
+  //
+  // SHAPE — this comment said `{path: content}` until 2026-08-22 and that was
+  // WRONG. It is two file universes, written in app/api/generate/route.ts and
+  // read in app/projects/[id]/page.tsx:
+  //
+  //   { source: { "src/App.tsx": "…" }, build: { "index.html": "…" } }
+  //
+  // `source` is the real Vite project the agent edits; `build` is the compiled
+  // output actually served. The wrong comment already cost one reader real
+  // time — they believed it, reported "2 files, 277 KB", and only found the
+  // truth by querying live rows (18 source + 3 build). Trust the code.
   filesSnapshot Json?
 
   // Real model spend in micro-dollars, and what we actually charged.
@@ -134,14 +512,27 @@ model Build {
 
 model CreditLedger {
   id          String   @id @default(cuid())
-  userId      String
+  // Nullable, and SetNull rather than Cascade, so erasing an account does not
+  // erase the financial record. Three reasons, all load-bearing:
+  //
+  //  1. lib/retention.ts lists this table as NEVER_PRUNED — "retained
+  //     permanently" — and every balance in the product is derived from it.
+  //  2. identityAlreadyUsed() in app/api/rewards/_lib.ts enforces one reward
+  //     per external social account by scanning `reason` strings GLOBALLY.
+  //     Cascading these away turns "delete, re-register, reconnect the same
+  //     Discord" into an unlimited credit farm at real model spend per cycle.
+  //  3. `stripe:<checkout_session_id>` rows are the record of money received.
+  //
+  // What survives a deletion is a delta, a reason, a balance and a date, with
+  // no user attached — see app/api/account/_deletion.ts.
+  userId      String?
   delta       Int // negative = spend, positive = grant/refund
   reason      String
   buildId     String?
   balanceAfter Int
   createdAt   DateTime @default(now())
 
-  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user  User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
   build Build? @relation(fields: [buildId], references: [id], onDelete: SetNull)
 
   @@index([userId])

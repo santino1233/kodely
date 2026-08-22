@@ -8,11 +8,12 @@ import { Aura } from "@/components/marketing/Aura";
 import { Reveal, RevealGroup, RevealItem } from "@/components/marketing/Reveal";
 import { MotionLift } from "@/components/marketing/FloatCard";
 import { MagneticButton } from "@/components/marketing/MagneticButton";
+import { SkipLink } from "@/components/marketing/SkipLink";
 
 const FAQS = [
   {
     q: "Why credits instead of a flat monthly price?",
-    a: "Every generation costs real AI compute. A flat \"unlimited\" price either loses money on heavy users or gets throttled quietly — neither is honest. Credits mean the price you see is the price you pay, and nothing more.",
+    a: "Every generation costs real AI compute. A flat \"unlimited\" price either loses money on heavy users or gets throttled quietly — neither is honest. Credits mean you pay for the generation you actually ran, metered from real usage, and nothing more.",
   },
   {
     q: "What if a build fails?",
@@ -27,9 +28,12 @@ const FAQS = [
 export default function PricingPage() {
   return (
     <div className="relative min-h-screen bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-50">
+      <SkipLink />
       <Aura />
       <MarketingNav />
 
+      {/* The page had no <main> landmark; this is a wrapper only. */}
+      <main id="main-content" tabIndex={-1}>
       <section className="relative mx-auto max-w-4xl px-6 pb-8 pt-40 text-center sm:pt-52">
         <Reveal>
           <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
@@ -59,7 +63,7 @@ export default function PricingPage() {
                 {SIGNUP_GRANT} free credits
               </p>
               <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-                Enough for a real first site plus a few rounds of changes. No card required.
+                Enough to build a real first site. No card required.
               </p>
               <MagneticButton className="mt-5">
                 <Link
@@ -128,9 +132,12 @@ export default function PricingPage() {
           ))}
         </RevealGroup>
         <Reveal delay={0.1}>
-          <p className="mx-auto mt-8 max-w-lg text-center text-sm text-neutral-500 dark:text-neutral-500">
-            A typical first build runs roughly 100–150 credits; a follow-up
-            change is usually similar. Credits never expire.
+          {/* dark:text-neutral-500 was 4.2:1 on the dark page — just under
+              AA's 4.5:1 for this size. neutral-400 clears it at 7.9:1. */}
+          <p className="mx-auto mt-8 max-w-lg text-center text-sm text-neutral-500 dark:text-neutral-400">
+            Credits come off measured model usage once a build succeeds, so
+            what a build costs depends on how much work it took. Credits never
+            expire.
           </p>
         </Reveal>
       </section>
@@ -151,6 +158,7 @@ export default function PricingPage() {
           ))}
         </RevealGroup>
       </section>
+      </main>
 
       <MarketingFooter />
     </div>

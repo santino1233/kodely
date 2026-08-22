@@ -1,0 +1,43 @@
+{
+  "slug": "why-ai-generated-sites-have-no-stock-photos",
+  "title": "Why Kodely Sites Have No Stock Photos",
+  "metaDescription": "Generated Kodely sites contain no photography, no remote images and no web fonts. Here is the exact technical reason, and how to design around it.",
+  "category": "Explainers",
+  "targetKeyword": "ai website builder no images",
+  "body": [
+    "<p>If you build a site with Kodely, it will contain no photographs. Not stock photos, not AI-generated photos, not images pulled from anywhere else. This is the limitation people notice first, so here's the actual reason and what to do about it — rather than a paragraph explaining that constraints are secretly good for you.</p>",
+
+    "<h2>The reason, precisely</h2>",
+    "<p>Every published Kodely site is served under a strict content security policy. In effect it says: this page may load resources from itself, and images may additionally be inline data. Requests to any other origin are blocked, and the page's ability to make network requests at all is switched off.</p>",
+    "<p>An <code>&lt;img&gt;</code> pointing at a photo library, a font file from a font CDN, an embedded map, a video embed, an analytics script, a social feed widget — all of them are requests to another host, and all of them are blocked before they load.</p>",
+    "<p>The builder is told about this constraint directly, so it doesn't write markup that would fail. That's why you don't get a broken-image icon: you get a design that never asked for the image in the first place.</p>",
+
+    "<h2>Why the policy is that strict</h2>",
+    "<p>Kodely takes text from anyone on the internet, turns it into code with a language model, compiles it, and serves it from a domain we own. If those pages could load and execute code from arbitrary third-party hosts, that pipeline becomes a very convenient way to host something malicious with our name on the certificate.</p>",
+    "<p>Blocking all external requests removes that entire category at once. It also means a published site can't quietly break later because somebody else's CDN moved a URL, changed their terms, or went down. A Kodely site has no third-party dependencies at runtime, which is an unusual and genuinely nice property for a small business page.</p>",
+    "<p>The honest accounting: you lose photography, and you gain a page that can't be turned into an attack surface and can't rot from the outside.</p>",
+
+    "<h2>What the sites use instead</h2>",
+    "<p>Everything visual is drawn by the page itself:</p>",
+    "<ul><li><strong>Inline SVG.</strong> Icons, logos, illustrations, decorative shapes — written directly into the components as markup, so there's no file to fetch.</li><li><strong>CSS gradients and colour.</strong> Layered gradients and mesh-style backgrounds carry a surprising amount of a design's atmosphere, and they scale to any screen size with no image at all.</li><li><strong>Typography and space.</strong> With no photograph to lean on, type size, weight, colour and generous white space have to do the work — which tends to push a design towards being deliberate rather than decorated.</li><li><strong>System fonts.</strong> The system stack, not a custom web font. More on that below.</li></ul>",
+
+    "<h2>The font part, since it surprises people</h2>",
+    "<p>You can't use a custom web font either, and not just remotely-hosted ones — a font embedded as a base64 data URI is also blocked. The policy allows data URIs for images but not for other resource types, and fonts fall into the second category. So a base64 font fails exactly like a remote one.</p>",
+    "<p>Sites use the system font stack instead — the same one most operating systems use for their own interface. It's a real constraint on brand expression. It's also the fastest possible text rendering, with no layout shift while a font loads.</p>",
+
+    "<h2>How to design around it</h2>",
+    "<p>Some categories of site genuinely don't need photography, and some do. Being clear-eyed about which you are will save you an afternoon.</p>",
+    "<p><strong>Works well without photos:</strong> service businesses where credibility comes from specifics (trades, consultants, clinics, accountants), text-led portfolios, landing pages for software, event and announcement pages, restaurants with a strong type-led menu treatment, anything where the design can be bold and graphic.</p>",
+    "<p><strong>Doesn't work without photos:</strong> photographers, illustrators, property listings, anything where seeing the actual item is the entire decision — a room, a dress, a cake, a haircut. If the images <em>are</em> the product, use a tool built around a gallery.</p>",
+    "<p>Practical prompt advice, if you're in the first group: name a strong palette and a distinct typographic idea, and ask for one structural gesture — an oversized number, a full-bleed colour block, a rule-and-margin editorial layout. That's what fills the space a hero photo would have taken.</p>",
+
+    "<h2>If you do need real images</h2>",
+    "<p>There's a real path, and it involves leaving the sandbox. You can download your project's entire source as a zip at any time — it's a standard Vite + React project. A developer can drop image files into it, reference them normally, run <code>npm install</code> and <code>npm run build</code>, and host the result anywhere. Nothing about that is blocked or discouraged; the restriction applies to sites we serve, not to your code.</p>",
+    "<p>That's a genuine option rather than a consolation prize, but it does require someone comfortable with a terminal. If that's not you, factor it in before you start.</p>",
+
+    "<h2>What we're not going to do</h2>",
+    "<p>We're not going to relax the policy per-site so that a page can pull from arbitrary hosts. If image support arrives, it will be images uploaded to and served from our own origin, under the same policy — because the policy is the thing that makes the rest of the product safe to operate.</p>",
+    "<p>Until then, the honest answer is the one at the top of this page: no photographs. <a href=\"/blog/what-kodely-cannot-build-yet\">Here's the rest of the list</a>, so nothing else surprises you either.</p>",
+    "<p><a href=\"/signup\">750 free credits, no card</a> — enough to see whether a type-led design works for what you're building.</p>"
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "slug": "how-to-build-an-event-website-with-ai",
+  "title": "How to Build an Event Website With AI",
+  "metaDescription": "One page for a conference, meetup or festival: what, when, where, who is speaking, and a ticket link that actually works.",
+  "category": "Guides",
+  "targetKeyword": "event website builder",
+  "body": [
+    "<p>An event page is a deadline product. It needs to exist quickly, say the right things, and stop existing the moment the event is over. Spending three weeks on it is a bad trade, which is what makes it a good fit for an AI builder.</p>",
+    "<p>This guide covers a one-page site for a conference, a meetup, a workshop, a festival or a fundraiser — and the one thing you must route to a real platform.</p>",
+
+    "<h2>What belongs on the page</h2>",
+    "<ol><li><strong>What it is, when, and where.</strong> In the first screen, in text, including the year. A surprising number of event pages make you hunt for the date.</li><li><strong>Who it is for.</strong> One honest sentence. This does more to sell a ticket than any amount of adjective.</li><li><strong>The programme.</strong> Sessions, times, speakers by name. If the programme is not finalised, say \"programme announced [date]\" rather than inventing one.</li><li><strong>Price and what it includes.</strong> Lunch, materials, a recording afterwards.</li><li><strong>Practicalities.</strong> Venue address as text, transport, accessibility, what to bring.</li><li><strong>One ticket button.</strong> Repeated top and bottom.</li></ol>",
+
+    "<h2>Ticketing links out — always</h2>",
+    "<p>A generated site has no server and no payment processing. It cannot sell a ticket, take a registration, or hold a place. Nothing in a prompt changes that.</p>",
+    "<p>Ticketing platforms exist and are good at this: they handle payment, capacity, refunds, waitlists and the emails. Your page's job is to make somebody want a ticket and then hand them to the platform in one tap.</p>",
+    "<p>So the primary call to action is a link out, labelled with its destination — \"Get tickets on [your platform]\" — rather than a \"Register\" button that goes to a form with nothing behind it. <a href=\"/blog/why-ai-built-sites-have-no-contact-form\">The reasoning</a>, and <a href=\"/blog/how-to-add-a-booking-button-to-an-ai-built-site\">how to place the button well</a>.</p>",
+
+    "<h2>Careful with speakers and sponsors</h2>",
+    "<p>This one bites people. Speaker names, job titles, company affiliations and sponsor logos are facts about real people and real organisations. If you leave them out of your prompt, the builder will not invent a plausible-sounding lineup — it writes a bracketed placeholder such as <code>[speaker name, role]</code> instead.</p>",
+    "<p>That is the behaviour you want. An invented speaker on a published event page is a claim you have to retract in public. <a href=\"/blog/why-an-ai-builder-should-leave-blanks\">Why a blank beats a plausible invention</a>.</p>",
+    "<p>The same goes for sponsor logos twice over: there is no way to load an image from another host, so a logo wall is not buildable regardless. A row of sponsor names set in type is, and it is honest.</p>",
+
+    "<h2>Write the prompt</h2>",
+    "<blockquote><p>A one-page site for [event name], a one-day [topic] conference on [date] at [venue, full address]. For [audience, one honest line]. Sections: what and when at the top; who it is for; the programme as a timed list — [sessions and speakers]; tickets [price] including lunch and recordings; getting there ([transport notes], [accessibility notes]); and a \"Get tickets\" button linking out to [your ticketing link], at the top and bottom of the page. No registration form on the page. Confident and plain: near-black background, one bright accent, big type, a countdown-free hero. Must read well on a phone.</p></blockquote>",
+    "<p>\"Countdown-free\" is there on purpose. A live countdown is a nice idea that ages into an embarrassment: the day after your event, the page says \"0 days to go\" forever unless you go back and change it.</p>",
+
+    "<h2>Keeping it current</h2>",
+    "<p>A Kodely site is static — you change it by describing a change and republishing. For an event that is usually ideal, because an event page changes in bursts: programme announced, speakers added, sold out.</p>",
+    "<p>Each of those is one sentence: \"Add a red 'Sold out' banner across the top and change the ticket button to a waitlist link.\" Every successful build is a checkpoint you can roll back to for free, so the pre-announcement version is never lost.</p>",
+
+    "<h2>After the event</h2>",
+    "<p>Do not delete it. Change it. \"Rewrite the hero: [event] happened on [date]. Replace the ticket button with a link to the recordings, and add a line saying the next one is [date or 'to be announced'].\" That page keeps earning search traffic for the next one.</p>",
+
+    "<h2>Publishing</h2>",
+    "<p>One click publishes to a <code>kodely.site</code> subdomain, with <code>robots.txt</code> and <code>sitemap.xml</code> generated and real title, description and link-preview tags in the head — so the URL pasted into a work chat shows the event name and date rather than a blank card. For an event, that preview is a meaningful share of your marketing.</p>",
+    "<p><a href=\"/signup\">Start with your date, venue and ticket link</a>. See also: <a href=\"/blog/how-to-build-a-coming-soon-page-with-ai\">a coming-soon page</a> if the details are not fixed yet.</p>"
+  ]
+}

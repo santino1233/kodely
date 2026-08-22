@@ -1,0 +1,43 @@
+{
+  "slug": "how-to-build-a-portfolio-website-with-ai",
+  "title": "How to Build a Portfolio Website With AI",
+  "metaDescription": "Build a personal portfolio site with AI in one sitting — plus a straight answer on the image problem, which decides whether this is right for you.",
+  "category": "Guides",
+  "targetKeyword": "ai portfolio website builder",
+  "body": [
+    "<p>A portfolio site is a small, high-stakes page. It needs to say who you are, show that you're good, and make it easy to contact you. Kodely can build that page from a description in one sitting — but there's an image limitation that decides up front whether this is the right tool for your portfolio specifically. Let's deal with that first.</p>",
+
+    "<h2>The honest constraint: no images</h2>",
+    "<p>Published Kodely sites run under a strict content security policy that blocks every request to another host. There is no stock photo library, no image search, and no upload-your-photos feature today. Everything visual in a generated site is drawn by the page itself: CSS gradients, colour, typography, and inline SVG.</p>",
+    "<p>What that means for you depends on what your work is:</p>",
+    "<ul><li><strong>Writers, developers, strategists, consultants, researchers, copywriters.</strong> Your portfolio is words and links. This works well — arguably better than a template, because the design can be tuned to your writing rather than to a photo grid.</li><li><strong>Designers and product people.</strong> Workable if your case studies are described and linked out to the live work, rather than displayed as screenshots on the page.</li><li><strong>Photographers, illustrators, and anyone whose portfolio <em>is</em> the images.</strong> Not today. The images are the product and Kodely cannot place them. Use a gallery-focused tool instead. We'd rather say that here than have you find out after signing up.</li></ul>",
+    "<p>One workaround worth knowing: you can download your project's full source as a zip, so a developer can drop real image files into the Vite project and host it elsewhere. That's a real path, but it's a developer's path, not a click.</p>",
+
+    "<h2>What you're building</h2>",
+    "<p>A single page — Kodely builds single-page sites, so your sections scroll rather than living on separate URLs. For a portfolio that's usually the right shape. Underneath it is a real Vite + React + TypeScript + Tailwind project, not an exported mockup.</p>",
+    "<p>A structure that works:</p>",
+    "<ol><li>Your name, what you do, and who you do it for — in one sentence, above the fold.</li><li>Three to five pieces of work, each with the problem, what you did, and the outcome.</li><li>A short about section with the actual, specific facts.</li><li>Contact: an email link, and links to wherever you exist online.</li></ol>",
+
+    "<h2>Write the prompt</h2>",
+    "<p>Put everything you want on the page into the prompt. The builder writes real, specific copy rather than placeholders, which is what makes the result feel finished — and also means that any gap you leave gets filled with something invented. On a portfolio that's a genuine hazard: a fabricated client or an invented metric is the kind of thing that falls apart in the follow-up call.</p>",
+    "<blockquote><p>A one-page portfolio for Mara Ellis, a freelance technical writer who documents developer APIs. Audience: engineering managers hiring a contractor. Tone: precise, dry, confident, not playful. Sections: name and one-line positioning; three projects, each with client type, what I wrote, and the result — (1) rewrote the REST reference for a payments startup, cut support tickets about auth by half according to their team; (2) built a docs style guide for a 40-engineer infra company; (3) migrated 300 pages of legacy docs into a versioned site. Then a short about paragraph, then contact with my email as a mailto link and a link to my GitHub. Monospace accents, lots of white space, one ink-blue accent, no decoration for its own sake.</p></blockquote>",
+    "<p>Notice that the metric in project one is attributed and hedged the way you'd say it in an interview. Do that with your own numbers — a portfolio that overstates is the one that falls apart in the follow-up call.</p>",
+    "<p>If you'd rather start smaller, write one line and press <strong>Enhance</strong>: it expands the idea into a full brief you can read and edit before spending anything. Enhance is free.</p>",
+
+    "<h2>Making it not look generic</h2>",
+    "<p>The default failure mode of any generated portfolio is that it looks like every other generated portfolio. Two things fix that, and both live in your prompt.</p>",
+    "<p>First, name a specific visual idea rather than a mood. \"Editorial, like a printed journal — a wide left margin, small caps section labels, rules between entries\" produces something. \"Modern and clean\" produces the average of everything.</p>",
+    "<p>Second, let the work choose the design. A portfolio for infrastructure documentation should not look like a portfolio for children's book illustration. Say what the work is and what it should feel like, and the two will match.</p>",
+
+    "<h2>Refining it</h2>",
+    "<p>You iterate by asking for changes in plain English — \"tighten the line height in the project descriptions\", \"move contact to the top too\", \"the accent blue is too bright, take it darker and duller\". Every successful build is stored as a checkpoint in the History tab, and rolling back to an earlier one is free, so experimenting is cheap.</p>",
+
+    "<h2>Publishing and taking it with you</h2>",
+    "<p>One click publishes the compiled site to a <code>kodely.site</code> subdomain, with a generated <code>robots.txt</code> and <code>sitemap.xml</code> and proper title, description and link-preview tags — so sharing the URL shows your name rather than a blank card.</p>",
+    "<p>And you can download the entire source as a zip whenever you like. It's a normal Vite + React project: <code>npm install</code>, <code>npm run build</code>, host it anywhere. Nothing about your portfolio is locked inside our account system.</p>",
+
+    "<h2>What it costs</h2>",
+    "<p>750 credits free on signup, no card. Credits are charged from measured model usage after a build succeeds, and a build that fails to compile is never charged. You can set your own 30-day spending ceiling in Settings.</p>",
+    "<p><a href=\"/signup\">Start by describing your three best pieces of work</a>. If you want to sharpen the prompt first, read <a href=\"/blog/how-to-write-a-prompt-for-an-ai-website-builder\">how to write a prompt for an AI website builder</a>.</p>"
+  ]
+}

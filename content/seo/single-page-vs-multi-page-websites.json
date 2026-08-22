@@ -1,0 +1,35 @@
+{
+  "slug": "single-page-vs-multi-page-websites",
+  "title": "Single-Page vs Multi-Page Websites",
+  "metaDescription": "When one scrolling page beats several separate pages, when it definitely does not, and why Kodely only builds the first kind.",
+  "category": "Comparisons",
+  "targetKeyword": "single page vs multi page website",
+  "body": [
+    "<p>Kodely builds single-page sites. Not \"single-page by default\" — that's what it builds. Since that's a genuine constraint rather than a preference, it's worth laying out honestly when one page is the right answer and when it isn't.</p>",
+
+    "<h2>What each one means</h2>",
+    "<p>A <strong>single-page site</strong> is one URL. Your services, your story, your prices and your contact details are sections you scroll through, and the navigation links jump down the page rather than loading anything new.</p>",
+    "<p>A <strong>multi-page site</strong> gives each of those its own address — <code>/about</code>, <code>/services</code>, <code>/services/boiler-repair</code>, <code>/contact</code> — each one a separate document a search engine can index and rank independently.</p>",
+
+    "<h2>When one page is the right answer</h2>",
+    "<ul><li><strong>The visitor has one decision to make.</strong> Call you, book, order, sign up. Splitting the argument across five pages just gives them four extra chances to leave.</li><li><strong>You have one page's worth of content.</strong> Most small businesses genuinely do. A four-page site made from one page of content is four thin pages, which is worse for search than one substantial one.</li><li><strong>Most of your traffic is on a phone.</strong> Scrolling is the native gesture. Tapping into a sub-page and back out is friction.</li><li><strong>You want it to stay current.</strong> One page is one place to update. Multi-page sites decay unevenly — it's always the services page that still lists the thing you stopped doing two years ago.</li><li><strong>People arrive knowing your name.</strong> If your traffic comes from a business listing, a van, a card, or word of mouth, they're not searching a category. They're checking you're real. One good page does that better than a structure.</li></ul>",
+
+    "<h2>When it's genuinely the wrong answer</h2>",
+    "<p>Being straight about this matters more than defending the constraint.</p>",
+    "<ul><li><strong>You want to rank for many distinct search terms.</strong> This is the big one. A page ranks for the thing it's about. If you want to compete for \"boiler repair Sheffield\" <em>and</em> \"bathroom fitting Sheffield\" <em>and</em> \"emergency plumber S10\", the standard answer is a dedicated page for each — and a single page can't do that. It can rank for one cluster, well. Not fifteen.</li><li><strong>You have a lot of genuinely different content.</strong> A restaurant with three locations, a firm with fourteen practice areas, a school. Cramming that into one scroll is worse for a human, never mind a crawler.</li><li><strong>You need a blog.</strong> Individual articles need individual URLs. That's the whole mechanism.</li><li><strong>You need to link deeply.</strong> Sending a client straight to the pricing details, or an ad straight to one service, is much cleaner with a real URL than with an anchor a third of the way down a long page.</li></ul>",
+    "<p>If any of those describe you, a single-page tool — Kodely included — is the wrong choice, and we'd rather say so than have you find out three weeks in.</p>",
+
+    "<h2>Making one page work harder</h2>",
+    "<p>If a single page does fit, a few things make a real difference:</p>",
+    "<ul><li><strong>Front-load the specifics.</strong> Service and location in the first sentence a visitor reads. \"Emergency plumber covering Sheffield S6, S10 and S11\" does more work than any technical tag.</li><li><strong>Use real headings.</strong> Each section wants a genuine heading naming what it covers. It's how people scan and how crawlers understand the page's structure.</li><li><strong>Give sections anchor links.</strong> A nav that jumps to \"Prices\" is most of the benefit of a separate prices page, without the maintenance.</li><li><strong>Write your title and description deliberately.</strong> With one page you get one shot at both. Kodely's builder writes them from your prompt, and a serving-time backstop fills anything left empty — but the specifics in your prompt are what make them good rather than merely present.</li><li><strong>Don't pad.</strong> One page of substance beats three screens of filler. Length is not the ranking factor people think it is.</li></ul>",
+
+    "<h2>The speed argument, honestly</h2>",
+    "<p>You'll read that single-page sites are faster. Sometimes. One page means one request instead of several as someone browses, and a Kodely site in particular is static, compiled, and loads nothing from any other host — no font service, no analytics, no widgets.</p>",
+    "<p>But a single page holding five pages of content isn't fast, it's just one big slow request instead of five small quick ones. The speed comes from the content being appropriately sized, not from the page count.</p>",
+
+    "<h2>What Kodely does about this</h2>",
+    "<p>Nothing clever — it builds one page and says so. The builder is instructed to render distinct sections as components within one app rather than emitting separate documents. Your generated sitemap will usually contain a single URL, which is correct for the site you have.</p>",
+    "<p>If you outgrow it, the exit is real: download your project's source as a zip. It's a standard Vite + React project, so adding a router and splitting it into real pages is ordinary work for any developer, and you don't need our permission or our involvement to do it.</p>",
+    "<p><a href=\"/blog/what-kodely-cannot-build-yet\">The rest of the limits are listed here</a>, and if one page is what you need, <a href=\"/signup\">750 free credits is enough to build it</a>.</p>"
+  ]
+}

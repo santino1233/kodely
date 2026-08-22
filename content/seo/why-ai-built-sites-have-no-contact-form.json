@@ -1,0 +1,40 @@
+{
+  "slug": "why-ai-built-sites-have-no-contact-form",
+  "title": "Why an AI-Built Site Has No Contact Form",
+  "metaDescription": "A form needs a server to send to. A generated site has none. Here is why Kodely gives you a mailto, a tel link and a link-out instead.",
+  "category": "Explainers",
+  "targetKeyword": "ai website builder contact form",
+  "body": [
+    "<p>Ask almost any AI website builder for a contact form and you will get one. It will have a name field, an email field, a message box, a submit button, and a little \"Thanks, we'll be in touch!\" state that appears when you click it. It will look completely convincing.</p>",
+    "<p>On a site with no backend, none of that is real. The message goes nowhere. Nobody is told. The person who typed it watches a confirmation appear and reasonably concludes you have their enquiry.</p>",
+    "<p>That is the failure this page is about, and it is worth understanding properly, because it is the single most expensive mistake you can make with a generated site.</p>",
+
+    "<h2>What a form actually needs</h2>",
+    "<p>A working form is three things, not one. There is the visible part — the inputs and the button. Then there is somewhere to send the submission: a server endpoint that accepts it. Then there is something that acts on it: a database row, an email, a notification.</p>",
+    "<p>An AI builder that generates front-end code produces the first of those three. A Kodely project is a Vite, React, TypeScript and Tailwind application — real component files, compiled server-side into static output. There is no server process in it, because there is nothing in it that runs on a server. The whole thing is HTML, CSS and JavaScript that runs in your visitor's browser.</p>",
+    "<p>So the second and third parts do not exist and cannot be added by rephrasing the prompt. This is not a limit of how clearly you asked.</p>",
+
+    "<h2>Even the network call is blocked</h2>",
+    "<p>There is a second layer to this that people are usually surprised by. Suppose you decided to wire the form up yourself to some third-party form service. A published Kodely site is served under a strict content security policy, and one of its directives is <code>connect-src 'none'</code>.</p>",
+    "<p>That directive means the page is not permitted to make network requests to anywhere at all — not to another host, not to a form endpoint, not to an analytics collector. The browser refuses it before the request leaves the machine.</p>",
+    "<p>The policy exists so that a published site can only ever be itself. Nothing it renders can phone home, load a tracker, or pull a script from somewhere that got compromised last Tuesday. That is a genuinely good property. It also means a form has no escape hatch.</p>",
+
+    "<h2>What to build instead</h2>",
+    "<p>Everything a small site actually needs from a contact form can be done with a link, and a link is a navigation rather than a request, so it works perfectly:</p>",
+    "<ul><li><strong>A <code>mailto:</code> link.</strong> Opens the visitor's mail app with your address already filled in. You can prefill a subject line too, so enquiries arrive pre-sorted.</li><li><strong>A <code>tel:</code> link.</strong> On a phone, a tap dials you. For a local business this converts better than any form ever has.</li><li><strong>A link out to a tool that has a backend.</strong> Your booking system, your scheduling page, your WhatsApp or Instagram profile, your ticketing page. Those platforms have servers. Send people to them.</li></ul>",
+    "<p>Label them for what they do. \"Email us\", \"Call now\", \"Book on [your booking platform]\" — never a bare \"Submit\", which implies something is being submitted.</p>",
+
+    "<h2>How to ask for it in the prompt</h2>",
+    "<p>Be explicit about the destination, because the builder cannot guess it and should not invent it:</p>",
+    "<blockquote><p>No contact form. The main call to action is a \"Book now\" button linking out to my booking page, repeated at the top and bottom of the page. Put the phone number in the header as a tap-to-call link, and an \"Email us\" link in the footer.</p></blockquote>",
+    "<p>If you leave the actual address or URL out, you will get a bracketed placeholder such as <code>[your booking link]</code> rather than a plausible-looking invention. That is deliberate — see <a href=\"/blog/why-an-ai-builder-should-leave-blanks\">why leaving a blank is the right behaviour</a>.</p>",
+
+    "<h2>When you genuinely need a form</h2>",
+    "<p>Sometimes you do. If you are collecting job applications with attachments, or running a survey, or taking structured intake before an appointment, a link-out to a real form tool is the honest answer, and it takes about ninety seconds to set up. Your site's job is to get someone to that tool having already decided to use you.</p>",
+    "<p>The thing not to do is put a decorative form on the page and hope. A form is a promise. Do not make one you cannot keep.</p>",
+
+    "<h2>The short version</h2>",
+    "<ol><li>A form needs a server. A generated site has no server.</li><li>The published-site policy blocks outbound requests, so it cannot borrow someone else's.</li><li>Links work perfectly and are usually the better call to action anyway.</li></ol>",
+    "<p><a href=\"/signup\">Start with 750 free credits</a> and build the page around a real call to action. See also: <a href=\"/blog/what-kodely-cannot-build-yet\">the full list of what Kodely cannot build yet</a>, and <a href=\"/blog/how-to-add-a-booking-button-to-an-ai-built-site\">how to wire up a booking button that actually works</a>.</p>"
+  ]
+}

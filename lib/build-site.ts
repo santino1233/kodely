@@ -63,10 +63,40 @@ export async function buildSite(sourceFiles: FileMap): Promise<FileMap> {
 
 function runBounded(command: string, args: string[], cwd: string): Promise<void> {
   return new Promise((resolve, reject) => {
+    // A MINIMAL environment, not the parent's.
+    //
+    // vite executes the project's own config and any plugin code in this child
+    // process. Inheriting `process.env` handed that code DATABASE_URL, the
+    // Anthropic/OAuth tokens, the session secret and the Stripe keys — so a
+    // single successful write to a config file would have been enough to
+    // exfiltrate every credential the app holds. The write is now blocked
+    // upstream (isProtectedPath in lib/agent.ts); this is the second line, so
+    // that a gap in the first one is not immediately catastrophic.
+    //
+    // Only what a build genuinely needs: a PATH to find node, the platform
+    // variables Node itself requires on Windows, and NODE_ENV.
+    const parent = process.env;
+    const buildEnv: NodeJS.ProcessEnv = {
+      NODE_ENV: "production",
+      PATH: parent.PATH,
+      // Windows resolves temp dirs and the system root through these; without
+      // them the child fails in ways that look like a vite bug.
+      ...(process.platform === "win32"
+        ? {
+            SystemRoot: parent.SystemRoot,
+            windir: parent.windir,
+            TEMP: parent.TEMP,
+            TMP: parent.TMP,
+            COMSPEC: parent.COMSPEC,
+            PATHEXT: parent.PATHEXT,
+          }
+        : { HOME: parent.HOME }),
+    };
+
     const child = spawn(command, args, {
       cwd,
       timeout: BUILD_TIMEOUT_MS,
-      env: { ...process.env, NODE_ENV: "production" },
+      env: buildEnv,
     });
 
     let stderr = "";

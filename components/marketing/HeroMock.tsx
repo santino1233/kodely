@@ -40,28 +40,28 @@ const blockVariants: Variants = {
   shown: { opacity: 1, scale: 1, transition: { duration: 0.4, ease: [0.2, 0.9, 0.2, 1] } },
 };
 
-function useTypewriter(text: string, active: boolean, msPerChar: number) {
+// No `active` flag and no reset: the typing panel below is only mounted
+// during the typing phase, so each run starts from a fresh `count` of 0 by
+// virtue of the component mounting. (Resetting it from inside an effect
+// instead — the old shape — was a cascading render, and one React can't
+// batch away because it lands after paint.)
+function useTypewriter(text: string, msPerChar: number) {
   const [count, setCount] = useState(0);
   useEffect(() => {
-    if (!active) {
-      setCount(0);
-      return;
-    }
     const id = setInterval(() => {
       setCount((c) => (c >= text.length ? c : c + 1));
     }, msPerChar);
     return () => clearInterval(id);
-  }, [active, text, msPerChar]);
+  }, [text, msPerChar]);
   return text.slice(0, count);
 }
 
-function useEllipsis(active: boolean) {
+function useEllipsis() {
   const [n, setN] = useState(0);
   useEffect(() => {
-    if (!active) return;
     const id = setInterval(() => setN((v) => (v + 1) % 4), 400);
     return () => clearInterval(id);
-  }, [active]);
+  }, []);
   return ".".repeat(n);
 }
 
@@ -82,6 +82,190 @@ const CLASSES = [
   { time: "1:00 PM", name: "Power Pilates", initial: "S", color: "#3d9970", meta: "2 spots left" },
 ];
 
+/** The typing phase's contents. Mounted only while that phase is showing —
+ * which is what resets the typewriter between loops. (Its state used to be
+ * cleared from an effect keyed on an `active` flag; remounting is the
+ * React-native way to reset state, and costs no cascading render.) */
+function TypingPanel() {
+  const typed = useTypewriter(PROMPT_TEXT, 34);
+  const reduced = useReducedMotion();
+
+  return (
+    <>
+      <Mark size={30} />
+      <div className="w-full max-w-sm rounded-xl border border-[#e4d9cc] bg-white px-4 py-3.5 text-left text-[13px] leading-relaxed text-[#2a1f1a] shadow-sm dark:border-white/10 dark:bg-[#241a15] dark:text-[#f2e9e2]">
+        {typed}
+        {/* A caret that blinks forever is motion; under reduced-motion it
+            holds steady instead of being removed, so the line still reads
+            as a text field being typed into. */}
+        <motion.span
+          className="ml-0.5 inline-block h-[1em] w-[2px] translate-y-[2px] bg-current align-middle"
+          animate={reduced ? { opacity: 1 } : { opacity: [1, 1, 0, 0] }}
+          transition={reduced ? { duration: 0 } : { duration: 0.9, repeat: Infinity, times: [0, 0.5, 0.5, 1] }}
+        />
+      </div>
+      <p className="text-xs text-[#826b5a] dark:text-[#b39d8a]">Describe it, and Kodely builds it.</p>
+    </>
+  );
+}
+
+/** Mounted only during the building phase, so its 400ms interval isn't
+ * running the rest of the time. */
+function BuildingEllipsis() {
+  const dots = useEllipsis();
+  return <>{dots}</>;
+}
+
+/** The live phase's contents, including the little booking flow that plays
+ * out inside it. `bookingStep` lives HERE rather than in HeroMock because
+ * this component is mounted only while the live phase is showing: every
+ * re-entry is a fresh mount, so the step starts at "browse" on its own and
+ * needs no reset effect. */
+function LivePanel({ reduced }: { reduced: boolean }) {
+  const [bookingStep, setBookingStep] = useState<BookingStep>("browse");
+  const bookingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (reduced) return;
+    bookingTimeoutRef.current = setTimeout(() => {
+      setBookingStep((s) => NEXT_BOOKING[s]);
+    }, BOOKING_DURATIONS[bookingStep]);
+    return () => {
+      if (bookingTimeoutRef.current) clearTimeout(bookingTimeoutRef.current);
+    };
+  }, [bookingStep, reduced]);
+
+  return (
+    <>
+      <motion.div variants={item} className="flex items-center justify-between">
+        <span className="text-sm font-semibold tracking-tight">Bloom Pilates</span>
+        <div className="flex gap-4 text-xs text-[#716b82] dark:text-[#b3aec2]">
+          <span>Classes</span>
+          <span>Instructors</span>
+          <span>Membership</span>
+        </div>
+      </motion.div>
+
+      <motion.div
+        variants={item}
+        className="relative mt-4 flex h-32 flex-col justify-end overflow-hidden rounded-xl p-4"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={HERO_IMAGE} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"
+        />
+        <span className="relative text-[10px] font-medium uppercase tracking-[0.14em] text-white/80">
+          Book a class
+        </span>
+        {/* Deliberately NOT a heading element. This is the headline of a
+            SIMULATED site inside a browser mock, not a section of the Kodely
+            page — as an <h3> it landed straight after the page's <h1> in the
+            document outline (a skipped level, and a heading a screen-reader
+            user would try to navigate to). Styling is unchanged; <p> and <h3>
+            both have their margins zeroed by Tailwind's preflight. */}
+        <p className="relative mt-1 text-lg font-semibold leading-tight text-white sm:text-xl">
+          Strength. Balance. You.
+        </p>
+      </motion.div>
+
+      <motion.div variants={item} className="mt-4 space-y-2">
+        {CLASSES.map((c, i) => {
+          const isTarget = i === BOOKING_TARGET_INDEX;
+          const booked = isTarget && bookingStep === "confirmed";
+          const selecting = isTarget && bookingStep === "clicking";
+          return (
+            <motion.div
+              key={c.name}
+              animate={{ scale: selecting ? 1.015 : 1 }}
+              transition={{ duration: 0.2 }}
+              className="flex items-center gap-3 rounded-xl border px-3 py-2.5"
+              style={{
+                borderColor: booked
+                  ? "rgba(16,185,129,0.4)"
+                  : "color-mix(in srgb, currentColor 10%, transparent)",
+                background: booked
+                  ? "rgba(16,185,129,0.06)"
+                  : "color-mix(in srgb, currentColor 3%, transparent)",
+              }}
+            >
+              <div
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
+                style={{ background: c.color }}
+              >
+                {c.initial}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-[13px] font-medium">{c.name}</div>
+                <div className="text-[11px] text-[#8a839a] dark:text-[#9d97ad]">{c.time}</div>
+              </div>
+              <AnimatePresence mode="wait">
+                {booked ? (
+                  <motion.span
+                    key="booked"
+                    initial={{ opacity: 0, scale: 0.7 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400"
+                  >
+                    <Check size={11} strokeWidth={3} /> Booked
+                  </motion.span>
+                ) : (
+                  // Part of the simulated site, so it must not behave like a
+                  // real control: it does nothing when pressed, and left
+                  // tabbable it put three dead stops in the page's tab order
+                  // and announced three "Book" buttons that cannot be used.
+                  // Hidden from assistive tech and skipped by Tab; the
+                  // scripted click animation above still plays over it.
+                  <motion.span
+                    key="book"
+                    aria-hidden
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="shrink-0 rounded-full px-3 py-1 text-[11px] font-medium text-white"
+                    style={{ background: "var(--brand-gradient)" }}
+                  >
+                    Book
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          );
+        })}
+      </motion.div>
+
+      {!reduced && (
+        <motion.div
+          aria-hidden
+          className="pointer-events-none absolute left-6 top-[13.5rem] z-10 h-4 w-4 rounded-full border-2 border-white shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
+          style={{ background: "var(--accent)" }}
+          animate={{
+            x: bookingStep === "browse" ? 0 : 500,
+            y: bookingStep === "browse" ? 0 : 4,
+            opacity: bookingStep === "confirmed" ? 0 : 1,
+            scale: bookingStep === "clicking" ? [1, 0.65, 1] : 1,
+          }}
+          transition={{ duration: 0.55, ease: "easeInOut" }}
+        />
+      )}
+
+      <AnimatePresence>
+        {bookingStep === "confirmed" && (
+          <motion.div
+            initial={{ opacity: 0, y: -16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            className="absolute left-1/2 top-3 z-20 -translate-x-1/2 whitespace-nowrap rounded-full px-4 py-2 text-xs font-medium text-white shadow-lg"
+            style={{ background: "var(--brand-gradient)" }}
+          >
+            You&apos;re booked — Reformer Flow, Tue 9:00 AM
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
 /** The one real hero object — a miniature browser frame that plays out the
  * actual product loop (type a prompt → watch it build → it's live at a real
  * URL) instead of showing a single static screenshot. Loops continuously;
@@ -89,43 +273,17 @@ const CLASSES = [
 export function HeroMock() {
   const reduced = useReducedMotion();
   const [phase, setPhase] = useState<Phase>(reduced ? "live" : "typing");
-  const [liveCycle, setLiveCycle] = useState(0);
-  const [bookingStep, setBookingStep] = useState<BookingStep>("browse");
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const bookingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (reduced) return;
     timeoutRef.current = setTimeout(() => {
-      setPhase((p) => {
-        const next = NEXT_PHASE[p];
-        if (next === "live") setLiveCycle((c) => c + 1);
-        return next;
-      });
+      setPhase((p) => NEXT_PHASE[p]);
     }, PHASE_DURATIONS[phase]);
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
   }, [phase, reduced]);
-
-  // Resets to "browse" every time the live phase is (re-)entered, then
-  // steps itself through click -> confirm while that phase is showing.
-  useEffect(() => {
-    setBookingStep("browse");
-  }, [liveCycle]);
-
-  useEffect(() => {
-    if (phase !== "live" || reduced) return;
-    bookingTimeoutRef.current = setTimeout(() => {
-      setBookingStep((s) => NEXT_BOOKING[s]);
-    }, BOOKING_DURATIONS[bookingStep]);
-    return () => {
-      if (bookingTimeoutRef.current) clearTimeout(bookingTimeoutRef.current);
-    };
-  }, [bookingStep, phase, reduced]);
-
-  const typed = useTypewriter(PROMPT_TEXT, phase === "typing", 34);
-  const dots = useEllipsis(phase === "building");
 
   return (
     // The scroll entrance is entirely CSS — see .hero-mock-enter in
@@ -139,7 +297,7 @@ export function HeroMock() {
           <span className="h-2.5 w-2.5 rounded-full bg-black/15 dark:bg-white/15" />
           <span className="h-2.5 w-2.5 rounded-full bg-black/15 dark:bg-white/15" />
           <span className="h-2.5 w-2.5 rounded-full bg-black/15 dark:bg-white/15" />
-          <div className="ml-3 flex-1 overflow-hidden rounded-md bg-black/[0.04] px-3 py-1 text-center font-mono text-[11px] text-black/40 dark:bg-white/[0.06] dark:text-white/40">
+          <div className="ml-3 flex-1 overflow-hidden rounded-md bg-black/[0.04] px-3 py-1 text-center font-mono text-[11px] text-black/55 dark:bg-white/[0.06] dark:text-white/55">
             <AnimatePresence mode="wait">
               {phase === "live" ? (
                 <motion.span key="url" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -152,7 +310,7 @@ export function HeroMock() {
               )}
             </AnimatePresence>
           </div>
-          <div className="hidden items-center gap-1.5 font-mono text-[10px] text-black/30 sm:flex dark:text-white/30">
+          <div className="hidden items-center gap-1.5 font-mono text-[10px] text-black/55 sm:flex dark:text-white/55">
             {phase === "live" ? (
               <>
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
@@ -180,16 +338,7 @@ export function HeroMock() {
                 exit={{ opacity: 0 }}
                 className="flex h-full flex-col items-center justify-center gap-5 px-10 text-center"
               >
-                <Mark size={30} />
-                <div className="w-full max-w-sm rounded-xl border border-[#e4d9cc] bg-white px-4 py-3.5 text-left text-[13px] leading-relaxed text-[#2a1f1a] shadow-sm dark:border-white/10 dark:bg-[#241a15] dark:text-[#f2e9e2]">
-                  {typed}
-                  <motion.span
-                    className="ml-0.5 inline-block h-[1em] w-[2px] translate-y-[2px] bg-current align-middle"
-                    animate={{ opacity: [1, 1, 0, 0] }}
-                    transition={{ duration: 0.9, repeat: Infinity, times: [0, 0.5, 0.5, 1] }}
-                  />
-                </div>
-                <p className="text-xs text-[#8a7362] dark:text-[#b39d8a]">Describe it, and Kodely builds it.</p>
+                <TypingPanel />
               </motion.div>
             )}
 
@@ -223,133 +372,22 @@ export function HeroMock() {
                   <motion.div variants={blockVariants} className="h-10 rounded-md" style={BLOCK_STYLE} />
                 </motion.div>
 
-                <motion.p variants={item} className="font-mono text-xs text-[#8a7362] dark:text-[#b39d8a]">
-                  Building your site{dots}
+                <motion.p variants={item} className="font-mono text-xs text-[#826b5a] dark:text-[#b39d8a]">
+                  Building your site
+                  <BuildingEllipsis />
                 </motion.p>
               </motion.div>
             )}
 
             {phase === "live" && (
               <motion.div
-                key={`live-${liveCycle}`}
+                key="live"
                 initial="hidden"
                 animate="shown"
                 variants={container}
                 className="relative flex h-full flex-col px-6 py-6 text-[#201c2b] dark:text-[#f1eef7]"
               >
-                <motion.div variants={item} className="flex items-center justify-between">
-                  <span className="text-sm font-semibold tracking-tight">Bloom Pilates</span>
-                  <div className="flex gap-4 text-xs text-[#716b82] dark:text-[#b3aec2]">
-                    <span>Classes</span>
-                    <span>Instructors</span>
-                    <span>Membership</span>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  variants={item}
-                  className="relative mt-4 flex h-32 flex-col justify-end overflow-hidden rounded-xl p-4"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={HERO_IMAGE} alt="" className="absolute inset-0 h-full w-full object-cover" />
-                  <div
-                    aria-hidden
-                    className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"
-                  />
-                  <span className="relative text-[10px] font-medium uppercase tracking-[0.14em] text-white/80">
-                    Book a class
-                  </span>
-                  <h3 className="relative mt-1 text-lg font-semibold leading-tight text-white sm:text-xl">
-                    Strength. Balance. You.
-                  </h3>
-                </motion.div>
-
-                <motion.div variants={item} className="mt-4 space-y-2">
-                  {CLASSES.map((c, i) => {
-                    const isTarget = i === BOOKING_TARGET_INDEX;
-                    const booked = isTarget && bookingStep === "confirmed";
-                    const selecting = isTarget && bookingStep === "clicking";
-                    return (
-                      <motion.div
-                        key={c.name}
-                        animate={{ scale: selecting ? 1.015 : 1 }}
-                        transition={{ duration: 0.2 }}
-                        className="flex items-center gap-3 rounded-xl border px-3 py-2.5"
-                        style={{
-                          borderColor: booked
-                            ? "rgba(16,185,129,0.4)"
-                            : "color-mix(in srgb, currentColor 10%, transparent)",
-                          background: booked
-                            ? "rgba(16,185,129,0.06)"
-                            : "color-mix(in srgb, currentColor 3%, transparent)",
-                        }}
-                      >
-                        <div
-                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
-                          style={{ background: c.color }}
-                        >
-                          {c.initial}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="truncate text-[13px] font-medium">{c.name}</div>
-                          <div className="text-[11px] text-[#8a839a] dark:text-[#9d97ad]">{c.time}</div>
-                        </div>
-                        <AnimatePresence mode="wait">
-                          {booked ? (
-                            <motion.span
-                              key="booked"
-                              initial={{ opacity: 0, scale: 0.7 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              className="flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400"
-                            >
-                              <Check size={11} strokeWidth={3} /> Booked
-                            </motion.span>
-                          ) : (
-                            <motion.button
-                              key="book"
-                              type="button"
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              className="shrink-0 rounded-full px-3 py-1 text-[11px] font-medium text-white"
-                              style={{ background: "var(--brand-gradient)" }}
-                            >
-                              Book
-                            </motion.button>
-                          )}
-                        </AnimatePresence>
-                      </motion.div>
-                    );
-                  })}
-                </motion.div>
-
-                {!reduced && (
-                  <motion.div
-                    aria-hidden
-                    className="pointer-events-none absolute left-6 top-[13.5rem] z-10 h-4 w-4 rounded-full border-2 border-white shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
-                    style={{ background: "var(--accent)" }}
-                    animate={{
-                      x: bookingStep === "browse" ? 0 : 500,
-                      y: bookingStep === "browse" ? 0 : 4,
-                      opacity: bookingStep === "confirmed" ? 0 : 1,
-                      scale: bookingStep === "clicking" ? [1, 0.65, 1] : 1,
-                    }}
-                    transition={{ duration: 0.55, ease: "easeInOut" }}
-                  />
-                )}
-
-                <AnimatePresence>
-                  {bookingStep === "confirmed" && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -16 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -16 }}
-                      className="absolute left-1/2 top-3 z-20 -translate-x-1/2 whitespace-nowrap rounded-full px-4 py-2 text-xs font-medium text-white shadow-lg"
-                      style={{ background: "var(--brand-gradient)" }}
-                    >
-                      You&apos;re booked — Reformer Flow, Tue 9:00 AM
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                <LivePanel reduced={!!reduced} />
               </motion.div>
             )}
           </AnimatePresence>

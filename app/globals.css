@@ -26,11 +26,230 @@
   --brand-gradient: linear-gradient(100deg, #f72570 0%, #ff6b67 44%, #ff9868 66%, #a33dff 100%);
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   KODELY PRODUCT SURFACE
+   ══════════════════════════════════════════════════════════════════════════
+   The tokens above (--accent, --brand-gradient, --glow…) are the MARKETING
+   system and are ported from the approved reference mockup. Do not repoint
+   them; the marketing pages read them directly.
+
+   These are the PRODUCT tokens — the portal and the builder. They are additive
+   and share the same brand hues on purpose, because a customer crosses
+   marketing → portal → builder in one session and the seam should be
+   invisible. What differs is density: marketing is a poster, the product is an
+   instrument, so the product gets a surface ramp, semantic status colour, and
+   a tighter spacing/type scale that the marketing pages have no use for.
+
+   TYPEFACE: deliberately still Geist. A display serif was considered and
+   rejected — the marketing site the customer just came from is set in Geist,
+   and swapping faces at the /dashboard boundary would break the one continuity
+   requirement that matters most. "Premium" here is bought with the type SCALE,
+   tracking, tabular numerals and weight discipline below, not a second family.
+
+   NEUTRALS are hue-biased toward the brand (a touch of magenta in light, a
+   touch of indigo in dark) rather than pure grey, so panels sit in the same
+   world as the accent instead of looking like a default admin theme. */
+:root {
+  /* Surface ramp — canvas sits BEHIND panels, so it is darker than --surface
+     in light mode. Everything else steps up from there. */
+  --surface-canvas: #faf8fb;
+  --surface: #ffffff;
+  --surface-2: #f5f2f7;
+  --surface-3: #ece8f0;
+  --surface-inset: #f8f6fa;
+
+  --border-soft: rgba(11, 10, 13, 0.06);
+  --border-mid: rgba(11, 10, 13, 0.1);
+  --border-strong: rgba(11, 10, 13, 0.18);
+
+  --text-1: #16131c;
+  --text-2: #605b6b;
+  --text-3: #948da3;
+  --text-inv: #ffffff;
+
+  /* Brand, as flat UI colour. --accent is the marketing pink; these add the
+     tints a product needs (a fill you can put text on, a focus ring). */
+  --brand: #e01b6e;
+  --brand-hover: #c4155e;
+  --brand-tint: rgba(224, 27, 110, 0.08);
+  --brand-tint-2: rgba(224, 27, 110, 0.14);
+  --brand-ring: rgba(224, 27, 110, 0.38);
+  --brand-ink: #a41050;
+
+  /* Semantic status. Kept clearly OFF the brand ramp: a "success" that reads
+     as brand pink is unreadable as status, and the peach in the gradient is
+     close enough to amber that warning is pushed yellow-ward to separate. */
+  --ok: #0d8f5b;
+  --ok-tint: rgba(13, 143, 91, 0.1);
+  --warn: #a86a08;
+  --warn-tint: rgba(214, 145, 20, 0.14);
+  --danger: #cf2b3c;
+  --danger-tint: rgba(207, 43, 60, 0.1);
+  --info: #5b4ee0;
+  --info-tint: rgba(91, 78, 224, 0.1);
+
+  /* Elevation. Two axes deliberately: a neutral drop for depth plus a faint
+     violet cast, which is what stops white cards on a white-ish canvas from
+     looking like flat rectangles with a border. */
+  --e1: 0 1px 2px rgba(11, 10, 13, 0.04);
+  --e2:
+    0 1px 2px rgba(11, 10, 13, 0.04), 0 8px 20px -12px rgba(90, 40, 140, 0.18);
+  --e3:
+    0 2px 4px rgba(11, 10, 13, 0.05), 0 24px 48px -24px rgba(90, 40, 140, 0.26);
+
+  /* Radii. "Rounded but not bubbly" — the step from control (10) to card (14)
+     to sheet (20) is what reads as considered; one radius everywhere is what
+     reads as a Tailwind default. */
+  --r-xs: 6px;
+  --r-sm: 8px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 20px;
+  --r-2xl: 28px;
+  --r-full: 999px;
+
+  /* Motion. One easing for everything that enters or resizes, one for state
+     flips. Durations are short on purpose: "fast and expensive", not flashy. */
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-io: cubic-bezier(0.4, 0, 0.2, 1);
+  --t-1: 120ms;
+  --t-2: 200ms;
+  --t-3: 380ms;
+
+  --sidebar-w: 248px;
+  --sidebar-w-collapsed: 68px;
+  --topbar-h: 60px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    /* Deep navy-indigo rather than the marketing near-black. A product surface
+       is looked at for an hour at a time and the slight blue lift reads as a
+       lit room instead of a switched-off screen. */
+    --surface-canvas: #080714;
+    --surface: #100e1e;
+    --surface-2: #191730;
+    --surface-3: #232040;
+    --surface-inset: #0c0b1a;
+
+    --border-soft: rgba(228, 224, 255, 0.06);
+    --border-mid: rgba(228, 224, 255, 0.11);
+    --border-strong: rgba(228, 224, 255, 0.2);
+
+    --text-1: #eceaf6;
+    --text-2: #a49db8;
+    --text-3: #6d6684;
+    --text-inv: #0a0918;
+
+    --brand: #ff5c97;
+    --brand-hover: #ff7aab;
+    --brand-tint: rgba(255, 92, 151, 0.12);
+    --brand-tint-2: rgba(255, 92, 151, 0.2);
+    --brand-ring: rgba(255, 92, 151, 0.45);
+    --brand-ink: #ffd0e0;
+
+    --ok: #34d399;
+    --ok-tint: rgba(52, 211, 153, 0.14);
+    --warn: #fbbf5a;
+    --warn-tint: rgba(251, 191, 90, 0.14);
+    --danger: #ff7080;
+    --danger-tint: rgba(255, 112, 128, 0.14);
+    --info: #9b8cff;
+    --info-tint: rgba(155, 140, 255, 0.14);
+
+    --e1: 0 1px 2px rgba(0, 0, 0, 0.5);
+    --e2: 0 1px 2px rgba(0, 0, 0, 0.5), 0 10px 24px -14px rgba(0, 0, 0, 0.8);
+    --e3: 0 2px 6px rgba(0, 0, 0, 0.55), 0 28px 56px -26px rgba(0, 0, 0, 0.9);
+  }
+}
+
+:root.dark {
+  --surface-canvas: #080714;
+  --surface: #100e1e;
+  --surface-2: #191730;
+  --surface-3: #232040;
+  --surface-inset: #0c0b1a;
+
+  --border-soft: rgba(228, 224, 255, 0.06);
+  --border-mid: rgba(228, 224, 255, 0.11);
+  --border-strong: rgba(228, 224, 255, 0.2);
+
+  --text-1: #eceaf6;
+  --text-2: #a49db8;
+  --text-3: #6d6684;
+  --text-inv: #0a0918;
+
+  --brand: #ff5c97;
+  --brand-hover: #ff7aab;
+  --brand-tint: rgba(255, 92, 151, 0.12);
+  --brand-tint-2: rgba(255, 92, 151, 0.2);
+  --brand-ring: rgba(255, 92, 151, 0.45);
+  --brand-ink: #ffd0e0;
+
+  --ok: #34d399;
+  --ok-tint: rgba(52, 211, 153, 0.14);
+  --warn: #fbbf5a;
+  --warn-tint: rgba(251, 191, 90, 0.14);
+  --danger: #ff7080;
+  --danger-tint: rgba(255, 112, 128, 0.14);
+  --info: #9b8cff;
+  --info-tint: rgba(155, 140, 255, 0.14);
+
+  --e1: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --e2: 0 1px 2px rgba(0, 0, 0, 0.5), 0 10px 24px -14px rgba(0, 0, 0, 0.8);
+  --e3: 0 2px 6px rgba(0, 0, 0, 0.55), 0 28px 56px -26px rgba(0, 0, 0, 0.9);
+}
+
+/* Exposed to Tailwind so the product can be written as `bg-surface`,
+   `text-text-2`, `border-border-mid`, `rounded-lg` etc. rather than as
+   arbitrary-value brackets on every element. This is the whole reason the
+   design system holds together across pages written by different hands. */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --color-canvas: var(--surface-canvas);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-inset: var(--surface-inset);
+
+  --color-hair: var(--border-soft);
+  --color-line-mid: var(--border-mid);
+  --color-line-strong: var(--border-strong);
+
+  --color-ink: var(--text-1);
+  --color-ink-2: var(--text-2);
+  --color-ink-3: var(--text-3);
+  --color-ink-inv: var(--text-inv);
+
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-tint: var(--brand-tint);
+  --color-brand-tint-2: var(--brand-tint-2);
+  --color-brand-ink: var(--brand-ink);
+
+  --color-ok: var(--ok);
+  --color-ok-tint: var(--ok-tint);
+  --color-warn: var(--warn);
+  --color-warn-tint: var(--warn-tint);
+  --color-danger: var(--danger);
+  --color-danger-tint: var(--danger-tint);
+  --color-info: var(--info);
+  --color-info-tint: var(--info-tint);
+
+  --radius-xs: var(--r-xs);
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-lg);
+  --radius-xl: var(--r-xl);
+  --radius-2xl: var(--r-2xl);
+
+  --shadow-e1: var(--e1);
+  --shadow-e2: var(--e2);
+  --shadow-e3: var(--e3);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -270,6 +489,85 @@ body {
   }
 }
 
+/* ── Build-in-progress treatment (app/projects/[id]/BuildingOverlay.tsx) ──
+   The Kodely mark breathes while a build runs. Scale only, and only 3% —
+   enough to read as alive, small enough not to look like a loading spinner
+   fighting for attention. */
+@keyframes kodely-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+}
+.kodely-breathe {
+  animation: kodely-breathe 2.4s ease-in-out infinite;
+}
+
+/* Skeleton blocks: fade up into place once (staggered by inline delay), then
+   a highlight sweeps across them continuously. `background-position` rather
+   than a moving pseudo-element so there is nothing to clip or overflow. */
+@keyframes kodely-skeleton-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes kodely-skeleton-sweep {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+.kodely-skeleton {
+  opacity: 0;
+  background-color: color-mix(in oklab, currentColor 8%, transparent);
+  background-image: linear-gradient(
+    90deg,
+    transparent 20%,
+    color-mix(in oklab, currentColor 10%, transparent) 50%,
+    transparent 80%
+  );
+  background-size: 200% 100%;
+  animation:
+    kodely-skeleton-in 0.45s ease-out forwards,
+    kodely-skeleton-sweep 1.8s linear infinite;
+}
+
+/* Motion here is decoration, not information — the status line carries the
+   meaning — so it is safe to drop entirely. The blocks must still be VISIBLE,
+   hence opacity:1 rather than just cancelling the animation. */
+@media (prefers-reduced-motion: reduce) {
+  .kodely-breathe,
+  .kodely-skeleton {
+    animation: none;
+  }
+  .kodely-skeleton {
+    opacity: 1;
+  }
+}
+
+/* Staggered dots beside the live build-progress line in the editor chat.
+   Opacity only — no transform — so the three dots never shift the text
+   baseline beside them while a build runs. */
+@keyframes kodely-pulse {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 /* CTA button hover treatment — ported from Nxeon's real .btn-deploy
    pattern (see that codebase's app/globals.css) using Kodely's own brand
    gradient instead of Nxeon's blue/purple one. Two pieces:
@@ -372,6 +670,218 @@ body {
   color: color-mix(in srgb, var(--foreground) 70%, transparent);
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   PRODUCT UTILITIES
+   Small, named, reused everywhere in the portal and builder. Each one exists
+   because expressing it as a Tailwind class chain at every call site is how
+   the old portal drifted out of alignment with itself.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* One focus treatment for the whole product. Always visible, never removed —
+   a ring that only shows on :focus-visible still has to exist.
+
+   Never pair either of these with `outline-none`. Three separate second focus
+   systems had already appeared (the form primitives, the segmented control and
+   the onboarding panel), two of which cancelled the outline entirely. If a
+   control needs an EXTRA cue — a border colour change on an input, say — add it
+   alongside these, never instead of them. */
+.k-focus:focus-visible {
+  outline: 2px solid var(--brand-ring);
+  outline-offset: 2px;
+}
+
+/* The same ring for a control whose real input is visually hidden: a <label>
+   wrapping an sr-only radio or checkbox never matches :focus-visible itself,
+   because the input is what receives focus. Same values, so the product still
+   has exactly one focus appearance — this is a second SELECTOR, not a second
+   system. */
+.k-focus-within:has(:focus-visible) {
+  outline: 2px solid var(--brand-ring);
+  outline-offset: 2px;
+}
+
+/* Type scale. Display sizes get negative tracking (optical correction — at
+   32px+ the default spacing reads loose); the label size gets positive
+   tracking and uppercase, which is the only place caps are used. */
+.k-display {
+  font-size: clamp(1.75rem, 1.2rem + 1.6vw, 2.35rem);
+  line-height: 1.1;
+  letter-spacing: -0.028em;
+  font-weight: 600;
+  text-wrap: balance;
+}
+.k-h1 {
+  font-size: 1.5rem;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+.k-h2 {
+  font-size: 1.0625rem;
+  line-height: 1.35;
+  letter-spacing: -0.011em;
+  font-weight: 600;
+}
+.k-label {
+  font-size: 0.6875rem;
+  line-height: 1;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--text-3);
+}
+/* Anywhere digits stack in a column — usage, credits, invoices, versions. */
+.k-num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Any wide child (table, code, diagram) scrolls inside its own box so the
+   page body never scrolls sideways. */
+.k-scroll-x {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+/* A 1px brand-gradient hairline around a panel, done with a padding box so it
+   works on any background without a second opaque layer to keep in sync. */
+.k-gradient-border {
+  background:
+    linear-gradient(var(--surface), var(--surface)) padding-box,
+    var(--brand-gradient) border-box;
+  border: 1px solid transparent;
+}
+
+/* ── AI progress: the three states a step can be in ──
+   Reused by the build overlay, the chat progress list and the preview
+   loading treatment, so all three read as the same object. */
+@keyframes k-step-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.88);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.k-step-active {
+  animation: k-step-pulse 1.4s var(--ease-io) infinite;
+}
+
+@keyframes k-step-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.k-step-in {
+  animation: k-step-in 0.32s var(--ease) both;
+}
+
+/* The travelling sheen along an in-progress bar. Position, not a moving
+   child, so there is nothing to clip. */
+@keyframes k-indeterminate {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+.k-indeterminate {
+  background-image: linear-gradient(
+    90deg,
+    var(--brand-tint) 0%,
+    var(--brand) 40%,
+    var(--brand) 60%,
+    var(--brand-tint) 100%
+  );
+  background-size: 200% 100%;
+  animation: k-indeterminate 1.6s linear infinite;
+}
+
+/* Preview while the AI is applying a change. Deliberately mild: the customer
+   must still recognise their own site underneath, otherwise it reads as the
+   site having been replaced rather than edited. */
+.k-preview-busy {
+  filter: blur(2.5px) saturate(0.82);
+  transform: scale(1.008);
+  transition:
+    filter var(--t-3) var(--ease-io),
+    transform var(--t-3) var(--ease-io);
+}
+.k-preview-idle {
+  filter: none;
+  transform: none;
+  transition:
+    filter var(--t-3) var(--ease-io),
+    transform var(--t-3) var(--ease-io);
+}
+
+/* Chat message entrance — one shared animation so an assistant reply and a
+   progress row arrive the same way. */
+@keyframes k-msg-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.k-msg-in {
+  animation: k-msg-in 0.28s var(--ease) both;
+}
+
+/* Ambient brand wash for hero panels inside the product (dashboard welcome,
+   create-website prompt). Softer than the marketing .aura and NOT fixed —
+   it belongs to its panel and scrolls with it. */
+.k-wash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: inherit;
+}
+.k-wash::before,
+.k-wash::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(72px);
+}
+.k-wash::before {
+  width: 46%;
+  aspect-ratio: 1;
+  left: -6%;
+  top: -42%;
+  background: radial-gradient(closest-side, var(--glow), transparent);
+}
+.k-wash::after {
+  width: 40%;
+  aspect-ratio: 1;
+  right: -4%;
+  bottom: -50%;
+  background: radial-gradient(closest-side, var(--glow-2), transparent);
+}
+
+/* Sidebar collapse. The width lives on the shell as a custom property so the
+   sidebar, the mobile drawer and the main column all animate off one value
+   and cannot disagree mid-transition. */
+.k-shell {
+  --shell-sidebar: var(--sidebar-w);
+}
+.k-shell[data-collapsed="true"] {
+  --shell-sidebar: var(--sidebar-w-collapsed);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -379,5 +889,11 @@ body {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.2s !important;
+  }
+  /* Blur is motion-adjacent for some vestibular users and, unlike the
+     animations above, is not covered by the duration override. */
+  .k-preview-busy {
+    filter: saturate(0.82);
+    transform: none;
   }
 }

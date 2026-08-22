@@ -1,0 +1,41 @@
+{
+  "slug": "what-happens-when-an-ai-build-fails",
+  "title": "What Happens When an AI Build Fails",
+  "metaDescription": "AI-generated code sometimes doesn't compile. Here is exactly what Kodely does when that happens, why you are not charged, and what to try next.",
+  "category": "Explainers",
+  "targetKeyword": "ai website builder build failed",
+  "body": [
+    "<p>Language models write code that doesn't compile. Not often, but often enough that how a builder handles it is a real product decision rather than an edge case. Here's precisely what Kodely does, and what you should do on your side.</p>",
+
+    "<h2>Failure means something specific here</h2>",
+    "<p>Every Kodely generation ends with a real production build of your project on our servers — TypeScript and JSX compiled, Tailwind processed, a bundle emitted. \"Failed\" means that build returned a non-zero exit code: a type error, an unclosed tag, a missing import, a typo'd prop, a syntax error.</p>",
+    "<p>This is a stricter and more useful definition than most builders use. A tool that generates raw HTML has almost nothing that can fail — the page will render <em>something</em> no matter how wrong it is, and you find the problem yourself, later, in a browser. Compiling means a whole class of mistakes gets caught by a machine before you ever see the page.</p>",
+
+    "<h2>The first thing that happens: one repair attempt</h2>",
+    "<p>When the build fails, Kodely doesn't hand you the error. It sends the compiler output straight back to the model with the instruction to fix it and keep the rest of the change intact, then builds again.</p>",
+    "<p>You'll see the status change to say the build didn't compile and is being fixed. In most cases the second build succeeds and the whole episode is twenty extra seconds you barely notice.</p>",
+    "<p>There is exactly one repair attempt. If the second build also fails, the generation stops and is marked failed. That ceiling is deliberate — it bounds the worst case at roughly twice a normal generation instead of an open-ended loop, and a model that couldn't fix its own error twice is unlikely to fix it on the seventh attempt.</p>",
+
+    "<h2>You are not charged</h2>",
+    "<p>A failed build costs zero credits. Not a discount, not a partial charge — zero.</p>",
+    "<p>This is enforced structurally rather than by policy. Credits are only ever deducted on the success path of a build; the failure path writes a record of the build with its true measured cost and a charge of zero. There is no code path where a failed build takes credits from your balance, which means it can't be quietly changed by someone adjusting a setting.</p>",
+    "<p>Worth being clear about what this does and doesn't cover: the model tokens spent on a failed build are real money that Kodely pays and you don't. That's a cost we absorb precisely because \"you paid for something broken\" is the single worst experience this category has to offer. The repair attempt is capped at one partly to keep that promise affordable to keep.</p>",
+
+    "<h2>What you'll see</h2>",
+    "<p>An error message with the reason, your credit balance unchanged, and your project exactly as it was. Your previous working version is untouched — a failed generation doesn't leave you with a half-broken site.</p>",
+    "<p>If your browser tab closes or your connection drops mid-generation, the in-flight model request is actually cancelled rather than left running to completion for nobody. That build is recorded as failed and, again, charged nothing.</p>",
+
+    "<h2>What to do next</h2>",
+    "<p>Failures cluster around a few causes, and the fix is different for each.</p>",
+    "<ul><li><strong>You asked for something very large in one go.</strong> A prompt requesting eight sections with intricate interactive behaviour is more surface area to get wrong. Ask for the page, then add the complicated section as a second request.</li><li><strong>You asked for something the sandbox can't do.</strong> Requests involving external libraries, a database, or a remote resource push the model towards code that can't work here. <a href=\"/blog/what-kodely-cannot-build-yet\">The list of what isn't possible is worth two minutes.</a></li><li><strong>The request was ambiguous in a structural way.</strong> \"Make it interactive\" gives the model no target. Say what should happen and when.</li><li><strong>It was just bad luck.</strong> Sometimes it is. Re-running the same prompt is a perfectly reasonable response, and it costs you nothing if it fails again.</li></ul>",
+
+    "<h2>Rolling back is always available and always free</h2>",
+    "<p>Separately from failures: every <em>successful</em> build is saved as a checkpoint under the History tab. If a build succeeds but you don't like the result, you can restore any earlier checkpoint.</p>",
+    "<p>Rolling back costs nothing. It isn't a generation — it restores a snapshot of files you already paid for when that build ran, including the already-compiled output, so the preview is correct immediately and there's no rebuild that could itself fail. That makes an ambitious edit a cheap experiment rather than a gamble.</p>",
+
+    "<h2>Why we talk about this at all</h2>",
+    "<p>Most tools in this category would rather not mention that generation fails. But everyone who uses one finds out within a week, and the thing that determines whether they stay isn't whether it ever fails — it's whether failing cost them anything.</p>",
+    "<p>Compile every build, repair once, charge zero on failure, keep every successful version restorable. That's the whole answer.</p>",
+    "<p><a href=\"/blog/how-kodely-credits-work\">How credits and charging work in detail</a>, or <a href=\"/signup\">start with 750 free credits</a>.</p>"
+  ]
+}

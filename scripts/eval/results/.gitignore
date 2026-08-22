@@ -1,0 +1,10 @@
+# Result files are run artefacts, not source: a full suite is ~1MB per run and
+# every run produces a new one. They are ignored by default so the directory
+# still exists in a fresh checkout.
+#
+# The exception is a deliberate baseline. Name a run `--label baseline` (or
+# anything ending `-baseline`) and it stays tracked, so the run everyone diffs
+# against travels with the repo.
+*
+!.gitignore
+!*-baseline.json

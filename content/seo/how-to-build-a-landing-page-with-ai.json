@@ -1,0 +1,46 @@
+{
+  "slug": "how-to-build-a-landing-page-with-ai",
+  "title": "How to Build a Landing Page With AI",
+  "metaDescription": "Build and publish a real landing page from a description — the structure that works, the prompt to write, and how to handle signups honestly.",
+  "category": "Guides",
+  "targetKeyword": "build a landing page with ai",
+  "body": [
+    "<p>A landing page is the one job an AI builder is unambiguously good at. One page, one message, one action — which happens to be exactly the shape of site Kodely builds. Here's how to get a good one, and the single thing you'll need to solve outside the page.</p>",
+
+    "<h2>Decide the one action first</h2>",
+    "<p>Before you write a prompt, finish this sentence: <em>this page succeeds if the visitor ___.</em> Joins the waitlist. Books a call. Downloads the thing. Buys. Calls you.</p>",
+    "<p>Pages fail when the answer is \"learns about us\", because that isn't an action and nothing on the page can be designed to produce it. One action, named, decides your headline, your sections and where the buttons go.</p>",
+
+    "<h2>The structure that works</h2>",
+    "<ol><li><strong>Headline.</strong> What it is and who it's for, in a sentence a stranger understands. Not a slogan.</li><li><strong>Subhead.</strong> The specific promise, plus who it isn't for. Naming who it's not for makes the rest more believable.</li><li><strong>The action, immediately.</strong> Above the fold, not at the bottom.</li><li><strong>Three points of substance.</strong> Concrete things it does, not adjectives.</li><li><strong>Objection handling.</strong> The two or three reasons a reasonable person would hesitate, answered directly.</li><li><strong>The action again.</strong> Same wording, same destination.</li></ol>",
+    "<p>That's it. Landing pages get worse as they get longer, almost without exception.</p>",
+
+    "<h2>The signup question, answered honestly</h2>",
+    "<p>Here's the thing to know before you start. Kodely generates the front end of a site. There's no backend, so an email capture form on the page would collect addresses and have nowhere to put them. Ask for one and you may well get a beautiful signup box that silently discards every address — which is the worst possible outcome for a launch page, and entirely avoidable.</p>",
+    "<p>What works instead is a link out to something that already handles it:</p>",
+    "<ul><li>Your email tool's own hosted signup page.</li><li>Your scheduling link, for \"book a call\".</li><li>Your form tool's hosted form, for anything longer.</li><li>A <code>mailto:</code> link, which is unglamorous and converts better than people expect for high-intent B2B.</li><li>Your store or payment link, if the action is buying.</li></ul>",
+    "<p>Links are ordinary navigations and work normally — the sandbox restricts what the page can <em>load</em>, not where it can send someone. Put the destination in your prompt and you'll get a real, working button rather than a decorative form.</p>",
+
+    "<h2>Write the prompt</h2>",
+    "<p>Describe the product and the reader. Bring every fact you want on the page, because the builder writes real, specific copy rather than placeholders — which means an unsupplied statistic, customer count or testimonial gets invented rather than left blank. On a page whose entire job is to be believed, that's the thing to watch. Proofread the result against reality before you publish.</p>",
+    "<blockquote><p>A landing page for Ledgerly, a bookkeeping tool for solo tradespeople in the UK. The reader is a self-employed electrician who does their books on a Sunday night and hates it. Goal: get them onto the waitlist — the button links to my email tool's signup page. Headline should name the reader and the pain, not the category. Three points: photograph a receipt and it's filed, quarterly VAT figures ready without a spreadsheet, your accountant gets a single export. Objections to answer: I already use a shoebox and it's fine; I don't want another subscription; is my data safe. No pricing yet — say \"pricing at launch, waitlist members get the first month free\". Tone: plain, unhurried, no startup language. Deep blue and warm off-white, big readable type, one accent.</p></blockquote>",
+    "<p>If that's more than you want to write, put in one line and press <strong>Enhance</strong>. It expands the idea into a structured brief you read and edit before building, and it's free — it's never charged as a build.</p>",
+
+    "<h2>There won't be a hero image</h2>",
+    "<p>Published Kodely sites can't load anything from another host, so there's no photography, no product screenshots pulled in, no logo strip of customers, no embedded demo video. Everything visual is drawn by the page: colour, type, layout, CSS gradients, inline SVG.</p>",
+    "<p>For a landing page this is less limiting than it sounds — the most effective ones are often type-led anyway — but if your pitch depends on showing the product, plan on adding screenshots after you download the source. <a href=\"/blog/why-ai-generated-sites-have-no-stock-photos\">The reasoning behind that limit is here.</a></p>",
+
+    "<h2>Iterate towards sharper, not longer</h2>",
+    "<p>The most valuable second-round edits on a landing page are usually subtractions:</p>",
+    "<ul><li>\"Cut the third benefit — it's weaker than the other two.\"</li><li>\"Make the headline one line shorter and drop the exclamation mark.\"</li><li>\"Move the objections section above the benefits.\"</li><li>\"Make the button the only coloured thing above the fold.\"</li></ul>",
+    "<p>Every successful build is a checkpoint under History, and rolling back is free, so cutting hard is safe — you can always restore the longer version.</p>",
+
+    "<h2>Publish, and what you get with it</h2>",
+    "<p>One click publishes to a <code>kodely.site</code> subdomain. The page is static and compiled, with a real title and description and proper link-preview tags — which matters here more than on most sites, because a launch page gets shared into group chats and feeds, and a blank preview card costs you clicks.</p>",
+    "<p>Two things worth knowing: custom domains aren't supported yet, and there's no way to add an analytics script, since the page can't load third-party scripts at all. If you need either now, download the source as a zip — it's a standard Vite project — and host it yourself.</p>",
+
+    "<h2>Cost</h2>",
+    "<p>750 free credits on signup, no card. Builds are charged from measured model usage after they succeed, and a build that fails to compile is charged zero. You can set your own rolling 30-day spending cap.</p>",
+    "<p><a href=\"/signup\">Start by writing the one sentence a stranger needs to read</a>. If you want to sharpen the brief first: <a href=\"/blog/how-to-write-a-prompt-for-an-ai-website-builder\">how to write a prompt for an AI website builder</a>.</p>"
+  ]
+}

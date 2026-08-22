@@ -1,0 +1,36 @@
+{
+  "slug": "how-to-build-a-cleaning-business-website-with-ai",
+  "title": "How to Build a Cleaning Business Website With AI",
+  "metaDescription": "A credibility page for a cleaning company: what you cover, what you charge, and one obvious way to get a quote. Built in an afternoon.",
+  "category": "Guides",
+  "targetKeyword": "cleaning business website builder",
+  "body": [
+    "<p>Cleaning is a trust purchase. Somebody is deciding whether to give a stranger a key to their house, and they are deciding it from a phone in about thirty seconds.</p>",
+    "<p>That makes the website's job narrow and specific: look like a real, insured, local business, say exactly what you do and roughly what it costs, and make asking for a quote take one tap. This guide covers building exactly that with Kodely, and what to do about the quote form.</p>",
+
+    "<h2>What earns trust on the page</h2>",
+    "<ul><li><strong>Where you actually work.</strong> Name the towns, postcodes or neighbourhoods. \"Serving the local area\" reassures nobody and ranks for nothing.</li><li><strong>What kind of cleaning.</strong> Domestic, end of tenancy, commercial, after-builders, oven, carpets. These are different businesses to the person searching.</li><li><strong>Insurance and checks.</strong> Public liability, DBS-checked staff, whatever you genuinely hold. This is usually the single most persuasive line on the page.</li><li><strong>Prices, or a real price shape.</strong> Hourly rate, minimum booking, or a from-price per job. Vagueness reads as expensive.</li><li><strong>Who you are.</strong> A named owner, employed staff or subcontractors, how long you have been going.</li></ul>",
+    "<p>All of those are facts about your business, which means you have to supply them. The builder writes a bracketed placeholder like <code>[your insurance details]</code> rather than inventing a policy you do not have — <a href=\"/blog/why-an-ai-builder-should-leave-blanks\">deliberately so</a>.</p>",
+
+    "<h2>The quote request: do not use a form</h2>",
+    "<p>Every cleaning website has a \"request a quote\" form. Yours should not, and this is the one thing on this page to get right.</p>",
+    "<p>A Kodely site is front-end only. There is no server behind it and no mail path, so a form has nowhere to send a submission. It would look entirely convincing and throw away every quote request — including the four-bedroom end-of-tenancy one.</p>",
+    "<p>What works instead, with no server at all:</p>",
+    "<ul><li>A large tap-to-call button. For local services this converts better than a form anyway.</li><li>A <code>mailto:</code> link with the subject line prefilled — \"Quote request\" — so enquiries arrive pre-sorted.</li><li>A WhatsApp link, if that is genuinely how your customers talk to you.</li><li>A link out to a real form tool if you need structured details like room counts.</li></ul>",
+    "<p><a href=\"/blog/why-ai-built-sites-have-no-contact-form\">The full reasoning</a>, and <a href=\"/blog/how-to-add-a-booking-button-to-an-ai-built-site\">how to wire the button</a>.</p>",
+
+    "<h2>Write the prompt</h2>",
+    "<blockquote><p>A one-page site for Bright Path Cleaning, a domestic and end-of-tenancy cleaning company covering [your towns]. Run by [your name], [number] employed cleaners, all DBS-checked, [your insurance]. Services with from-prices: regular domestic clean from [price] an hour, one-off deep clean from [price], end of tenancy from [price], oven clean [price]. Minimum booking two hours. Sections: what we do, areas covered as a plain list of place names, why us (insured, checked, employed not subcontracted), prices, and a big \"Get a quote\" button that is a tap-to-call link, repeated at the top and bottom, plus an email link. No contact form. Clean and calm: white, soft blue-green, one strong accent, generous spacing, plain readable type.</p></blockquote>",
+    "<p>The areas list is doing double duty: it reassures a human and it puts your actual place names in the page text, which is most of what local search needs from a site this size.</p>",
+    "<p>If writing that out is more than you want to do, type one line and press <strong>Enhance</strong> — it expands it into a brief you read and edit before building, and costs no credits.</p>",
+
+    "<h2>What it will look like</h2>",
+    "<p>There will be no photographs — not of your team, not of a sparkling kitchen. Published sites cannot load images from another host and there is no upload path, so the design is carried by type, colour, spacing and inline SVG icons.</p>",
+    "<p>For cleaning this is less damaging than you would think. Before-and-after photos are the one thing that would help, and stock photos of someone else's spotless worktop help nobody. What persuades is the insurance line, the postcode list, and a phone number that dials. <a href=\"/blog/why-ai-generated-sites-have-no-stock-photos\">Why the constraint exists</a>.</p>",
+
+    "<h2>Refining and publishing</h2>",
+    "<ul><li>\"Move the areas covered list higher — it's what people check first.\"</li><li>\"Make the phone button sticky at the bottom on mobile.\"</li><li>\"Add 'We bring our own products, including fragrance-free' to the domestic section.\"</li><li>\"Tone the accent colour down a notch, it's shouting.\"</li></ul>",
+    "<p>Every successful build is a free checkpoint you can roll back to. One click publishes to a <code>kodely.site</code> subdomain with <code>robots.txt</code> and <code>sitemap.xml</code> generated, and a real title and description so a shared link shows your company name.</p>",
+    "<p><a href=\"/signup\">Start with your areas, your prices and your phone number</a>. See also: <a href=\"/blog/how-to-build-a-tradesman-website-with-ai\">the same job for a trade</a>.</p>"
+  ]
+}

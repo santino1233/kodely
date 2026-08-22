@@ -1,0 +1,51 @@
+{
+  "slug": "why-your-ai-website-looks-generic",
+  "title": "Why Your AI Website Looks Generic",
+  "metaDescription": "Generated sites look the same for a specific, fixable reason. What causes it, what actually works against it, and what no prompt can fix.",
+  "category": "Explainers",
+  "targetKeyword": "ai generated website looks generic",
+  "body": [
+    "<p>You described your business, pressed build, and got back something competent and completely forgettable. Hero, three cards, a footer. It's the most common complaint about AI builders and it has a specific cause — mostly fixable, partly not. Here's both halves.</p>",
+
+    "<h2>The cause</h2>",
+    "<p>A language model asked for \"a website for a bakery\" produces the average of every bakery website it has seen. That average is real: it exists, it's competent, and it's the reason your output looks like everyone else's. The model isn't being lazy — you gave it a category, and the average of a category is what a category looks like.</p>",
+    "<p>Every specific thing you add pulls the result away from that average. Every vague thing you add pulls it back towards it. That's the whole mechanism, and almost every fix below is an application of it.</p>",
+
+    "<h2>Fix one: describe the business, not the website</h2>",
+    "<p>\"A modern website for a bakery with a hero, three features and a contact section\" briefs a layout. The model is already good at layout. What it can't know is what makes yours specific.</p>",
+    "<p>\"A sourdough bakery that sells out by 11am, two loaves done properly plus whatever pastry the baker felt like that morning, regulars order the night before by text\" gives it a scarcity story, a two-product menu, and a texting habit — three things to build a page around that no other bakery page has.</p>",
+
+    "<h2>Fix two: name one visual idea, not three moods</h2>",
+    "<p>\"Modern, clean, professional\" describes nearly every website ever made, so it steers nothing at all. One concrete idea steers everything.</p>",
+    "<p>Compare \"editorial, like a printed menu — cream paper, deep ink, serif headings with wide letterspacing, thin rules between sections, one oversized number per price\" against \"clean and modern\". The first has a point of view. The second is a request for the average.</p>",
+    "<p>Kodely's builder is asked to give each page one distinctive visual idea rather than a generic hero-plus-three-cards. It can only do that if there's something in your brief to be distinctive <em>about</em>.</p>",
+
+    "<h2>Fix three: bring real content</h2>",
+    "<p>This is the one people skip, and it does more than everything else combined. Generated sites look generic largely because they're full of generic content — and they're full of generic content because the prompt contained none.</p>",
+    "<p>If you don't supply your actual price list, your actual service names, your actual coverage area, the page has nothing but category-average filler to put there — and it <em>will</em> put something there, because the builder is instructed to write real copy rather than \"Your Price Here\". Generic content and invented content are the same failure wearing two hats: check the result against reality before publishing.</p>",
+    "<p>A page with your real prices, your real hours and your real service names simply cannot look like anyone else's, because nobody else has those.</p>",
+
+    "<h2>Fix four: make round two a subtraction</h2>",
+    "<p>The instinct after a generic first build is to ask for more. More sections, more features, more copy. That reliably makes it more generic, because you're adding more category-average material.</p>",
+    "<p>Cut instead. \"Remove the testimonials section entirely.\" \"Delete the third feature card and make the other two twice the size.\" \"Cut the about paragraph to one sentence.\" A page with three things said properly reads as designed. A page with eight things said adequately reads as generated.</p>",
+    "<p>Every successful build is a checkpoint under the History tab, and restoring one is free — it restores a snapshot rather than generating anything. So cutting aggressively costs you nothing if you were wrong.</p>",
+
+    "<h2>Fix five: be specific in your edits</h2>",
+    "<p>\"Make it look better\" gives the model no target, so it produces another average. Compare:</p>",
+    "<ul><li>Vague: \"the colours are off\". Specific: \"the green is too dark and cold — lighter and warmer, closer to olive\".</li><li>Vague: \"more modern\". Specific: \"increase the space between sections by half, and make the headings about 30% larger\".</li><li>Vague: \"needs more personality\". Specific: \"rewrite the hero in the voice of someone who's been doing this for twenty years and isn't trying to impress anyone\".</li></ul>",
+
+    "<h2>Use Enhance as a first draft of the brief</h2>",
+    "<p>If writing a detailed brief is the part you don't want to do, the Enhance button takes a one-liner and expands it into a structured version — audience, goal, tone, sections, key content — which you then edit. Editing a draft is much easier than writing one from nothing, and the edits are where your specifics get in.</p>",
+    "<p>Enhance is free and never charged as a build.</p>",
+
+    "<h2>What no prompt will fix</h2>",
+    "<p>Two limits are structural, and no amount of prompting gets around them.</p>",
+    "<p><strong>No photography.</strong> Published sites can't load anything from another host, so there are no images beyond what the page draws itself in CSS and inline SVG. If your mental image of \"not generic\" is a striking full-bleed photograph, that specific thing isn't available. <a href=\"/blog/why-ai-generated-sites-have-no-stock-photos\">Why, in full.</a></p>",
+    "<p><strong>No custom fonts.</strong> Type comes from the system font stack. A distinctive typeface is one of the fastest routes to a distinctive site, and it's closed here. What's left is scale, weight, spacing and contrast — which is more than it sounds, but it isn't the same lever.</p>",
+    "<p>Both of those are consequences of the security policy that makes published sites safe to host, and neither is going to be loosened per-site. <a href=\"/blog/what-kodely-cannot-build-yet\">The complete list of limits is here.</a></p>",
+
+    "<h2>The short version</h2>",
+    "<p>Generic in, generic out. Describe the business rather than the layout, name one visual idea, bring your real numbers and copy, and make your second round a subtraction. That gets you most of the way — and the remaining distance is a design constraint you should know about before you start rather than after.</p>",
+    "<p><a href=\"/blog/how-to-write-a-prompt-for-an-ai-website-builder\">The full prompting guide</a>, or <a href=\"/signup\">try it with 750 free credits</a>.</p>"
+  ]
+}

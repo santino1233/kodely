@@ -1,0 +1,36 @@
+{
+  "slug": "ai-website-builder-vs-a-template",
+  "title": "AI Website Builder vs a Template",
+  "metaDescription": "Templates and AI builders solve the same problem differently. An honest comparison of what each is actually good at, and how to choose.",
+  "category": "Comparisons",
+  "targetKeyword": "ai website builder vs template",
+  "body": [
+    "<p>Buying a template and describing a site to an AI are two answers to the same question: how do I get a decent website without hiring anyone. They fail in different places. Here's where each one is actually better, written by people with an obvious stake in one of them — so weigh it accordingly and check the claims.</p>",
+
+    "<h2>The core difference</h2>",
+    "<p>A template is a finished design you fill in. Someone made every layout decision in advance; your job is to replace their content with yours and adjust what the editor lets you adjust.</p>",
+    "<p>An AI builder makes the layout decisions per site, from a description. Nothing is chosen in advance, which is both the advantage and the risk.</p>",
+
+    "<h2>Where a template wins</h2>",
+    "<ul><li><strong>You can see it before you commit.</strong> This is the biggest one and it's not close. You browse, you find one you like, you know exactly what you're getting. With an AI builder you write a description and hope.</li><li><strong>Predictability.</strong> Templates were designed by a person who considered the edge cases, tested them on real devices, and shipped. A generated design is new each time, and new means unverified.</li><li><strong>Images are handled.</strong> Template ecosystems assume photography and give you somewhere to put it. This is a hard limit on Kodely specifically: generated sites contain no photographs at all, because published sites can't load anything from another host. If your site is photo-driven, a template ecosystem is simply the better tool.</li><li><strong>Complete features.</strong> Templates usually come attached to a platform with a store, a booking system, forms that deliver, and a CMS. Kodely has none of those. <a href=\"/blog/what-kodely-cannot-build-yet\">Here's the full list of what it can't do.</a></li></ul>",
+
+    "<h2>Where an AI builder wins</h2>",
+    "<ul><li><strong>Nothing to fight.</strong> Templates resist. Your business has five services and the template has three slots; your key selling point is a price list and the template wants a photo gallery. Half the work of a template is bending your business into someone else's structure. A generated design starts from your description, so the sections are the sections you asked for.</li><li><strong>Changes are a sentence.</strong> \"Move the price list above the about section, make the headings larger, take the green warmer.\" With a template you go and find the setting — assuming the setting exists.</li><li><strong>You don't start from a blank page.</strong> Choosing between four hundred templates is its own kind of paralysis. Describing your business is easier than evaluating a catalogue.</li><li><strong>The result is yours specifically.</strong> A template that looks great is a template a thousand other businesses also bought.</li></ul>",
+
+    "<h2>What Kodely does about the predictability problem</h2>",
+    "<p>The honest weakness of any AI builder is that you can't see it before you commit. Three things address that here:</p>",
+    "<p><strong>Enhance.</strong> Type one line, press Enhance, and you get a structured brief back — audience, goal, tone, sections in order, key content — which you read and edit before anything is built. It's free and never charged as a build, because a preview you pay for isn't a preview.</p>",
+    "<p><strong>Nothing charged for broken output.</strong> Every build is genuinely compiled on our servers. If it doesn't compile, it gets one automatic repair attempt, and if it still doesn't, the build is charged zero credits.</p>",
+    "<p><strong>Free rollback.</strong> Every successful build is a checkpoint. Restoring an earlier one costs nothing — it restores a snapshot rather than generating anything — so an experimental edit is genuinely low-stakes.</p>",
+
+    "<h2>What you own at the end</h2>",
+    "<p>Templates vary enormously here and it's worth checking before you buy. Some are HTML files that are yours; some only exist inside one platform's editor and cannot leave it.</p>",
+    "<p>With Kodely the answer is fixed: your project is a Vite + React + TypeScript + Tailwind application, you can read the source in the Code tab, and you can download the whole thing as a zip for free, any number of times. It's a standard project — <code>npm install</code>, <code>npm run build</code>, host it anywhere. <a href=\"/blog/do-ai-website-builders-give-you-real-code\">More on what \"real code\" should mean.</a></p>",
+
+    "<h2>A straightforward way to choose</h2>",
+    "<p><strong>Pick a template if:</strong> your site depends on photography; you need a store, bookings, a working contact form, or a CMS; you want to see exactly what you're getting before you commit; or someone non-technical needs to edit it regularly.</p>",
+    "<p><strong>Pick an AI builder if:</strong> you need one strong page rather than a structure; your content doesn't fit standard slots; you'd rather describe your business than evaluate four hundred designs; or you want the underlying code to be genuinely portable.</p>",
+    "<p><strong>Honestly, try both.</strong> They're cheap to evaluate. Kodely gives you 750 credits free with no card, which is enough to see a real first build and decide whether the result is better than the template you were considering. If it isn't, buy the template — that's a perfectly good outcome.</p>",
+    "<p><a href=\"/signup\">Build one and compare</a>.</p>"
+  ]
+}

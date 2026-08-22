@@ -1,0 +1,36 @@
+{
+  "slug": "one-page-website-vs-a-link-in-bio-page",
+  "title": "One-Page Website vs a Link-in-Bio Page",
+  "metaDescription": "A list of links and a real one-page site do different jobs. Which one you need, and what changes when you own the page instead of renting it.",
+  "category": "Comparisons",
+  "targetKeyword": "link in bio vs website",
+  "body": [
+    "<p>A link-in-bio page is a list of links on a hosted profile. A one-page website is a page you control that happens to be short. They look similar in a screenshot and they do quite different jobs.</p>",
+    "<p>This is about which one your situation actually calls for. It is deliberately not a review of anyone's product — the comparison that matters is structural.</p>",
+
+    "<h2>What a link list is genuinely good at</h2>",
+    "<ul><li><strong>Routing.</strong> Someone arrived from a social profile and needs to get to one of six places. A list is the correct interface for that.</li><li><strong>Speed of change.</strong> New link, two taps, done. No rebuild, no publish step.</li><li><strong>Being one thing.</strong> No decisions about layout or copy. For a lot of people that is the feature.</li></ul>",
+    "<p>If your traffic is entirely social and the only job is forwarding people, a list is not a compromise. It is the right tool and you can stop reading.</p>",
+
+    "<h2>Where a list stops being enough</h2>",
+    "<p>Four situations, and you will recognise yours immediately:</p>",
+    "<ol><li><strong>Someone needs to be persuaded, not routed.</strong> A list cannot say what you do, who it is for, or why you are good at it. If people arrive not yet convinced, a list asks them to click before they have a reason to.</li><li><strong>You want to be found.</strong> A hosted profile page is thin content on somebody else's domain. It is not going to rank for \"plumber in [your town]\" — a page with your services, your area names and your credentials in real text has a chance.</li><li><strong>You need to say more than a label.</strong> Prices, hours, what is included, what you do not do. That is content, and a list has nowhere to put it.</li><li><strong>It is your address on printed things.</strong> A van, a card, a menu. That URL wants to be yours and to look like a business.</li></ol>",
+
+    "<h2>The ownership difference</h2>",
+    "<p>The structural point, and the one people feel later rather than sooner.</p>",
+    "<p>A hosted profile is a tenancy. The design, the URL shape, the features and the terms belong to the platform, and the page is intelligible only inside it.</p>",
+    "<p>A Kodely site is a real application: Vite, React, TypeScript and Tailwind, compiled to static files. There is a code view where you can read exactly what was generated — actual component files, not an abstraction of them. That is a different kind of thing to have, even if you never open it. <a href=\"/blog/do-ai-website-builders-give-you-real-code\">What \"real code\" does and does not mean.</a></p>",
+
+    "<h2>What a one-page site costs you in exchange</h2>",
+    "<p>Being even-handed about our own side:</p>",
+    "<ul><li><strong>You have to write it.</strong> A list needs labels. A page needs sentences about your business — and the facts have to come from you, because a builder that invents your prices is a worse problem than a blank page.</li><li><strong>Changing it is a rebuild, not a toggle.</strong> Quick — describe the change, republish — but not two taps.</li><li><strong>Some things are not buildable.</strong> No forms, no payments, no photographs, no analytics. A published site runs under a policy that <a href=\"/blog/what-a-published-ai-site-is-allowed-to-load\">blocks every other host</a>. Link-outs cover most of it; not all.</li><li><strong>The address is a subdomain for now.</strong> Custom domains are not supported yet, which matters if you are printing it on something.</li></ul>",
+
+    "<h2>The honest middle</h2>",
+    "<p>You can build a one-page site that is mostly a link list and slightly more: a real headline that says what you do, one paragraph, then the buttons. That page routes as well as a list, ranks better than one, and looks like a business rather than a profile.</p>",
+    "<p>It is also the fastest thing to build, because the content is short and the structure is obvious. If you are unsure which side you are on, that is the version to make.</p>",
+
+    "<h2>Choosing</h2>",
+    "<ul><li><strong>Link list</strong> if your audience already knows who you are and only needs forwarding.</li><li><strong>One-page site</strong> if strangers arrive, if you want search traffic, or if the URL goes on anything physical.</li><li><strong>Both</strong> is fine. They are not in competition — the list can be one of the links on your page, or the other way round.</li></ul>",
+    "<p><a href=\"/signup\">Build the one-page version with 750 free credits</a> and see which one you keep. See also: <a href=\"/blog/single-page-vs-multi-page-websites\">when one page stops being enough</a>.</p>"
+  ]
+}

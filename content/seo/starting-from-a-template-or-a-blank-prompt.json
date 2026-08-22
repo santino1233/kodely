@@ -1,0 +1,39 @@
+{
+  "slug": "starting-from-a-template-or-a-blank-prompt",
+  "title": "Start From a Template, or a Blank Prompt?",
+  "metaDescription": "Kodely's templates are starter prompts, not layouts. What that changes about how you begin, and when a blank box is the better start.",
+  "category": "Guides",
+  "targetKeyword": "ai website builder templates",
+  "body": [
+    "<p>Every website builder has templates. On most of them a template is a finished layout you pour your content into, and the whole job is bending your business to fit someone else's structure.</p>",
+    "<p>Kodely's templates are not that. They are <em>prompts</em> — the text lands in the composer, you edit it, and the site gets generated from your version. Which means choosing between \"template\" and \"blank prompt\" is a much smaller decision than it sounds, and a genuinely useful one to understand.</p>",
+
+    "<h2>What a template actually is here</h2>",
+    "<p>Pick a template and what you get is a full starter brief in the prompt box: the audience, the purpose, the tone, the sections, and bracketed placeholders where only you know the facts — <code>[your opening hours]</code>, <code>[your price]</code>, <code>[link to your booking system]</code>.</p>",
+    "<p>Nothing is generated until you press build. So the template is not a layout you are stuck inside; it is a well-written first message you are free to gut. Delete half of it, change the tone line, add three sections it did not think of. The result is still a site generated from a description — yours.</p>",
+
+    "<p>The gallery covers the verticals a one-page site actually suits: food and drink, beauty and wellness, local services, professional services, personal and creative, startup and product, events and causes.</p>",
+
+    "<h2>Why the templates are written the way they are</h2>",
+    "<p>The interesting constraint is what the starter prompts deliberately never ask for.</p>",
+    "<p>None of them asks for a working contact or booking form, an account, a cart, a database or an API call. None asks for a remote image, a custom web font, or a second page either. Not because those would look bad, but because a generated site genuinely cannot do them — <a href=\"/blog/what-kodely-cannot-build-yet\">the full list is here</a> — and a starter prompt that asked for one would be a trap set by the product itself.</p>",
+    "<p>Where a vertical normally leans on something impossible — bookings, RSVPs, donations, checkout, waitlists — the prompt asks for a link-out instead: a <code>mailto:</code>, a <code>tel:</code>, or a clearly bracketed link to the tool you already use. And the card describing the template says so in plain language, so nobody picks \"Restaurant\" expecting a reservation system.</p>",
+    "<p>That is worth checking on any builder you evaluate: whether its templates promise things its engine cannot deliver.</p>",
+
+    "<h2>When to start from a template</h2>",
+    "<ul><li><strong>You are not sure what sections the page needs.</strong> The starter prompt is a checklist written by someone who has thought about this vertical.</li><li><strong>You freeze at an empty box.</strong> Editing beats composing, and this converts the job into editing.</li><li><strong>You want to see how a good prompt is written.</strong> Read one closely — the structure of it is the actual lesson, and it transfers to every prompt you write afterwards.</li><li><strong>Your business is close to a standard shape.</strong> A barber, a coffee shop, a consultant. The starter is 80% right before you touch it.</li></ul>",
+
+    "<h2>When to start blank</h2>",
+    "<ul><li><strong>You have a strong visual idea.</strong> A template prompt carries tone and palette suggestions you will end up arguing with. Faster to state yours.</li><li><strong>Your business is genuinely odd.</strong> Two businesses in one room, an unusual service model, a page with one strange job to do. A generic starter drags you towards the average.</li><li><strong>You already know the sections.</strong> Then the template is a longer route to the same place.</li></ul>",
+    "<p>And there is a middle path most people end up on: start blank with one line, press <strong>Enhance</strong>, and get a full brief generated from your own idea rather than a category. Enhance is free and is not recorded as a build — a preview of what you are about to spend on should not itself cost anything.</p>",
+
+    "<h2>Either way, edit before you build</h2>",
+    "<p>This is the part that matters more than the choice. Whatever lands in the box, read it and replace every bracket you can before pressing build.</p>",
+    "<p>Left in, a bracket stays on the page as a bracket. That is the intended behaviour — the builder writes <code>[your phone number]</code> rather than inventing one, because <a href=\"/blog/why-an-ai-builder-should-leave-blanks\">an invented phone number is a real stranger's phone number</a>. But it does mean a first build from an unedited template is a scaffold, not a site.</p>",
+    "<p>Spending four minutes filling in brackets before the first build is the highest-value four minutes in the whole process, and it saves a round of edits afterwards.</p>",
+
+    "<h2>The short version</h2>",
+    "<ol><li>A template here is a starter prompt, not a layout. Nothing about it is locked.</li><li>They are written to stay inside what a generated site can genuinely do, and to link out where it cannot.</li><li>Start from one when you want a checklist; start blank when you have a strong idea.</li><li>Fill in the brackets before the first build, either way.</li></ol>",
+    "<p><a href=\"/signup\">Start with 750 free credits</a>. See also: <a href=\"/blog/how-to-write-a-prompt-for-an-ai-website-builder\">how to write a prompt that gets a good first build</a>, and <a href=\"/blog/ai-website-builder-vs-a-template\">how this compares with a traditional template</a>.</p>"
+  ]
+}

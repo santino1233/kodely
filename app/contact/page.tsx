@@ -4,16 +4,18 @@ import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { Aura } from "@/components/marketing/Aura";
 import { Reveal } from "@/components/marketing/Reveal";
 import { ContactForm } from "@/components/marketing/ContactForm";
+import { SkipLink } from "@/components/marketing/SkipLink";
 
 export const metadata: Metadata = { title: "Contact — Kodely" };
 
 export default function ContactPage() {
   return (
     <div className="relative min-h-screen bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-50">
+      <SkipLink />
       <Aura />
       <MarketingNav />
 
-      <main className="relative mx-auto max-w-xl px-6 pb-24 pt-36 sm:pt-44">
+      <main id="main-content" tabIndex={-1} className="relative mx-auto max-w-xl px-6 pb-24 pt-36 sm:pt-44">
         <Reveal>
           <p className="text-xs font-medium uppercase tracking-[0.14em] text-neutral-500 dark:text-neutral-400">
             Get in touch

@@ -1,0 +1,62 @@
+{
+  "slug": "what-kodely-cannot-build-yet",
+  "title": "What Kodely Cannot Build Yet",
+  "metaDescription": "The complete, blunt list of what Kodely cannot do today — no backend, no forms that deliver, no photos, no multi-page routing. Read before signing up.",
+  "category": "Explainers",
+  "targetKeyword": "kodely limitations",
+  "body": [
+    "<p>This page exists so that nobody signs up expecting something that isn't there. Everything below is a real limitation today, written plainly rather than softened. If one of these is a dealbreaker for you, we'd rather you found out here than after you'd spent an afternoon.</p>",
+
+    "<h2>No backend of any kind</h2>",
+    "<p>A Kodely site is a front end. There is no server code, no database, no API layer, no scheduled jobs, no email sending. Nothing your visitors do on the page is stored or transmitted anywhere.</p>",
+    "<p>That single fact is upstream of most of what follows.</p>",
+
+    "<h2>No contact forms that deliver</h2>",
+    "<p>A form on a generated site would collect a message and have nowhere to send it. If you ask for one you may well get a well-designed form that silently discards every enquiry — so don't ask for one.</p>",
+    "<p><strong>What to do instead:</strong> link out. An email address as a <code>mailto:</code> link, a phone number as a <code>tel:</code> link, or a button pointing at whatever tool you already use. Links are ordinary navigations, so they work normally — the restriction is on what the page can <em>load</em>, not where it can send someone.</p>",
+
+    "<h2>No user accounts, logins, or member areas</h2>",
+    "<p>No sign-up, no sign-in, no password reset, no dashboard, no admin panel, no gated content. All of it needs somewhere to store a user, and there is nowhere.</p>",
+    "<p>A login screen can be drawn as a visual element. It won't authenticate anyone. Don't ship one.</p>",
+
+    "<h2>No e-commerce, carts, checkout, or payments</h2>",
+    "<p>You cannot sell anything from a Kodely site. No cart, no checkout, no payment processor, no order records, no inventory.</p>",
+    "<p><strong>What to do instead:</strong> a product page that describes what you sell, with a button linking out to the store, marketplace or payment link you already have.</p>",
+
+    "<h2>No bookings or reservations that reserve anything</h2>",
+    "<p>Same reason. A date picker can exist as a visual element and it will hold nothing. Link out to your booking platform, or make the phone number a large tap-to-call button.</p>",
+
+    "<h2>No external API integrations</h2>",
+    "<p>Published sites run under a content security policy that switches off the page's ability to make outbound network requests entirely. So no live prices, no weather, no currency conversion, no CRM sync, no email-list signup posting to a provider, no chat widget, no analytics.</p>",
+
+    "<h2>No images, photography, or remote media</h2>",
+    "<p>No stock photos, no image search, no photo uploads today, no remote images of any kind, no embedded maps, no video embeds, no social feeds. Every request to another host is blocked.</p>",
+    "<p>Everything visual is drawn by the page itself: inline SVG, CSS gradients, colour and typography. If your site's whole job is showing photographs — a photographer's portfolio, property listings, a lookbook — this is the wrong tool today, straightforwardly. <a href=\"/blog/why-ai-generated-sites-have-no-stock-photos\">The full reasoning is here.</a></p>",
+
+    "<h2>No custom web fonts</h2>",
+    "<p>Not from a font service, and not embedded in the page either — a base64-encoded font is blocked by the same policy as a remote one. Sites use the system font stack. It's fast and it renders instantly, but it is a genuine limit on brand expression.</p>",
+
+    "<h2>No multi-page routing</h2>",
+    "<p>Kodely builds single-page sites. Sections are things you scroll to, not separate URLs. There is no <code>/about</code>, no <code>/services/plumbing</code>, no blog with individual post pages.</p>",
+    "<p>For most small business sites this is fine and arguably better. If your plan depends on ranking twenty separate service pages for twenty separate search terms, it isn't. <a href=\"/blog/single-page-vs-multi-page-websites\">The trade-off, in detail.</a></p>",
+
+    "<h2>No npm packages</h2>",
+    "<p>Generated projects have exactly two runtime dependencies: React and React DOM. No animation library, no carousel, no icon package, no charting library, no date picker, no form library, no router. There's no install step during generation, so there's no mechanism to add one.</p>",
+    "<p>Anything you'd normally reach for a package to do has to be written from scratch in the project's own components — which is fine for a fade-in or an accordion, and genuinely limiting for something like a full data grid.</p>",
+
+    "<h2>No custom domains</h2>",
+    "<p>Published sites live on a <code>kodely.site</code> subdomain. You can't point your own domain at a Kodely-hosted site today. If you need your own domain now, download your source as a zip — it's a standard Vite project — and host it wherever you like.</p>",
+
+    "<h2>No content management for non-technical editors</h2>",
+    "<p>There's no CMS, no editable-region UI, no way to hand a member of staff a login so they can change the menu. Edits happen by asking for them in the chat box, which requires access to your Kodely account and costs credits.</p>",
+
+    "<h2>What you get in exchange</h2>",
+    "<p>Being clear about the limits is only half of it. Here's the other half, and each of these is a consequence of the same design:</p>",
+    "<ul><li>A real Vite + React + TypeScript + Tailwind project you can read and download, not a proprietary page format.</li><li>Every build genuinely compiled server-side, so type errors and broken markup are caught by a machine before you see the page.</li><li>Zero charge for a build that fails to compile.</li><li>Every successful build kept as a checkpoint you can roll back to for free.</li><li>A published site with no third-party requests at all — nothing to break when someone else's CDN changes, and no third-party tracking on your visitors.</li></ul>",
+
+    "<h2>So who is this actually for?</h2>",
+    "<p>Kodely is a good fit if you need one well-built, fast, honest page: a local service business, a restaurant, a landing page for something you're launching, a text-led portfolio, an event, a one-page pitch for a product.</p>",
+    "<p>It's the wrong fit if you need a store, a booking system, logins, a photo-driven site, or twenty indexable pages. Those aren't things we're going to talk you into doing badly.</p>",
+    "<p>If you're in the first group: <a href=\"/signup\">750 free credits, no card required</a>.</p>"
+  ]
+}

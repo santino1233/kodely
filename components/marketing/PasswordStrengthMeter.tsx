@@ -8,9 +8,16 @@ export function PasswordStrengthMeter({ password }: { password: string }) {
   const score = passwordScore(password);
 
   return (
-    <div className="space-y-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-900">
+    // id so the password field can point aria-describedby at this. The rule
+    // list is what a screen-reader user needs; the coloured bars are the
+    // same information as the "Weak/Strong" label beside them, so they are
+    // hidden rather than read out as six anonymous elements.
+    <div
+      id="password-strength"
+      className="space-y-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-900"
+    >
       <div className="flex items-center gap-2">
-        <div className="flex flex-1 gap-1">
+        <div aria-hidden className="flex flex-1 gap-1">
           {PASSWORD_RULES.map((_, i) => (
             <span
               key={i}
@@ -28,11 +35,22 @@ export function PasswordStrengthMeter({ password }: { password: string }) {
           return (
             <li
               key={rule.key}
+              // Contrast: emerald-600 was 3.8:1 on this panel and
+              // neutral-400 / dark:neutral-600 were ~2.4:1 — both under AA
+              // for 11px text. emerald-700 / neutral-500 / neutral-400 clear
+              // it while keeping the met-vs-unmet distinction identical.
               className={`flex items-center gap-1.5 text-[11px] ${
-                met ? "text-emerald-600 dark:text-emerald-400" : "text-neutral-400 dark:text-neutral-600"
+                met ? "text-emerald-700 dark:text-emerald-400" : "text-neutral-500 dark:text-neutral-400"
               }`}
             >
-              {met ? <Check size={11} strokeWidth={3} /> : <X size={11} strokeWidth={2.5} />}
+              {/* The icon repeats what the "met"/"not met" wording below
+                  already conveys via colour+glyph, so it is decoration. */}
+              {met ? (
+                <Check size={11} strokeWidth={3} aria-hidden />
+              ) : (
+                <X size={11} strokeWidth={2.5} aria-hidden />
+              )}
+              <span className="sr-only">{met ? "Met:" : "Not met:"}</span>
               {rule.label}
             </li>
           );

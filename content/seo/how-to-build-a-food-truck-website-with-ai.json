@@ -1,0 +1,41 @@
+{
+  "slug": "how-to-build-a-food-truck-website-with-ai",
+  "title": "How to Build a Food Truck Website With AI",
+  "metaDescription": "A food truck site has one job: where are you today. Build a fast one-page site with AI, with the prompt to use and what it cannot do.",
+  "category": "Guides",
+  "targetKeyword": "food truck website builder",
+  "body": [
+    "<p>A food truck's website is not a restaurant's website with wheels. It answers a different question, and the difference matters for how you build it.</p>",
+    "<p>A restaurant site says: here is where we are, here is what we serve, book a table. A food truck site says: here is what we serve, here is how to find out where we are today, here is how to book us for your thing.</p>",
+
+    "<h2>The three jobs, in order</h2>",
+    "<ol><li><strong>What you sell.</strong> One line, unmissable. \"Birria tacos.\" Not \"street food with a twist\".</li><li><strong>Where you are.</strong> A truck moves, so a website cannot be your schedule. Point at whatever you actually update — your Instagram, your Facebook page — with a prominent, honest label: \"Today's pitch is always on Instagram\".</li><li><strong>Bookings for private events.</strong> Weddings, parties, office lunches. This is where a truck's real money often is, and most truck sites bury it.</li></ol>",
+    "<p>Menu and prices sit under those. Everything else is optional.</p>",
+
+    "<h2>Why your schedule must live somewhere else</h2>",
+    "<p>This is the one architectural fact to get right. A Kodely site is a static page: no server, no database, no admin panel. You change it by describing a change and republishing. That is fine for a menu you tweak monthly. It is wrong for a location you change daily.</p>",
+    "<p>So do not build a \"where we are this week\" table into the page. It will be wrong by Wednesday, and a wrong location is worse than no location — someone will drive to it.</p>",
+    "<p>Instead: one big, clearly labelled button linking to the account you actually post on. That link is a navigation, so it works exactly as expected, and it is honest about where the live information lives.</p>",
+
+    "<h2>Do not ask for a booking form</h2>",
+    "<p>Private-event enquiries are the one thing you genuinely want to capture, which makes it tempting to ask for a form. Do not. There is no server behind a generated site, so a form silently discards every enquiry — including the wedding.</p>",
+    "<p>Use a <code>mailto:</code> link with a prefilled subject line, a tap-to-call number, or a link out to a real form tool if you need structured details. <a href=\"/blog/why-ai-built-sites-have-no-contact-form\">Why forms cannot work here</a> covers the reasoning; <a href=\"/blog/how-to-add-a-booking-button-to-an-ai-built-site\">this one</a> covers wiring the button.</p>",
+
+    "<h2>Write the prompt</h2>",
+    "<blockquote><p>A one-page site for Smoke Signal, a barbecue food truck. Headline says exactly what we sell: slow-smoked brisket rolls. Menu with prices: brisket roll 9, burnt-end roll 10, loaded fries 7, slaw 3, vegetarian jackfruit roll 8. A big button at the top saying \"Where we are today\" linking out to our Instagram — make it obvious that is where the live schedule is. A private events section with a mailto link for wedding and party bookings, subject line already filled in. Tap-to-call number in the header. Dark, smoky palette, big condensed type, no cartoon flames.</p></blockquote>",
+    "<p>Bring your real prices. Anything factual you leave out comes back as a bracketed placeholder — the builder writes <code>[your price]</code> rather than inventing a number that ends up on a public menu.</p>",
+    "<p>If writing all that out feels like effort, type one line and press <strong>Enhance</strong> to expand it into an editable brief. Enhance costs no credits.</p>",
+
+    "<h2>What it will look like</h2>",
+    "<p>There will be no photograph of the food, which for a food business is the constraint you will feel most. Published sites cannot load images from another host and there is no upload, so the visual work is done by colour, type, spacing and inline SVG.</p>",
+    "<p>The workaround most trucks land on is the honest one: your Instagram is your gallery, and the site links to it hard. Your feed is better food photography than anything a website builder was going to give you anyway. <a href=\"/blog/why-ai-generated-sites-have-no-stock-photos\">The full explanation of the no-images constraint</a>.</p>",
+
+    "<h2>Then refine it</h2>",
+    "<ul><li>\"Move the private events section above the menu — that's the money.\"</li><li>\"Make the 'Where we are today' button sticky at the bottom on mobile.\"</li><li>\"Add 'We're at [your regular pitch] most Fridays' under the button.\"</li><li>\"Take the palette warmer — less charcoal, more ember.\"</li></ul>",
+    "<p>Every successful build is a free checkpoint you can roll back to, and a build that fails to compile is never charged.</p>",
+
+    "<h2>Publishing</h2>",
+    "<p>One click puts it on a <code>kodely.site</code> subdomain, with <code>robots.txt</code> and <code>sitemap.xml</code> generated and a real title and description in the head — so the link preview in a WhatsApp group shows your truck's name rather than a blank card. That matters more for a truck than for most businesses, because that is how you get shared.</p>",
+    "<p><a href=\"/signup\">Start with your menu and your Instagram handle</a>. See also: <a href=\"/blog/how-to-build-a-coffee-shop-website-with-ai\">the same job for a coffee shop</a>.</p>"
+  ]
+}

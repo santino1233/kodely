@@ -1,0 +1,45 @@
+{
+  "slug": "how-kodely-credits-work",
+  "title": "How Kodely Credits Work",
+  "metaDescription": "What a credit is, when you are charged, when you are not, and why we do not quote a fixed price per build. The full billing model, plainly.",
+  "category": "Explainers",
+  "targetKeyword": "ai website builder credits",
+  "body": [
+    "<p>Credit systems in AI tools are usually vague on purpose. A \"credit\" turns out to be an internal unit nobody can convert into money, the cost per action isn't stated, and you find out what things cost by running out. Here's Kodely's, defined precisely enough that you can check it.</p>",
+
+    "<h2>A credit is a fixed amount of real model spend</h2>",
+    "<p>One credit is $0.002 of the underlying model cost — so 500 credits is one dollar's worth. It isn't an abstract token, an action count, or a unit that means different things on different plans. It's a unit of the actual spend that a generation incurs.</p>",
+    "<p>New accounts get 750 credits free, with no card required.</p>",
+
+    "<h2>You're charged from what a build actually used</h2>",
+    "<p>Kodely doesn't charge a flat fee per build. When a generation finishes, the real token usage is measured — input, output, and cache reads and writes — priced at the model's published rate, and converted into credits at the rate above.</p>",
+    "<p>A small tweak to one section genuinely costs less than building a whole page from scratch, because it genuinely used fewer tokens. That's the point of metering rather than guessing.</p>",
+
+    "<h2>A build that fails costs nothing</h2>",
+    "<p>If the generated code doesn't compile — after one automatic repair attempt — the build is recorded with its true cost and charged zero credits. Not discounted. Zero.</p>",
+    "<p>This is structural, not a policy someone applies afterwards: credits are only ever deducted on a build's success path. The tokens spent on a failed build are real money that Kodely absorbs. <a href=\"/blog/what-happens-when-an-ai-build-fails\">More on what failure looks like from your side.</a></p>",
+
+    "<h2>Some things never cost credits at all</h2>",
+    "<ul><li><strong>Enhance.</strong> The button that expands a one-line idea into a full editable brief is free and isn't recorded as a build. A preview of what you're about to spend on shouldn't itself cost anything.</li><li><strong>Rolling back.</strong> Restoring an earlier checkpoint from the History tab restores a snapshot you already paid for. It isn't a generation, so it isn't charged.</li><li><strong>Publishing and republishing.</strong> Putting the site live, and putting an updated version live, cost nothing.</li><li><strong>Downloading your source as a zip.</strong> Free, any number of times.</li></ul>",
+
+    "<h2>Why we don't quote a price per build</h2>",
+    "<p>Here's the part most pages in this category would skip.</p>",
+    "<p>We don't publish a \"typical build costs N credits\" figure, and we're not going to until we can stand behind one. The measurements we have vary by roughly a factor of three depending on how much site is being built, and a handful of samples is not a distribution.</p>",
+    "<p>Quoting a precise-sounding average from that would be false confidence, and it would fail in the worst available direction: quote low, charge high, on a product whose entire pitch is that you won't be surprised by the bill. So the number stays unpublished until there's real data behind it — and when it appears it will move in whichever direction the evidence points, not the direction that markets better.</p>",
+    "<p>What you get instead is specific to you. The editor and dashboard show a running \"about this many builds left\" figure calculated from <em>your own</em> recent successful builds rather than a global constant. Someone building simple one-section pages and someone building dense ten-section pages deserve different answers to that question, and averaging their own history is the only honest way to give it. Until you've run a build, it falls back to a deliberately conservative estimate — over-promising how many builds you have left is how someone hits zero mid-generation.</p>",
+
+    "<h2>You can set your own ceiling</h2>",
+    "<p>The rules above stop any single build overcharging you. None of them stop you running thirty builds in an afternoon and being genuinely surprised by the total.</p>",
+    "<p>So you can set a spending cap in Settings: a maximum number of credits over a rolling 30-day window. Hit it and generation stops with a message saying it's your own cap and where to change it — never presented as a limit we imposed on you.</p>",
+    "<p>It's a rolling window rather than a calendar month on purpose. There's no reset day to game, and no cliff where the cap silently stops protecting you halfway through a month.</p>",
+
+    "<h2>Warnings come before the wall, not at it</h2>",
+    "<p>When your balance drops below roughly two builds' worth — measured against your own build history — the balance indicator turns amber and offers a top-up inline. The intent is that you never discover the problem in the middle of a generation.</p>",
+    "<p>Credits are bought in packs; current pack sizes and prices are on the <a href=\"/pricing\">pricing page</a>. There's no subscription to forget about and no monthly minimum.</p>",
+
+    "<h2>The four rules, in one place</h2>",
+    "<ol><li>A credit is a fixed, published amount of real model spend — 500 credits to the dollar.</li><li>You're charged from metered usage after a build succeeds, never from a flat guess.</li><li>A build that fails is charged zero.</li><li>You can cap your own spend over a rolling 30 days.</li></ol>",
+    "<p>If any of those ever stops being true, it will be because we changed the product and said so — not because a definition quietly drifted.</p>",
+    "<p><a href=\"/signup\">Start with 750 free credits</a>, or read <a href=\"/blog/how-ai-website-builders-actually-work\">what actually happens during a build</a>.</p>"
+  ]
+}
