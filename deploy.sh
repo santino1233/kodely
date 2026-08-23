@@ -64,10 +64,19 @@ else
   # fails with "couldn't find remote ref main".
   git bundle create /tmp/kodely-deploy.bundle "$BASE..main" >/dev/null 2>&1
   echo "  $(git rev-list --count "$BASE..HEAD") commit(s), $(du -h /tmp/kodely-deploy.bundle | cut -f1)"
-  base64 -w0 /tmp/kodely-deploy.bundle > /tmp/kodely-deploy.b64
-  B64=$(cat /tmp/kodely-deploy.b64)
+  # Raw bytes over stdin through both hops, NOT base64 embedded as a command
+  # argument. The base64 version deadlocked in practice on a real bundle
+  # (confirmed live: the exact nested `echo '$B64' | ssh ...` form hung
+  # indefinitely on a 1.4M bundle, no error, no progress). Embedding megabytes
+  # of text as a single argv element is the failure mode — it has to be fully
+  # buffered before anything moves and has no OS-level backpressure. `-J`
+  # (ProxyJump) was tried first and is not an option: the jump host refuses
+  # port-forwarding ("administratively prohibited"). Piping through the
+  # command's own stdin/stdout needs no forwarding permission — verified live
+  # at this exact bundle size (1.5M, <1s, sha256-identical) before landing.
   ssh -o BatchMode=yes -o ConnectTimeout=15 "$HOST" \
-    "echo '$B64' | ssh -o BatchMode=yes $VM 'base64 -d > /tmp/kodely-deploy.bundle'" \
+    "ssh -o BatchMode=yes $VM 'cat > /tmp/kodely-deploy.bundle'" \
+    < /tmp/kodely-deploy.bundle \
     || die "could not transfer the bundle to the VM"
   vm "cd /opt/kodely && git bundle verify /tmp/kodely-deploy.bundle >/dev/null 2>&1" \
     || die "bundle failed verification on the VM"
