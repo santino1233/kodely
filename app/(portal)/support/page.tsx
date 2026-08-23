@@ -9,6 +9,7 @@ import {
   CreditCard,
   FileText,
   Inbox,
+  LifeBuoy,
   Link2,
   Mail,
   MessageSquare,
@@ -29,6 +30,7 @@ import {
 } from "@/lib/support";
 import { Card, CardHeader, SectionHeader } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { PageHero } from "@/components/ui/PageHero";
 import { siteAddress } from "../dashboard/domains/address";
 import { formatDateTime } from "../settings/_format";
 import { TicketComposer, type SupportSite } from "./TicketComposer";
@@ -184,7 +186,8 @@ export default async function SupportPage({
 
   return (
     <div className="flex flex-col gap-8">
-      <SectionHeader as="h1"
+      <PageHero
+        icon={<LifeBuoy className="size-5" aria-hidden />}
         title="Support"
         description={
           tickets.length === 0

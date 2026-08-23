@@ -12,20 +12,32 @@
  * hands out.
  *
  * PROVENANCE
- * Every path in this file is hand-authored geometry: primitives (lines,
- * circles, rounded rectangles, single arcs) laid out on a 24x24 grid, with
- * corner rounding delegated to stroke-linejoin="round" rather than drawn.
- * No path data was copied from any icon library, free or licensed. The brand
- * marks under the "social" category are deliberately simplified, generic
- * renderings drawn from the same primitives — they are not the trademark
- * artwork, and a site using them commercially should check the platform's own
- * brand guidelines.
+ * The original ~147 icons below (the `DEFS` array) are hand-authored
+ * geometry: primitives (lines, circles, rounded rectangles, single arcs) laid
+ * out on a 24x24 grid, with corner rounding delegated to
+ * stroke-linejoin="round" rather than drawn. No path data in `DEFS` was
+ * copied from any icon library, free or licensed. The brand marks under the
+ * "social" category are deliberately simplified, generic renderings drawn
+ * from the same primitives — they are not the trademark artwork, and a site
+ * using them commercially should check the platform's own brand guidelines.
+ *
+ * `VENDORED_DEFS`, further down, is a second and much smaller set: real path
+ * data pulled verbatim from four permissively-licensed open-source icon
+ * projects (Lucide, Tabler Icons, Phosphor Icons, Heroicons) to close gaps
+ * the hand-authored set left — see the comment above that array for the full
+ * account. Every entry there carries a `prov` field (see ./provenance.ts,
+ * `VendorProvenance`) recording exactly which repo, which icon, which
+ * licence, and which commit it came from, plus a saved copy of the licence
+ * text under lib/assets/icon-licenses/. Nothing in `DEFS` was touched to make
+ * room for it.
  *
  * STYLE
  * One geometry, three weights. Icons are outline/stroke drawings on a 24x24
  * viewBox; weight is a render-time stroke-width, not a second copy of the
  * data, which is how we get three styles for zero extra bytes.
  */
+
+import { vendorProvenance, type VendorProvenance } from "./provenance";
 
 export type IconCategory =
   | "contact"
@@ -52,6 +64,8 @@ type IconDef = {
   k: string;
   d?: string;
   b?: string;
+  /** Present only on vendored icons — see VENDORED_DEFS below and ./provenance.ts. */
+  prov?: VendorProvenance;
 };
 
 export type Icon = {
@@ -61,6 +75,8 @@ export type Icon = {
   keywords: string[];
   /** Inner markup of the <svg>. viewBox is always "0 0 24 24". */
   body: string;
+  /** Per-asset source/licence record. Undefined means hand-authored, in-house geometry. */
+  provenance?: VendorProvenance;
 };
 
 /** Stroke widths for the three weights. Same geometry, different pen. */
@@ -1037,6 +1053,298 @@ const DEFS: IconDef[] = [
   },
 ];
 
+// ---------------------------------------------------------------------------
+// Vendored icons
+//
+// The gap this closes: `services`/`trades` had only 22 hand-authored icons,
+// and the SYNONYMS map in ./index.ts resolved plumber, electrician, handyman
+// and mechanic all down to the same single `wrench` icon; `contact` had only
+// 10 icons shared by every generated site's contact section. Rather than
+// hand-draw approximations, real path data was pulled from four permissively
+// licensed, general-purpose (non-brand) icon projects, verified against each
+// project's own LICENSE file fetched from its own GitHub repo (never an
+// aggregator — see docs/research/asset-sources.md §4):
+//
+//   - Lucide      ISC, plus MIT for the subset derived from Feather (Cole
+//                 Bemis) — lucide-icons/lucide, commit 33a44aa8b0b43d9b0ed14eb08860a1b5550a1573
+//   - Tabler Icons MIT — tabler/tabler-icons, commit 5a0fe38e97784d94279ce4eb1bf85f9a91bf027e
+//   - Phosphor Icons MIT — phosphor-icons/core, commit 2b75f3ad12b420c9504ef05df8d2564a28f8500e
+//   - Heroicons   MIT — tailwindlabs/heroicons, commit 616b7a4dbbf3d011760af8066262cd5c6b3868f3
+//
+// All four ship stroke/outline geometry compatible with this module's
+// fill="none" + dynamic stroke-width render model, so the vendored `d`/`b`
+// data renders through the exact same iconSvg()/three-weights pipeline as
+// the hand-authored set — no separate code path. Phosphor's upstream
+// viewBox is 0-256 rather than 0-24; those four icons carry their geometry
+// unscaled inside a `<g transform="scale(0.09375)">` with
+// vector-effect="non-scaling-stroke" on every child so the stroke still
+// tracks this module's dynamic weight instead of shrinking with the
+// transform.
+//
+// Every entry's `prov` is a full lib/assets/provenance.ts `VendorProvenance`
+// record (source repo, upstream id, licence, exact commit, retrieved-at,
+// brand-mark flag). Licence text for each pack is saved verbatim under
+// lib/assets/icon-licenses/<pack>/LICENSE. `isBrandMark` is false for every
+// icon here — all four packs are general UI icon sets, not logo packs — and
+// anything brand-shaped noticed while curating (Phosphor ships
+// `whatsapp-logo`, `telegram-logo`) was excluded rather than vendored.
+const LUCIDE_COMMIT = "33a44aa8b0b43d9b0ed14eb08860a1b5550a1573";
+const TABLER_COMMIT = "5a0fe38e97784d94279ce4eb1bf85f9a91bf027e";
+const PHOSPHOR_COMMIT = "2b75f3ad12b420c9504ef05df8d2564a28f8500e";
+const HEROICONS_COMMIT = "616b7a4dbbf3d011760af8066262cd5c6b3868f3";
+const VENDORED_AT = "2026-08-24";
+
+const lucideProv = (upstreamId: string, featherDerived = false): VendorProvenance =>
+  featherDerived
+    ? vendorProvenance("lucide", upstreamId, "MIT", "Feather-derived; (c) 2013-present Cole Bemis", LUCIDE_COMMIT, VENDORED_AT)
+    : vendorProvenance("lucide", upstreamId, "ISC", "(c) 2026 Lucide Icons and Contributors", LUCIDE_COMMIT, VENDORED_AT);
+
+const tablerProv = (upstreamId: string): VendorProvenance =>
+  vendorProvenance("tabler", upstreamId, "MIT", "(c) 2020-2026 Pawel Kuna", TABLER_COMMIT, VENDORED_AT);
+
+const phosphorProv = (upstreamId: string): VendorProvenance =>
+  vendorProvenance("phosphor", upstreamId, "MIT", "(c) 2023 Phosphor Icons", PHOSPHOR_COMMIT, VENDORED_AT);
+
+const heroiconsProv = (upstreamId: string): VendorProvenance =>
+  vendorProvenance("heroicons", upstreamId, "MIT", "(c) Tailwind Labs, Inc.", HEROICONS_COMMIT, VENDORED_AT);
+
+const VENDORED_DEFS: IconDef[] = [
+  // ------------------------------------------------------- services (trades)
+  {
+    id: "circuit-board",
+    name: "Circuit board",
+    c: "services",
+    k: "electrician electrical panel circuit board wiring fuse breaker technician",
+    d: "M11 9h4a2 2 0 0 0 2-2V3|M7 21v-4a2 2 0 0 1 2-2h4",
+    b: `<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><circle cx="15" cy="15" r="2"/>`,
+    prov: lucideProv("circuit-board"),
+  },
+  {
+    id: "electric-plug",
+    name: "Electric plug",
+    c: "services",
+    k: "electrician electrical plug power outlet socket wiring",
+    d: "M9.785 6l8.215 8.215l-2.054 2.054a5.81 5.81 0 1 1 -8.215 -8.215l2.054 -2.054|M4 20l3.5 -3.5|M15 4l-3.5 3.5|M20 9l-3.5 3.5",
+    prov: tablerProv("plug"),
+  },
+  {
+    id: "pipe-wrench",
+    name: "Pipe wrench",
+    c: "services",
+    k: "plumber plumbing pipe wrench drain repair fix",
+    b: `<g transform="scale(0.09375)"><path d="M125.66,145.66a8,8,0,0,0,0-11.32L77,85a17,17,0,0,1,0-24h0a17,17,0,0,1,24,0l72.69,73.37a8,8,0,0,1,0,11.32L85,235a17,17,0,0,1-24,0h0a17,17,0,0,1,0-24Z" vector-effect="non-scaling-stroke"/><path d="M132.28,92.58,150.9,74.34a8,8,0,0,1,11.25-.06l37.45,35.38a8,8,0,0,0,11.31,0l3.72-3.72a32,32,0,0,0,0-45.25l-45-42.35a8,8,0,0,0-11.32,0L108.12,68.19" vector-effect="non-scaling-stroke"/><path d="M84,92.12,58.34,117.66a8,8,0,0,0,0,11.31L71,141.66a8,8,0,0,0,11.31,0L108,116.4" vector-effect="non-scaling-stroke"/></g>`,
+    prov: phosphorProv("pipe-wrench"),
+  },
+  {
+    id: "pipeline",
+    name: "Pipeline",
+    c: "services",
+    k: "plumber plumbing pipe drain conduit installer",
+    d: "M3 4h8|M4 4v5a6 6 0 0 0 6 6h3a1 1 0 0 1 1 1v4|M10 4v4a1 1 0 0 0 1 1h3a6 6 0 0 1 6 6v5|M13 20h8|M12 9v6",
+    prov: tablerProv("pipeline"),
+  },
+  {
+    id: "hard-hat",
+    name: "Hard hat",
+    c: "services",
+    k: "contractor construction builder safety site foreman crew",
+    d: "M10 10V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5|M14 6a6 6 0 0 1 6 6v3|M4 15v-3a6 6 0 0 1 6-6",
+    b: `<rect x="2" y="15" width="20" height="4" rx="1"/>`,
+    prov: lucideProv("hard-hat"),
+  },
+  {
+    id: "toolbox",
+    name: "Toolbox",
+    c: "services",
+    k: "handyman tools toolbox repair maintenance fix contractor",
+    d: "M16 12v4|M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2|M17 6a2 2 0 011.414.586l3 3A2 2 0 0122 11v8a2 2 0 01-2 2H4a2 2 0 01-2-2v-8a2 2 0 01.586-1.414l3-3A2 2 0 017 6z|M2 14h20|M8 12v4",
+    prov: lucideProv("toolbox"),
+  },
+  {
+    id: "power-drill",
+    name: "Power drill",
+    c: "services",
+    k: "carpenter handyman power tool drill construction diy",
+    d: "M10 18a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H5a3 3 0 0 1-3-3 1 1 0 0 1 1-1z|M13 10H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1l-.81 3.242a1 1 0 0 1-.97.758H8|M14 4h3a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-3|M18 6h4|m5 10-2 8|m7 18 2-8",
+    prov: lucideProv("drill"),
+  },
+  {
+    id: "wrench-screwdriver",
+    name: "Wrench and screwdriver",
+    c: "services",
+    k: "handyman tools repair maintenance fix multi-trade",
+    d: "M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437 1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008Z",
+    prov: heroiconsProv("wrench-screwdriver"),
+  },
+  {
+    id: "paint-roller",
+    name: "Paint roller",
+    c: "services",
+    k: "painter decorator paint roller renovation redecorate",
+    d: "M10 16v-2a2 2 0 0 1 2-2h8a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2",
+    b: `<rect x="2" y="2" width="16" height="6" rx="2"/><rect x="8" y="16" width="4" height="6" rx="1"/>`,
+    prov: lucideProv("paint-roller"),
+  },
+  {
+    id: "potted-plant",
+    name: "Potted plant",
+    c: "services",
+    k: "landscaping gardener nursery garden plant potted greenery",
+    d: "M7 15h10v4a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2v-4|M12 9a6 6 0 0 0 -6 -6h-3v2a6 6 0 0 0 6 6h3|M12 11a6 6 0 0 1 6 -6h3v1a6 6 0 0 1 -6 6h-3|M12 15l0 -6",
+    prov: tablerProv("plant"),
+  },
+  {
+    id: "air-vent",
+    name: "Air vent",
+    c: "services",
+    k: "hvac ventilation air conditioning duct climate installer",
+    d: "M18 17.5a2.5 2.5 0 1 1-4 2.03V12|M6 12H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2|M6 8h12|M6.6 15.572A2 2 0 1 0 10 17v-5",
+    prov: lucideProv("air-vent"),
+  },
+  {
+    id: "fan",
+    name: "Fan",
+    c: "services",
+    k: "hvac ventilation cooling air conditioning climate",
+    d: "M10.827 16.379a6.082 6.082 0 0 1-8.618-7.002l5.412 1.45a6.082 6.082 0 0 1 7.002-8.618l-1.45 5.412a6.082 6.082 0 0 1 8.618 7.002l-5.412-1.45a6.082 6.082 0 0 1-7.002 8.618l1.45-5.412Z|M12 12v.01",
+    prov: lucideProv("fan"),
+  },
+  {
+    id: "solar-panel",
+    name: "Solar panel",
+    c: "services",
+    k: "solar renewable energy installer panel electrician sustainable",
+    b: `<g transform="scale(0.09375)"><line x1="40" y1="104" x2="56" y2="104" vector-effect="non-scaling-stroke"/><line x1="65.77" y1="41.77" x2="77.09" y2="53.09" vector-effect="non-scaling-stroke"/><line x1="128" y1="16" x2="128" y2="32" vector-effect="non-scaling-stroke"/><line x1="190.23" y1="41.77" x2="178.91" y2="53.09" vector-effect="non-scaling-stroke"/><line x1="216" y1="104" x2="200" y2="104" vector-effect="non-scaling-stroke"/><path d="M88,104a40,40,0,0,1,80,0" vector-effect="non-scaling-stroke"/><polygon points="24 216 64.7 144 191.3 144 232 216 24 216" vector-effect="non-scaling-stroke"/><line x1="46.61" y1="176" x2="209.39" y2="176" vector-effect="non-scaling-stroke"/><line x1="152.35" y1="144" x2="168" y2="216" vector-effect="non-scaling-stroke"/><line x1="88" y1="216" x2="103.65" y2="144" vector-effect="non-scaling-stroke"/></g>`,
+    prov: phosphorProv("solar-panel"),
+  },
+  {
+    id: "broom",
+    name: "Broom",
+    c: "services",
+    k: "cleaning cleaner housekeeping sweep janitorial sweeper",
+    d: "M13.5 10.5 22 2|M14.734 13.841a2 2 0 00-.314-2.42L12.58 9.58a2 2 0 00-2.421-.314l-7.657 4.461A1 1 0 002.3 15.3l6.403 6.403a1 1 0 001.571-.204z|m5 18 2-2|m7.699 10.7 5.602 5.601",
+    prov: lucideProv("broom"),
+  },
+  {
+    id: "laundry-wash",
+    name: "Wash",
+    c: "services",
+    k: "cleaning laundry wash launderette housekeeping",
+    d: "M3.486 8.965c.168 .02 .34 .033 .514 .035c.79 .009 1.539 -.178 2 -.5c.461 -.32 1.21 -.507 2 -.5c.79 -.007 1.539 .18 2 .5c.461 .322 1.21 .509 2 .5c.79 .009 1.539 -.178 2 -.5c.461 -.32 1.21 -.507 2 -.5c.79 -.007 1.539 .18 2 .5c.461 .322 1.21 .509 2 .5c.17 0 .339 -.014 .503 -.034|M3 6l1.721 10.329a2 2 0 0 0 1.973 1.671h10.612a2 2 0 0 0 1.973 -1.671l1.721 -10.329",
+    prov: tablerProv("wash"),
+  },
+  {
+    id: "cctv",
+    name: "CCTV camera",
+    c: "services",
+    k: "security camera surveillance cctv monitoring alarm installer",
+    d: "M16.75 12h3.632a1 1 0 0 1 .894 1.447l-2.034 4.069a1 1 0 0 1-1.708.134l-2.124-2.97|M17.106 9.053a1 1 0 0 1 .447 1.341l-3.106 6.211a1 1 0 0 1-1.342.447L3.61 12.3a2.92 2.92 0 0 1-1.3-3.91L3.69 5.6a2.92 2.92 0 0 1 3.92-1.3z|M2 19h3.76a2 2 0 0 0 1.8-1.1L9 15|M2 21v-4|M7 9h.01",
+    prov: lucideProv("cctv"),
+  },
+  {
+    id: "shield-lock",
+    name: "Shield lock",
+    c: "services",
+    k: "security locksmith alarm protection safe access control",
+    d: "M20 9.807V6a1 1 0 00-1-1c-2 0-4.49-1.19-6.24-2.72a1.17 1.17 0 00-1.52 0C9.5 3.8 7 5 5 5a1 1 0 00-1 1v7c0 3.88 2.107 6.254 5 7.796|M19 17v-2a2 2 0 00-4 0v2",
+    b: `<rect x="13" y="17" width="8" height="5" rx="1"/>`,
+    prov: lucideProv("shield-lock"),
+  },
+  {
+    id: "server-rack",
+    name: "Server",
+    c: "services",
+    k: "it tech support hosting server backend network administrator",
+    b: `<rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>`,
+    prov: lucideProv("server", true),
+  },
+  {
+    id: "router",
+    name: "Router",
+    c: "services",
+    k: "it network wifi internet router installer technician",
+    d: "M6.01 18H6|M10.01 18H10|M15 10v4|M17.84 7.17a4 4 0 0 0-5.66 0|M20.66 4.34a8 8 0 0 0-11.31 0",
+    b: `<rect x="2" y="14" width="20" height="8" rx="2"/>`,
+    prov: lucideProv("router"),
+  },
+  {
+    id: "network",
+    name: "Network",
+    c: "services",
+    k: "it network connectivity topology tech support administrator",
+    d: "M6 9a6 6 0 1 0 12 0a6 6 0 0 0 -12 0|M12 3c1.333 .333 2 2.333 2 6s-.667 5.667 -2 6|M12 3c-1.333 .333 -2 2.333 -2 6s.667 5.667 2 6|M6 9h12|M3 20h7|M14 20h7|M10 20a2 2 0 1 0 4 0a2 2 0 0 0 -4 0|M12 15v3",
+    prov: tablerProv("network"),
+  },
+  {
+    id: "cpu-chip",
+    name: "CPU chip",
+    c: "services",
+    k: "it tech support computer chip processor repair",
+    d: "M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 0 0 2.25-2.25V6.75a2.25 2.25 0 0 0-2.25-2.25H6.75A2.25 2.25 0 0 0 4.5 6.75v10.5a2.25 2.25 0 0 0 2.25 2.25Zm.75-12h9v9h-9v-9Z",
+    prov: heroiconsProv("cpu-chip"),
+  },
+  {
+    id: "compass-tool",
+    name: "Drafting compass",
+    c: "services",
+    k: "architect engineer design drafting compass tool blueprint",
+    b: `<g transform="scale(0.09375)"><circle cx="128" cy="80" r="32" vector-effect="non-scaling-stroke"/><line x1="128" y1="48" x2="128" y2="24" vector-effect="non-scaling-stroke"/><line x1="141" y1="109.25" x2="192" y2="224" vector-effect="non-scaling-stroke"/><line x1="64" y1="224" x2="115" y2="109.25" vector-effect="non-scaling-stroke"/><path d="M208,120c-14.57,28.49-45.8,48-80,48a87.71,87.71,0,0,1-35.75-7.56" vector-effect="non-scaling-stroke"/></g>`,
+    prov: phosphorProv("compass-tool"),
+  },
+  {
+    id: "megaphone",
+    name: "Megaphone",
+    c: "services",
+    k: "marketing advertising promotion agency announcement",
+    d: "M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 1 1 0-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 0 1-1.44-4.282m3.102.069a18.03 18.03 0 0 1-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 0 1 8.835 2.535M10.34 6.66a23.847 23.847 0 0 0 8.835-2.535m0 0A23.74 23.74 0 0 0 18.795 3m.38 1.125a23.91 23.91 0 0 1 1.014 5.395m-1.014 8.855c-.118.38-.245.754-.38 1.125m.38-1.125a23.91 23.91 0 0 0 1.014-5.395m0-3.46c.495.413.811 1.035.811 1.73 0 .695-.316 1.317-.811 1.73m0-3.46a24.347 24.347 0 0 1 0 3.46",
+    prov: heroiconsProv("megaphone"),
+  },
+
+  // ------------------------------------------------------------------ contact
+  {
+    id: "mailbox",
+    name: "Mailbox",
+    c: "contact",
+    k: "contact mail mailbox post address postbox",
+    d: "M22 17a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9.5C2 7 4 5 6.5 5H18c2.2 0 4 1.8 4 4v8Z|M6.5 5C9 5 11 7 11 9.5V17a2 2 0 0 1-2 2",
+    b: `<polyline points="15,9 18,9 18,11"/><line x1="6" y1="10" x2="7" y2="10"/>`,
+    prov: lucideProv("mailbox"),
+  },
+  {
+    id: "qr-code",
+    name: "QR code",
+    c: "contact",
+    k: "contact scan qr code link share digital business card",
+    d: "M21 16h-3a2 2 0 0 0-2 2v3|M21 21v.01|M12 7v3a2 2 0 0 1-2 2H7|M3 12h.01|M12 3h.01|M12 16v.01|M16 12h1|M21 12v.01|M12 21v-1",
+    b: `<rect x="3" y="3" width="5" height="5" rx="1"/><rect x="16" y="3" width="5" height="5" rx="1"/><rect x="3" y="16" width="5" height="5" rx="1"/>`,
+    prov: lucideProv("qr-code"),
+  },
+  {
+    id: "headset",
+    name: "Headset",
+    c: "contact",
+    k: "contact support helpdesk customer service headset call centre",
+    d: "M3 11h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5Zm0 0a9 9 0 1 1 18 0m0 0v5a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3Z|M21 16v2a4 4 0 0 1-4 4h-5",
+    prov: lucideProv("headset"),
+  },
+  {
+    id: "address-book",
+    name: "Address book",
+    c: "contact",
+    k: "contact address book directory contacts list",
+    b: `<g transform="scale(0.09375)"><circle cx="136" cy="112" r="32" vector-effect="non-scaling-stroke"/><line x1="32" y1="72" x2="56" y2="72" vector-effect="non-scaling-stroke"/><line x1="32" y1="128" x2="56" y2="128" vector-effect="non-scaling-stroke"/><line x1="32" y1="184" x2="56" y2="184" vector-effect="non-scaling-stroke"/><path d="M88,168a60,60,0,0,1,96,0" vector-effect="non-scaling-stroke"/><rect x="40" y="48" width="192" height="160" rx="8" transform="translate(264 -8) rotate(90)" vector-effect="non-scaling-stroke"/></g>`,
+    prov: phosphorProv("address-book"),
+  },
+  {
+    id: "lifebuoy",
+    name: "Lifebuoy",
+    c: "contact",
+    k: "support help contact assistance customer service",
+    d: "M16.712 4.33a9.027 9.027 0 0 1 1.652 1.306c.51.51.944 1.064 1.306 1.652M16.712 4.33l-3.448 4.138m3.448-4.138a9.014 9.014 0 0 0-9.424 0M19.67 7.288l-4.138 3.448m4.138-3.448a9.014 9.014 0 0 1 0 9.424m-4.138-5.976a3.736 3.736 0 0 0-.88-1.388 3.737 3.737 0 0 0-1.388-.88m2.268 2.268a3.765 3.765 0 0 1 0 2.528m-2.268-4.796a3.765 3.765 0 0 0-2.528 0m4.796 4.796c-.181.506-.475.982-.88 1.388a3.736 3.736 0 0 1-1.388.88m2.268-2.268 4.138 3.448m0 0a9.027 9.027 0 0 1-1.306 1.652c-.51.51-1.064.944-1.652 1.306m0 0-3.448-4.138m3.448 4.138a9.014 9.014 0 0 1-9.424 0m5.976-4.138a3.765 3.765 0 0 1-2.528 0m0 0a3.736 3.736 0 0 1-1.388-.88 3.737 3.737 0 0 1-.88-1.388m2.268 2.268L7.288 19.67m0 0a9.024 9.024 0 0 1-1.652-1.306 9.027 9.027 0 0 1-1.306-1.652m0 0 4.138-3.448M4.33 16.712a9.014 9.014 0 0 1 0-9.424m4.138 5.976a3.765 3.765 0 0 1 0-2.528m0 0c.181-.506.475-.982.88-1.388a3.736 3.736 0 0 1 1.388-.88m-2.268 2.268L4.33 7.288m6.406 1.18L7.288 4.33m0 0a9.024 9.024 0 0 0-1.652 1.306A9.025 9.025 0 0 0 4.33 7.288",
+    prov: heroiconsProv("lifebuoy"),
+  },
+];
+
 function buildBody(def: IconDef): string {
   const paths = def.d ? def.d.split("|").map((d) => `<path d="${d}"/>`).join("") : "";
   return paths + (def.b ?? "");
@@ -1048,12 +1356,13 @@ function keywordsFor(def: IconDef): string[] {
   return Array.from(new Set([...fromId, ...fromName, ...def.k.split(" "), def.c]));
 }
 
-export const ICONS: Icon[] = DEFS.map((def) => ({
+export const ICONS: Icon[] = [...DEFS, ...VENDORED_DEFS].map((def) => ({
   id: def.id,
   name: def.name,
   category: def.c,
   keywords: keywordsFor(def),
   body: buildBody(def),
+  provenance: def.prov,
 }));
 
 const BY_ID = new Map(ICONS.map((icon) => [icon.id, icon]));

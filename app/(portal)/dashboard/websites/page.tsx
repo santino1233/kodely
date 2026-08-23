@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { Globe } from "lucide-react";
+import { Globe, LayoutGrid } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import { ButtonLink } from "@/components/ui/Button";
-import { SectionHeader } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { PageHero } from "@/components/ui/PageHero";
 import WebsitesBrowser from "./WebsitesBrowser";
 import { BUILD_STALE_MINUTES, loadWebsites, readWebsiteParams } from "./data";
 
@@ -33,7 +33,9 @@ export default async function WebsitesPage({
 
   return (
     <>
-      <SectionHeader as="h1"
+      <PageHero
+        className="mb-6"
+        icon={<LayoutGrid className="size-5" aria-hidden />}
         title="My Websites"
         description="Every site you've built. Covers are generated from each site's own colours — Kodely doesn't capture screenshots."
         // The page's single action, and its single `primary`. It replaced a

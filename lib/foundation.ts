@@ -1,4 +1,5 @@
 import type { FileMap } from "./agent";
+import { FONT_FILES } from "./foundation-fonts";
 
 // The starter every new project begins from — a real Vite + React + TS +
 // Tailwind app, not a blank page. The agent edits these files; it never
@@ -383,4 +384,14 @@ export function Nav({ className = "", ...props }: HTMLAttributes<HTMLElement>) {
   );
 }
 `,
+
+  // Self-hosted webfonts (see lib/foundation-fonts.ts) — seeded into EVERY
+  // project's public/fonts/ so Vite's verbatim public/ copy (confirmed against
+  // this project's own vite.config.ts: no publicDir override, so the default
+  // "copy public/ into outDir" behaviour applies) puts a real .woff2 file at a
+  // same-origin path in every build's served output, whether or not a given
+  // site ends up using it. The agent never writes these files itself — it only
+  // references whichever family it picks via @font-face (see lib/agent.ts's
+  // font-rule paragraph); nothing here is generated per-request.
+  ...FONT_FILES,
 };

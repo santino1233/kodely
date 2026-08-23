@@ -8,8 +8,9 @@ import { db } from "@/lib/db";
 import { nxeonEnabled, nxeonWallet } from "@/lib/nxeon";
 import { Badge } from "@/components/ui/Badge";
 import { ButtonLink, buttonClass } from "@/components/ui/Button";
-import { Card, CardHeader, SectionHeader } from "@/components/ui/Card";
+import { Card, CardHeader } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { PageHero } from "@/components/ui/PageHero";
 import { ADDRESS_PATTERN, siteAddress, siteAddressLabel } from "./address";
 import { CopyAddress } from "./CopyAddress";
 import { NxeonBalance, NxeonBuyPanel } from "./NxeonPanel";
@@ -88,7 +89,8 @@ export default async function DomainsPage({
 
   return (
     <div className="flex flex-col gap-8">
-      <SectionHeader as="h1"
+      <PageHero
+        icon={<Globe className="size-5" aria-hidden />}
         title="Domains"
         description={
           sites.length === 0 ? (

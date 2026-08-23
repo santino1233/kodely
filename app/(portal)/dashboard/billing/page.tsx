@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Receipt } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import {
@@ -14,8 +15,9 @@ import {
 } from "@/lib/credits";
 import { CREDIT_PACKS, billingEnabled } from "@/lib/stripe";
 import { ButtonLink, buttonClass } from "@/components/ui/Button";
-import { Card, CardHeader, SectionHeader } from "@/components/ui/Card";
+import { Card, CardHeader } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { PageHero } from "@/components/ui/PageHero";
 import TopUpButton from "../TopUpButton";
 import { SpendCapPanel } from "./SpendCapPanel";
 import {
@@ -130,7 +132,9 @@ export default async function BillingPage({
 
   return (
     <>
-      <SectionHeader as="h1"
+      <PageHero
+        className="mb-6"
+        icon={<Receipt className="size-5" aria-hidden />}
         title="Billing & credits"
         description={`${user.email} — billed per build, never per month.`}
         action={

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Bug, Lightbulb, Moon, Sun, Zap } from "lucide-react";
 import { Menu } from "@/components/ui/Menu";
+import { SignOutButton } from "./SignOutButton";
 
 /* The bottom of the rail, above the account row. Three things live here
    because all three are "about the product rather than about your sites":
@@ -113,6 +114,7 @@ export function SidebarFooter({
       <div className={collapsed ? "flex flex-col gap-1" : "flex items-center gap-1"}>
         {report}
         <ThemeButton collapsed={collapsed} />
+        <SignOutButton collapsed={collapsed} />
       </div>
     </div>
   );

@@ -9,6 +9,7 @@ import {
   CreditCard,
   FilePlus2,
   Globe,
+  Home,
   LayoutTemplate,
   Rocket,
   Settings,
@@ -28,6 +29,7 @@ import type { Tone } from "@/components/ui/Badge";
 import { ButtonLink } from "@/components/ui/Button";
 import { Card, CardHeader, SectionHeader } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { PageHero } from "@/components/ui/PageHero";
 import { Progress } from "@/components/ui/Progress";
 import { Stat } from "@/components/ui/Stat";
 import FirstRunChecklist from "@/components/onboarding/FirstRunChecklist";
@@ -173,27 +175,12 @@ export default async function DashboardPage() {
 
   return (
     <>
-      {/* ── Welcome. The one k-wash panel and the one primary button. ─────── */}
-      <section className="relative overflow-hidden rounded-2xl border border-hair bg-surface p-6 shadow-e1 sm:p-8">
-        <div className="k-wash" aria-hidden />
-        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div className="min-w-0">
-            <h1 className="k-display text-ink">Welcome back, {displayName}</h1>
-            <p className="mt-2 max-w-xl text-sm leading-relaxed text-ink-2">
-              Describe what you want and Kodely builds a real site for it. Everything you make
-              lives here.
-            </p>
-            {/* ONE create path. There used to be a second, secondary "New
-                site" button here that made a blank project and dropped the
-                customer straight into the builder — two buttons, one job, and
-                the quieter one led to the emptier screen. */}
-            <div className="mt-5 flex flex-wrap items-center gap-3">
-              <ButtonLink href="/dashboard/new" variant="primary" size="lg">
-                Create Website
-              </ButtonLink>
-            </div>
-          </div>
-
+      {/* ── Welcome. The dashboard's one liquid-glass hero. ───────────────── */}
+      <PageHero
+        icon={<Home className="size-5" aria-hidden />}
+        title={`Welcome back, ${displayName}`}
+        description="Describe what you want and Kodely builds a real site for it. Everything you make lives here."
+        action={
           <dl className="k-num flex shrink-0 gap-6 sm:gap-8">
             <div>
               <dt className="k-label">Sites</dt>
@@ -208,8 +195,16 @@ export default async function DashboardPage() {
               <dd className="mt-1.5 text-xl font-semibold text-ink">{balance.toLocaleString()}</dd>
             </div>
           </dl>
-        </div>
-      </section>
+        }
+      >
+        {/* ONE create path. There used to be a second, secondary "New site"
+            button here that made a blank project and dropped the customer
+            straight into the builder — two buttons, one job, and the
+            quieter one led to the emptier screen. */}
+        <ButtonLink href="/dashboard/new" variant="primary" size="lg">
+          Create Website
+        </ButtonLink>
+      </PageHero>
 
       <div className="mt-6">
         {/* Renders nothing once they've published — reaching the North Star is

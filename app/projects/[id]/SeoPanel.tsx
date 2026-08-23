@@ -111,6 +111,9 @@ export default function SeoPanel({
   liveUrl,
   html,
   onSaved,
+  slug,
+  sitesBase,
+  onSlugChanged,
 }: {
   projectId: string;
   projectName: string;
@@ -121,6 +124,14 @@ export default function SeoPanel({
   html: string | undefined;
   /** Re-read the project's files after a successful save. */
   onSaved: () => void | Promise<void>;
+  /** The project's current subdomain — `<slug>.<sitesBase>` is the address a
+      publish puts it at. See prisma/schema.prisma's Project.slug. */
+  slug: string;
+  sitesBase: string;
+  /** The editor keeps its own copy of `slug` (it drives the live URL, the
+      download filename, the command palette) — this is how a successful
+      change here reaches it without a full reload. */
+  onSlugChanged: (slug: string) => void;
 }) {
   // PUT /api/projects/<id>/seo. This panel used to probe the route with an
   // OPTIONS request on mount and render a "saving isn't wired up yet" strip if
@@ -231,6 +242,14 @@ export default function SeoPanel({
           . Editing them here changes them directly — no build, no credits. A later build can
           rewrite them again, since the builder writes the head too.
         </p>
+
+        <SubdomainEditor
+          projectId={projectId}
+          slug={slug}
+          sitesBase={sitesBase}
+          published={published}
+          onChanged={onSlugChanged}
+        />
 
         {html === undefined ? (
           <p className="mt-4 rounded-lg border border-hair bg-surface px-3 py-2 text-[0.75rem] leading-relaxed text-ink-2">
@@ -352,6 +371,212 @@ export default function SeoPanel({
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+/** Same shape lib/slug.ts's format check enforces server-side — kept in sync
+    by hand since a component isn't a shared-server-code home. Client-side
+    format checking is a UX nicety only; the server is what actually decides. */
+function formatError(slug: string): string | null {
+  if (slug.length === 0) return null; // handled separately as "required"
+  if (slug.length < 3) return "Must be at least 3 characters.";
+  if (slug.length > 63) return "Must be 63 characters or fewer.";
+  if (!/^[a-z0-9-]+$/.test(slug)) return "Only lowercase letters, numbers, and hyphens.";
+  if (slug.startsWith("-") || slug.endsWith("-")) return "Can't start or end with a hyphen.";
+  if (slug.includes("--")) return "Can't have two hyphens in a row.";
+  return null;
+}
+
+/**
+ * Change the project's live subdomain — `<slug>.<sitesBase>`, the free
+ * Kodely address every project gets (NOT Nxeon's paid custom-domain product;
+ * see app/(portal)/dashboard/domains for that).
+ *
+ * Live-checks availability against the database as the customer types
+ * (debounced), and disables Save while the value is invalid, unchanged, still
+ * being checked, or known to be taken. The save itself re-checks for real —
+ * see the PUT handler in app/api/projects/[id]/slug/route.ts — because the
+ * live check above is only ever advisory: someone else's save can land in the
+ * gap between a green checkmark here and this button being pressed. A 409
+ * from that race is shown honestly, not swallowed.
+ */
+function SubdomainEditor({
+  projectId,
+  slug,
+  sitesBase,
+  published,
+  onChanged,
+}: {
+  projectId: string;
+  slug: string;
+  sitesBase: string;
+  published: boolean;
+  onChanged: (slug: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(slug);
+  const [checking, setChecking] = useState(false);
+  // null = not checked yet (or check failed to run) for the CURRENT value.
+  const [availability, setAvailability] = useState<{ available: boolean; reason: string | null } | null>(
+    null,
+  );
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const checkSeq = useRef(0);
+
+  function startEditing() {
+    setValue(slug);
+    setAvailability(null);
+    setSaveError(null);
+    setEditing(true);
+  }
+
+  function cancelEditing() {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    setEditing(false);
+    setValue(slug);
+    setAvailability(null);
+    setSaveError(null);
+  }
+
+  const localError = formatError(value);
+  const unchanged = value === slug;
+
+  function onInput(next: string) {
+    // Normalize the same way the server does, live, so what the customer
+    // sees typed matches what would actually be saved.
+    const normalized = next.trim().toLowerCase();
+    setValue(normalized);
+    setSaveError(null);
+    setAvailability(null);
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (normalized.length === 0 || normalized === slug || formatError(normalized)) {
+      setChecking(false);
+      return;
+    }
+
+    const seq = ++checkSeq.current;
+    setChecking(true);
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `/api/projects/${projectId}/slug?slug=${encodeURIComponent(normalized)}`,
+        );
+        const body = await res.json().catch(() => null);
+        if (checkSeq.current !== seq) return; // a newer keystroke superseded this check
+        if (!res.ok) {
+          setAvailability({ available: false, reason: body?.error ?? "Couldn't check that." });
+        } else {
+          setAvailability({ available: !!body.available, reason: body.reason ?? null });
+        }
+      } catch {
+        if (checkSeq.current !== seq) return;
+        setAvailability({ available: false, reason: "Couldn't reach Kodely to check that." });
+      } finally {
+        if (checkSeq.current === seq) setChecking(false);
+      }
+    }, 400);
+  }
+
+  // Disabled unless the value is a real, checked, available change.
+  const canSave =
+    !unchanged && !localError && !checking && availability?.available === true && !saving;
+
+  async function save() {
+    if (!canSave) return;
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const res = await fetch(`/api/projects/${projectId}/slug`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug: value }),
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) {
+        // Race lost, or the server rejected it for a reason the live check
+        // didn't catch. Never pretend this succeeded.
+        throw new Error(body?.error ?? "Couldn't save that address.");
+      }
+      onChanged(body.project.slug);
+      setEditing(false);
+      setAvailability(null);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Couldn't save that address.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="mb-6 rounded-lg border border-hair bg-surface p-3.5">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="k-h2 text-ink">Your address</h3>
+        {!editing && (
+          <Button size="sm" variant="ghost" onClick={startEditing}>
+            Change
+          </Button>
+        )}
+      </div>
+
+      {!editing ? (
+        <p className="mt-1.5 break-all font-mono text-sm text-ink-2">
+          {slug}
+          <span className="text-ink-3">.{sitesBase}</span>
+        </p>
+      ) : (
+        <div className="mt-2.5">
+          <div className="flex items-center gap-1.5">
+            <Input
+              aria-label="Subdomain"
+              value={value}
+              onChange={(e) => onInput(e.target.value)}
+              error={localError ?? (availability && !availability.available ? availability.reason : undefined)}
+              className="max-w-[16rem]"
+              autoFocus
+            />
+            <span className="shrink-0 text-sm text-ink-3">.{sitesBase}</span>
+          </div>
+
+          <p role="status" className="mt-1.5 text-xs text-ink-3">
+            {unchanged
+              ? "This is your current address."
+              : localError
+                ? ""
+                : checking
+                  ? "Checking availability…"
+                  : availability?.available === true
+                    ? "Available."
+                    : availability && !availability.available
+                      ? ""
+                      : ""}
+          </p>
+
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <Button size="sm" variant="secondary" onClick={() => void save()} disabled={!canSave} loading={saving}>
+              Save
+            </Button>
+            <Button size="sm" variant="ghost" onClick={cancelEditing} disabled={saving}>
+              Cancel
+            </Button>
+          </div>
+
+          {saveError && (
+            <p role="alert" className="mt-2 text-xs text-danger">
+              {saveError}
+            </p>
+          )}
+
+          <p className="mt-3 max-w-prose text-xs leading-relaxed text-ink-3">
+            {published
+              ? "Changing this moves your live site to a new address immediately — the old one stops working, with no redirect."
+              : "This becomes your live address the first time you publish."}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

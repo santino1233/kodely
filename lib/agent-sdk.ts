@@ -273,6 +273,11 @@ type SdkOptions = {
   files: FileMap;
   kind: "create" | "edit";
   image?: { mediaType: string; data: string };
+  /** Same reference-PDF field lib/agent.ts's api engine sends as a real
+      `document` content block. The SDK engine has no equivalent block, so
+      instead the PDF is materialized to a file and the agent is told to Read
+      it — the SDK's Read tool can read PDFs directly. */
+  document?: { data: string };
   onWrite: (path: string, content: string) => Promise<boolean>;
   onDelete: (path: string) => Promise<boolean>;
   signal?: AbortSignal;
@@ -301,6 +306,13 @@ export async function* runAgentSdk(
       imageNote = `\n\nA reference image was attached to this request — Read the file .reference.${ext} in this directory to see it, then use it as visual/style guidance.`;
     }
 
+    let documentNote = "";
+    if (opts.document) {
+      await writeFile(path.join(workDir, ".reference.pdf"), Buffer.from(opts.document.data, "base64"));
+      documentNote =
+        "\n\nA reference PDF was attached to this request — Read the file .reference.pdf in this directory for its actual text and layout, then use that as guidance on content and structure. It is not a file to embed or link to in the site.";
+    }
+
     const historyText = opts.history.length
       ? `## Prior conversation on this project\n${opts.history
           .map((h) => `${h.role === "user" ? "User" : "You"}: ${h.content}`)
@@ -313,7 +325,7 @@ export async function* runAgentSdk(
     };
 
     for await (const message of query({
-      prompt: `${historyText}## Current request\n${opts.request}${imageNote}`,
+      prompt: `${historyText}## Current request\n${opts.request}${imageNote}${documentNote}`,
       options: {
         cwd: workDir,
         systemPrompt: adaptPromptForSdk(systemPrompt),

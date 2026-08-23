@@ -257,7 +257,7 @@ function splitDescription(value: string, max: number): { opener: string; rest: s
  * How much of the stage-1 description the opening sentence can carry.
  *
  * lib/wizard.ts caps `whatYouDo` at 240 characters because it becomes the tail
- * of a single sentence ("Build a one-page website for X — <this>."). Stage 1
+ * of a single sentence ("Build a website for X — <this>."). Stage 1
  * lets someone write considerably more than that, so this sits comfortably
  * under the cap and everything past it goes into its own block.
  */

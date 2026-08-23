@@ -1,7 +1,7 @@
 /**
  * Logo handling for the inline wizard.
  *
- * Deliberately a SIBLING of app/(portal)/dashboard/new/image.ts rather than an
+ * Deliberately a SIBLING of app/(portal)/dashboard/new/attachment.ts rather than an
  * import of it, for the same reason that file is a copy of the downscale in
  * components/marketing/PromptHero.tsx: it belongs to another owner, and the two
  * only have to agree about one thing —

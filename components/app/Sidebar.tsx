@@ -106,7 +106,7 @@ export function Sidebar({
         canTopUp={canTopUp}
         collapsed={collapsed}
       />
-      <UserMenu user={user} balance={balance} collapsed={collapsed} />
+      <UserMenu user={user} collapsed={collapsed} />
     </aside>
   );
 }

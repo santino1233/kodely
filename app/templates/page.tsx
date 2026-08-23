@@ -12,7 +12,7 @@ import { TemplateGallery } from "@/components/templates/TemplateGallery";
 export const metadata: Metadata = {
   title: "Templates — Kodely",
   description:
-    "Start from a ready-made prompt. Restaurants, portfolios, tradespeople, SaaS landing pages and more — each one a complete, editable brief that builds a real one-page site.",
+    "Start from a ready-made prompt. Restaurants, portfolios, tradespeople, SaaS landing pages and more — each one a complete, editable brief that builds a real site.",
 };
 
 // getCurrentUser() reads the session cookie, so this page can never be

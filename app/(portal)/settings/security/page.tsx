@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { KeyRound } from "lucide-react";
+import { KeyRound, ShieldCheck } from "lucide-react";
 import { getCurrentSession, getCurrentUser } from "@/lib/auth";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { PageHero } from "@/components/ui/PageHero";
 import { listSessions } from "@/app/api/account/_sessions";
 import {
   CONFIRMATION_PHRASE,
@@ -79,6 +80,15 @@ export default async function SettingsSecurityPage() {
 
   return (
     <>
+      {/* Own hero for this tab — same reasoning and same tab icon
+          (ShieldCheck) as the Account/Credits tabs' PageHero; the layout's h1
+          stays "Settings". */}
+      <PageHero
+        as="h2"
+        icon={<ShieldCheck className="size-5" aria-hidden />}
+        title="Security"
+      />
+
       <Card>
         <CardHeader
           title="How you sign in"

@@ -5,29 +5,25 @@ import { redirect } from "next/navigation";
 import {
   ArrowDownRight,
   ArrowUpRight,
-  Code2,
-  Eye,
   Gauge,
   Hammer,
-  History,
   Receipt,
   Rocket,
   Sparkles,
-  UploadCloud,
-  Wrench,
-  XCircle,
   Zap,
 } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { billingEnabled } from "@/lib/stripe";
 import { getSpendCapStatus, averageBuildCredits, getBalance, spentInWindow } from "@/lib/credits";
 import { ButtonLink } from "@/components/ui/Button";
-import { Card, CardHeader, SectionHeader } from "@/components/ui/Card";
+import { Card, CardHeader } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { Progress } from "@/components/ui/Progress";
-import { Stat } from "@/components/ui/Stat";
+import { InfoPopover } from "@/components/ui/InfoPopover";
+import { PageHero } from "@/components/ui/PageHero";
+import { db } from "@/lib/db";
 import { SpendCapPanel } from "../billing/SpendCapPanel";
 import { formatCredits, formatDay } from "../billing/ledger";
+import { ActivityTable } from "./ActivityTable";
 import {
   accountSpanDays,
   dailySpend,
@@ -35,8 +31,8 @@ import {
   ledgerTotals,
   monthToDate,
   mtdBuildKind,
-  notCharged,
   previousWindowSpend,
+  recentActivity,
   siteUsage,
 } from "./data";
 import { RangeTabs } from "./RangeTabs";
@@ -51,39 +47,40 @@ export const metadata: Metadata = { title: "Usage" };
 
 /* /dashboard/usage — what the credits went ON.
    ───────────────────────────────────────────────────────────────────────────
-   The brief for this screen asked for storage, bandwidth, a plan allowance and
-   a reset date. None of the four exist (docs/design-system.md, "What does not
-   exist"), so none of the four are drawn here. What IS real turns out to be
-   more useful anyway: every credit ever charged is a successful build, every
-   build belongs to a website, and both facts are already in the database.
+   This is a visual overhaul against a ChatGPT-generated reference screen —
+   gradients, colour, a line chart instead of bars. The DATA underneath is
+   unchanged from the previous pass, and the same four substitutions still
+   apply, because the reference screen still shows things that are not true
+   of this product:
 
-   Every figure on this page is in CREDITS. Build.costMicros is real model
-   spend — the cost side of the retail prices in lib/stripe.ts — and it is used
-   only inside the arithmetic in ./data.ts, never rendered as money.
+     1. NO monthly allowance / reset date. The reference's hero card reads
+        "75% of 1,000 credits · Resets in 18 days" — credits here never expire
+        and nothing resets on a cycle. The hero's bar instead shows what
+        FRACTION OF EVERYTHING YOU'VE EVER BEEN GIVEN OR BOUGHT is still
+        unspent (balance ÷ totals.added) — a real, honest number in the same
+        visual slot, not a subscription cycle standing in for one.
+     2. NO donut over successful/failed/other builds — a failed build is
+        charged zero (chargeForBuild is only reached on the SUCCEEDED path in
+        app/api/generate/route.ts), so that shape would be one 100% slice and
+        two empty ones wearing a three-category costume. SpendKindDonut keeps
+        drawing each project's first charged build ("new sites") against every
+        build after it ("edits") — a genuine category recovered from data
+        that already exists — just with the gradient arcs the reference asks
+        for.
+     3. NO usage-alert toggles ("80% alert: On / 100% alert: On"). There is no
+        notification system behind them — lib/notifications sends four fixed
+        transactional emails and nothing configurable. SpendCapPanel (shared
+        with /dashboard/billing, so the two pages can never disagree about the
+        one real limit) still offers the one control that's real: the cap
+        itself.
+     4. NO "Upgrade plan" button — there is no subscription to upgrade. The
+        bottom card offers "Buy credits" only, and only when Stripe is
+        configured on this deployment.
 
-   WHAT A VISUAL REFERENCE FOR THIS PAGE SHOWED, and what stands in its place:
-     1. "75% of 1,000 monthly credits" / "resets in 18 days" — there is no
-        allowance to be a percentage of and no reset date. In that exact slot,
-        the gradient card instead shows the customer's own SPEND CAP when one
-        is set (a real number, a real rolling-30-day bar against it) and a
-        plain sentence when it isn't. Uncapped is not hidden behind a fake bar.
-     2. A donut splitting spend across successful, failed and "other" builds —
-        impossible here, since a failed build is charged zero (chargeForBuild
-        is only reached on the SUCCEEDED path in app/api/generate/route.ts),
-        which would draw one 100% slice and two empty ones. SpendKindDonut.tsx
-        draws the real split instead: each project's first charged build
-        ("new sites") against every build after it ("edits") — a genuine
-        category recovered from data that already exists, not invented to
-        fill the shape.
-     3. A "you're using less than last month!" banner, shown unconditionally —
-        here it only renders when `spendingLess` is true, i.e. spend really is
-        down by a real margin against a real comparable prior window. Spend
-        going up is exactly as likely as it going down, and a banner that
-        would still be praising an increase is worse than no banner.
-     4. Six "what's free" tiles naming things Kodely does not have (custom
-        domains, team invites) — the tiles below name six things that ARE
-        free and real: editing, previewing, publishing, version history, a
-        failed build, and a repaired one. */
+   REMOVED FROM THIS PASS BY REQUEST: Build reliability, "Included at no
+   additional credit cost", "What uses credits?", storage/bandwidth, and the
+   "How Kodely credits work" strip. None of that was fabricated — it's simply
+   not part of the page anymore. */
 
 // Closed range table, looked up with hasOwnProperty so a query string of
 // "constructor" or "__proto__" resolves to a miss rather than to something on
@@ -144,11 +141,11 @@ export default async function UsagePage({
     measuredBuilds,
     sites,
     totals,
-    waived,
     dayBuckets,
     trend,
     mtd,
     mtdKind,
+    activity,
   ] = await Promise.all([
     getBalance(user.id),
     // getSpendCapStatus skips the spend query when the user is uncapped; this
@@ -166,11 +163,11 @@ export default async function UsagePage({
     }),
     siteUsage(user.id),
     ledgerTotals(user.id),
-    notCharged(user.id),
     dailySpend(user.id, days),
     previousWindowSpend(user.id),
     monthToDate(user.id),
     mtdBuildKind(user.id),
+    recentActivity(user.id, 6),
   ]);
 
   const buckets = groupBuckets(dayBuckets, days > WEEKLY_ABOVE_DAYS ? 7 : 1);
@@ -192,7 +189,7 @@ export default async function UsagePage({
   // The same arithmetic the sidebar rail and the /support card do, so all three
   // answer "how much more can I build?" with the same number. No denominator is
   // invented anywhere: there is no allowance for the balance to be a fraction
-  // of, which is exactly why none of the three draws a bar.
+  // of, which is exactly why none of the three draws a bar tied to it.
   const buildsLeft = avgBuildCredits > 0 ? Math.floor(balance / avgBuildCredits) : 0;
 
   // Only computed when the account lived through the whole earlier window, and
@@ -202,104 +199,57 @@ export default async function UsagePage({
       ? Math.round(((spent - trend.previous) / trend.previous) * 100)
       : null;
 
-  // A congratulatory banner, ONLY when there is something real to congratulate.
-  // A visual reference for this page showed one unconditionally ("great job
-  // optimizing your builds!") — that is not available here: it would have to
-  // be true, and spend going up is exactly as likely as it going down. Below
-  // a token threshold the change is noise, not a trend, so nothing is shown
-  // rather than praising a 1% wobble.
-  const spendingLess = delta !== null && delta <= -5;
+  // Three real states for the hero card. "Low" mirrors the create-flow's own
+  // definition of tight (Composer.tsx): can't be sure of covering one more
+  // average build. Both thresholds are about THIS account's own numbers, not
+  // an arbitrary credit count.
+  const zero = balance <= 0;
+  const low = !zero && measuredBuilds > 0 && balance < avgBuildCredits;
+
+  const canBuyCredits = billingEnabled();
+  const hasAnyUsage = totals.spent > 0 || activity.length > 0;
 
   return (
     <>
-      <SectionHeader
+      <PageHero
+        className="mb-6"
         as="h1"
-        title="Usage & Credits"
-        description="Track your AI credits usage and build activity."
+        icon={<Gauge className="size-5" aria-hidden />}
+        title={
+          <span className="inline-flex items-center gap-2">
+            Usage &amp; Credits
+            <Sparkles className="size-5 text-brand" aria-hidden />
+          </span>
+        }
+        description="Track your AI usage, build activity, and remaining credits."
         action={
-          <ButtonLink href="/dashboard/billing" variant="secondary" size="sm">
-            Billing &amp; statements
-          </ButtonLink>
+          <div className="flex items-center gap-2">
+            <ButtonLink href="/dashboard/billing" variant="secondary" size="sm">
+              Billing &amp; statements
+            </ButtonLink>
+            <InfoPopover label="About this page" align="end">
+              This page reads directly from your credit ledger and build history — every figure is
+              real, nothing here is a projection or an estimate framed as a fact.
+            </InfoPopover>
+          </div>
         }
       />
 
       {/* ── Where you stand ─────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        {/* The one gradient fill this page contributes, and the reason the
-            gradient rule in docs/design-system.md now names four places. No
-            bar, no percentage, no reset: credits are bought in packs and never
-            expire, so a denominator would have to be invented. The number and
-            what it buys is the whole truth available — the same sentence the
-            rail beside this page is already showing. */}
-        <div className="btn-cta-gradient relative overflow-hidden rounded-xl p-5 text-white shadow-e2">
-          <div className="flex items-start justify-between gap-2">
-            <p className="text-[0.6875rem] leading-none font-semibold tracking-[0.07em] uppercase opacity-80">
-              Credits left
-            </p>
-            <Zap className="size-4 shrink-0 opacity-80" aria-hidden />
-          </div>
-          <p className="mt-3 flex items-baseline gap-1.5">
-            <span className="k-num text-2xl leading-none font-semibold tracking-tight">
-              {formatCredits(balance)}
-            </span>
-            <span className="text-[0.8125rem] opacity-90">credits</span>
-          </p>
-          <p className="mt-2 text-xs leading-relaxed opacity-95">
-            {balance <= 0
-              ? "Out of credits — the next build won't start until you top up."
-              : buildsLeft >= 1
-                ? `About ${formatCredits(buildsLeft)} more ${buildsLeft === 1 ? "build" : "builds"}.`
-                : "Not quite enough for a full build."}
-          </p>
-          <p className="mt-1.5 text-[0.6875rem] leading-relaxed opacity-85">
-            {measuredBuilds > 0
-              ? `Measured from your own builds, averaging ${formatCredits(avgBuildCredits)} credits each.`
-              : `Based on a typical build, about ${formatCredits(avgBuildCredits)} credits.`}{" "}
-            Credits never expire and nothing renews.
-          </p>
-
-          {/* A bar in this exact slot ONLY when there is something real for it
-              to measure. A visual reference showed one unconditionally
-              ("75% of 1,000 monthly credits") — there is no monthly
-              allowance to be a percentage of, so that number cannot exist
-              here. What genuinely fills this shape is the customer's OWN
-              spend cap, when they have set one: a real ceiling, a real
-              rolling-30-day spend against it. Uncapped, the bar is omitted
-              rather than faked — see the plain sentence below instead. */}
-          {cap.cap !== null ? (
-            <div className="mt-3 border-t border-white/20 pt-3">
-              <div className="flex items-baseline justify-between text-[0.6875rem] opacity-90">
-                <span>Your spend cap</span>
-                <span className="k-num">
-                  {formatCredits(spent)} / {formatCredits(cap.cap)}
-                </span>
-              </div>
-              <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/25">
-                <div
-                  className="h-full rounded-full bg-white"
-                  style={{ width: `${Math.min(100, (spent / cap.cap) * 100)}%` }}
-                />
-              </div>
-              <p className="mt-1.5 text-[0.625rem] opacity-80">
-                Rolling 30 days, not a monthly reset —{" "}
-                <a href="/settings/credits" className="underline underline-offset-2">
-                  edit your cap
-                </a>
-                .
-              </p>
-            </div>
-          ) : (
-            <p className="mt-3 border-t border-white/20 pt-3 text-[0.625rem] leading-relaxed opacity-80">
-              No spend cap set —{" "}
-              <a href="/settings/credits" className="underline underline-offset-2">
-                add one
-              </a>{" "}
-              to put a ceiling on a long session.
-            </p>
-          )}
-        </div>
+        <HeroCreditsCard
+          balance={balance}
+          buildsLeft={buildsLeft}
+          measuredBuilds={measuredBuilds}
+          avgBuildCredits={avgBuildCredits}
+          totalEverAdded={totals.added}
+          zero={zero}
+          low={low}
+          canBuyCredits={canBuyCredits}
+        />
 
         <StatTile
+          tone="pink"
           icon={<Receipt className="size-4" aria-hidden />}
           label="Credits spent"
           value={formatCredits(spent)}
@@ -317,7 +267,7 @@ export default async function UsagePage({
                   <span>vs the 30 days before</span>
                 </span>
               )}
-              A rolling window measured to the hour, not a calendar month. There is no reset day.
+              Rolling 30 days, not a calendar month. There is no reset day.
               {delta === null && trend.comparable && trend.previous === 0
                 ? " Nothing was spent in the 30 days before this one, so there is no change to quote."
                 : ""}
@@ -326,109 +276,128 @@ export default async function UsagePage({
         />
 
         <StatTile
+          tone="purple"
           icon={<Gauge className="size-4" aria-hidden />}
           label="Your average build"
           value={measuredBuilds > 0 ? formatCredits(avgBuildCredits) : "—"}
           unit={measuredBuilds > 0 ? "credits" : undefined}
           detail={
             measuredBuilds > 0
-              ? `Measured across your recent builds — ${formatCredits(measuredBuilds)} charged so far.`
+              ? `Per successful build — ${formatCredits(measuredBuilds)} charged so far.`
               : "Nothing measured yet. You haven't been charged for a build."
           }
         />
 
         <StatTile
+          tone="peach"
           icon={<Hammer className="size-4" aria-hidden />}
           label="Builds this month"
           value={formatCredits(mtd.builds)}
           unit={mtd.builds === 1 ? "build" : "builds"}
-          detail={`Charged builds since 1 ${MONTH.format(new Date(mtd.start))} (UTC). A calendar count for orientation — nothing resets on the 1st.`}
+          detail={`Since 1 ${MONTH.format(new Date(mtd.start))} (UTC) — a calendar count for orientation, nothing resets on the 1st.`}
         />
 
         <StatTile
+          tone="ok"
           icon={<Rocket className="size-4" aria-hidden />}
           label="Builds you can afford"
           value={formatCredits(buildsLeft)}
           unit="more"
+          info={
+            <InfoPopover label="How this is calculated">
+              Your credit balance divided by{" "}
+              {measuredBuilds > 0 ? "your own measured average build cost" : "a typical Kodely build cost"}
+              , rounded down. A bigger or more complex site costs more than a smaller one, so treat
+              this as a rough guide, not a guarantee.
+            </InfoPopover>
+          }
           detail={
             measuredBuilds > 0
-              ? "At your own measured average. A bigger site costs more than a smaller one."
-              : "Based on a typical Kodely build, not on you — you haven't had one charged yet, so there is nothing of your own to measure."
+              ? "At your own measured average."
+              : "Based on a typical Kodely build — you haven't had one charged yet."
           }
         />
       </div>
 
-      {/* ── The two-column body ─────────────────────────────────────────── */}
-      <div className="mt-4 grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
-        <div className="flex flex-col gap-4 lg:col-span-2">
-          <Card>
-            <CardHeader
-              title="Credits over time"
-              description="Only successful, metered builds are charged, so only those appear."
-              action={
-                <RangeTabs
-                  value={rangeKey}
-                  allLabel={span === null ? "All time" : `All time`}
-                />
-              }
-            />
-
-            <UsageChart buckets={buckets} days={days} rangeLabel={rangeLabel} />
-
-            <p className="mt-4 text-xs leading-relaxed text-ink-3">
-              These bars are UTC calendar {days > WEEKLY_ABOVE_DAYS ? "weeks" : "days"}; the
-              &ldquo;credits spent&rdquo; figure above is a rolling window measured to the hour.
-              The two totals can differ by up to one{" "}
-              {days > WEEKLY_ABOVE_DAYS ? "week" : "day"}&apos;s spend, and that is the reason —
-              neither is an estimate.
-            </p>
-
-            {/* Only appears when it is true. See `spendingLess` above — this
-                is the one place a visual reference for this page showed an
-                unconditional "great job!" banner. */}
-            {spendingLess && (
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-ok/30 bg-ok-tint px-4 py-3">
-                <p className="flex items-start gap-2 text-sm text-ok">
-                  <Sparkles className="mt-0.5 size-4 shrink-0" aria-hidden />
-                  <span>
-                    You spent <span className="k-num font-medium">{Math.abs(delta ?? 0)}%</span>{" "}
-                    less than the 30 days before this one.
-                  </span>
-                </p>
-              </div>
-            )}
-          </Card>
-
-          {/* Same left-column slot a visual reference for this page put its
-              spending cap in — moved here from below the grid so the two
-              match. */}
-          <SpendCapPanel cap={cap.cap} spent={spent} />
-        </div>
-
-        <div className="flex flex-col gap-4">
-          {/* ── This calendar month — a real donut, not a fabricated one ─── */}
-          <Card>
-            <CardHeader
-              title="Usage this month"
-              description={`1–${mtd.daysElapsed} ${MONTH.format(new Date(mtd.start))}, UTC.`}
-            />
-            <div className="mt-5">
-              <SpendKindDonut
-                createCredits={mtdKind.createCredits}
-                editCredits={mtdKind.editCredits}
+      {!hasAnyUsage ? (
+        <EmptyState
+          className="mt-4"
+          kind="empty"
+          title="Your usage will appear here"
+          body="Once you build or update a website with Kodely AI, your credit activity, charts and breakdowns fill in on their own."
+          action={
+            <ButtonLink href="/dashboard/new" variant="primary" size="sm">
+              Create a website
+            </ButtonLink>
+          }
+        />
+      ) : (
+        <>
+          {/* ── Credits over time + Usage this month ─────────────────────── */}
+          <div className="mt-4 grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
+            <Card className="lg:col-span-2">
+              <CardHeader
+                title="Credits over time"
+                description="Daily AI credits spent (UTC)."
+                action={<RangeTabs value={rangeKey} allLabel={span === null ? "All time" : "All time"} />}
               />
-            </div>
-            <p className="mt-4 text-xs leading-relaxed text-ink-3">
-              A month boundary is a convenient way to read this and nothing more. Nothing resets
-              on the 1st: credits never expire and there is no monthly allowance.
-            </p>
-          </Card>
 
-          {/* ── Per-website attribution ─────────────────────────────────── */}
-          <Card>
+              <UsageChart buckets={buckets} days={days} rangeLabel={rangeLabel} />
+
+              <p className="mt-4 text-xs leading-relaxed text-ink-3">
+                Only successful, metered builds are charged, so only those appear. This line steps
+                across UTC calendar {days > WEEKLY_ABOVE_DAYS ? "weeks" : "days"}; the rolling
+                30-day figure above can differ from a sum of these points by up to one{" "}
+                {days > WEEKLY_ABOVE_DAYS ? "week" : "day"}&apos;s spend — neither is an estimate,
+                they&apos;re just measured over different windows.
+              </p>
+
+              {delta !== null && delta <= -5 && (
+                <div className="mt-4 flex flex-wrap items-center gap-2.5 rounded-lg border border-ok/30 bg-ok-tint px-4 py-3">
+                  <Sparkles className="size-4 shrink-0 text-ok" aria-hidden />
+                  <p className="text-sm text-ok">
+                    You spent <span className="k-num font-medium">{Math.abs(delta)}%</span> less
+                    than the 30 days before this one.
+                  </p>
+                </div>
+              )}
+            </Card>
+
+            <Card>
+              <CardHeader
+                title="Usage this month"
+                description={`1–${mtd.daysElapsed} ${MONTH.format(new Date(mtd.start))}, UTC.`}
+              />
+              <div className="mt-5">
+                <SpendKindDonut createCredits={mtdKind.createCredits} editCredits={mtdKind.editCredits} />
+              </div>
+              <p className="mt-4 text-xs leading-relaxed text-ink-3">
+                A month boundary is a convenient way to read this and nothing more — credits never
+                expire and there is no monthly allowance behind them.
+              </p>
+            </Card>
+          </div>
+
+          {/* ── Recent activity + Spending cap ───────────────────────────── */}
+          <div className="mt-4 grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
+            <Card className="lg:col-span-2">
+              <CardHeader
+                title="Recent credit activity"
+                description="Your newest charges and credits."
+              />
+              <div className="mt-4">
+                <ActivityTable rows={activity} />
+              </div>
+            </Card>
+
+            <SpendCapPanel cap={cap.cap} spent={spent} />
+          </div>
+
+          {/* ── Per-website attribution ───────────────────────────────────── */}
+          <Card className="mt-4">
             <CardHeader
               title="Where your credits went"
-              description="Every charge on this account is one successful site build, grouped by the website it built."
+              description="See which websites are using the most AI credits."
             />
 
             {sites.length === 0 && orphaned === 0 ? (
@@ -436,17 +405,12 @@ export default async function UsagePage({
                 className="mt-5"
                 kind="empty"
                 title="Nothing charged yet"
-                body="You haven't been charged for a build, so there is nothing to break down. Build something and this fills in on its own."
-                action={
-                  <ButtonLink href="/dashboard/new" variant="secondary" size="sm">
-                    Create a website
-                  </ButtonLink>
-                }
+                body="You haven't been charged for a build, so there is nothing to break down."
               />
             ) : (
               <>
                 <ul className="mt-5 flex flex-col gap-4">
-                  {sites.map((site) => (
+                  {sites.map((site, i) => (
                     <SiteRow
                       key={site.projectId}
                       name={
@@ -460,7 +424,7 @@ export default async function UsagePage({
                       credits={site.credits}
                       max={largest}
                       share={share(site.credits)}
-                      tone="brand"
+                      gradient={SITE_GRADIENTS[i % SITE_GRADIENTS.length]}
                       barLabel={`${site.name}: ${formatCredits(site.credits)} credits`}
                       footnote={
                         <>
@@ -482,148 +446,271 @@ export default async function UsagePage({
                       credits={orphaned}
                       max={largest}
                       share={share(orphaned)}
-                      tone="neutral"
+                      gradient="linear-gradient(90deg, var(--border-strong), var(--border-strong))"
                       barLabel={`Deleted websites: ${formatCredits(orphaned)} credits`}
                       footnote="Their build records are gone, so these charges can no longer be pointed at a site — but the credits really were spent, so they stay on your statement."
                     />
                   )}
                 </ul>
 
-                <p className="mt-4 text-xs leading-relaxed text-ink-3">
-                  Shares are of <span className="k-num">{formatCredits(totals.spent)}</span> credits
-                  spent in total, against <span className="k-num">{formatCredits(totals.added)}</span>{" "}
-                  ever added (welcome credits, top-ups and rewards combined).
-                </p>
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-xs leading-relaxed text-ink-3">
+                    Shares are of <span className="k-num">{formatCredits(totals.spent)}</span>{" "}
+                    credits spent in total, against{" "}
+                    <span className="k-num">{formatCredits(totals.added)}</span> ever added.
+                  </p>
+                  <Link
+                    href="/dashboard/websites"
+                    className="k-focus shrink-0 rounded-sm text-xs font-medium text-brand hover:underline"
+                  >
+                    View all projects →
+                  </Link>
+                </div>
               </>
             )}
           </Card>
-        </div>
-      </div>
+        </>
+      )}
 
-      {/* ── The bills that never arrived ────────────────────────────────── */}
-      <section className="mt-6">
-        <SectionHeader
-          title="What isn't charged"
-          description="Six real things, in the same six-tile shape a visual reference for this page used — theirs named a couple of features Kodely doesn't have (custom domains, team invites); these are the ones that are actually true and actually free."
-        />
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <WaivedTile
-            icon={<Code2 className="size-4" aria-hidden />}
-            label="Editing code"
-            value="Free"
-            detail="Manual edits in the editor — brand, SEO, anything you change by hand — never touch your credit balance."
-          />
-          <WaivedTile
-            icon={<Eye className="size-4" aria-hidden />}
-            label="Previewing your site"
-            value="Free"
-            detail="The live preview in the builder runs as often as you like, before you publish anything."
-          />
-          <WaivedTile
-            icon={<UploadCloud className="size-4" aria-hidden />}
-            label="Publishing your site"
-            value="Free"
-            detail="Going live is a separate action from asking the AI to build — it never charges credits on its own."
-          />
-          <WaivedTile
-            icon={<History className="size-4" aria-hidden />}
-            label="Version history"
-            value="Free"
-            detail="Viewing or restoring an earlier build costs nothing — undo is not a second build."
-          />
-          <WaivedTile
-            icon={<XCircle className="size-4" aria-hidden />}
-            label="Builds that failed"
-            value={formatCredits(waived.failedBuilds)}
-            detail="Recorded at their true cost and charged zero credits. A build you can't use is never a build you pay for."
-          />
-          <WaivedTile
-            icon={<Wrench className="size-4" aria-hidden />}
-            label="Builds we repaired"
-            value={formatCredits(waived.repairedBuilds)}
-            detail={`Didn't compile first time. You were charged for your original attempt only — ${formatCredits(waived.repairWaivedCredits)} credits absorbed on repairs so far.`}
-          />
-        </div>
-      </section>
-
-      {/* ── Say plainly what is not measured ────────────────────────────── */}
-      <div className="mt-4">
-        <EmptyState
-          kind="unavailable"
-          title="Storage and bandwidth aren't measured"
-          body="Nothing in Kodely records how much disk your sites take up or how much traffic they serve, so there is no honest number to put here. Credits are the only thing this account meters — and there is no plan, allowance or renewal date behind them either."
-        />
-      </div>
+      {/* ── Buy credits — no "Upgrade plan": there is no plan ───────────── */}
+      {canBuyCredits && (
+        <Card className="relative mt-6 overflow-hidden">
+          <div className="k-wash" aria-hidden />
+          <div className="relative flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <span
+                aria-hidden
+                className="grid size-11 shrink-0 place-items-center rounded-full text-white shadow-[0_6px_18px_-4px_var(--glow)]"
+                style={{ background: "var(--brand-gradient)" }}
+              >
+                <Zap className="size-5" aria-hidden />
+              </span>
+              <div>
+                <p className="k-h2 text-ink">Need more credits?</p>
+                <p className="mt-1 text-sm text-ink-2">
+                  Buy a credit pack to keep building — a single payment, nothing subscribes.
+                </p>
+              </div>
+            </div>
+            <ButtonLink href="/dashboard/billing" variant="primary" icon={<Zap className="size-4" aria-hidden />}>
+              Buy credits
+            </ButtonLink>
+          </div>
+        </Card>
+      )}
     </>
   );
 }
 
-/** One of the four plain stat cards in the top row. The icon chip is
-    decorative — it carries no status, which is why it is brand tint rather
-    than an `ok`/`warn` tint that would imply one. */
+/** Gradients cycled across "Where your credits went" rows — purely decorative
+    hue variety over a list of otherwise-equal items, drawn from the same
+    chart palette as UsageChart/SpendKindDonut so the whole page reads as one
+    family of colour rather than three different ideas of "brand". */
+const SITE_GRADIENTS = [
+  "linear-gradient(90deg, var(--brand), var(--brand-chart-2))",
+  "linear-gradient(90deg, var(--brand-chart-2), var(--brand-chart-3))",
+  "linear-gradient(90deg, var(--brand-chart-3), var(--brand))",
+  "linear-gradient(90deg, var(--brand), var(--ok))",
+];
+
+/** The gradient hero card. Three real states: normal, low (can't be sure of
+    covering one more average build), and zero. Low/zero use warm/danger
+    TINTS rather than the brand gradient — that gradient means "things are
+    fine" everywhere else it appears (this card's normal state, the sidebar,
+    /support), and reusing it for a warning would blur that meaning right when
+    clarity matters most.
+
+    The bar in the normal state is NOT a monthly-allowance bar — there is no
+    allowance. It reads balance ÷ everything ever added to this account, i.e.
+    "how much of what you've bought or been given is still unspent" — a real
+    ratio in the same visual slot a subscription-style card would put a fake
+    one. */
+function HeroCreditsCard({
+  balance,
+  buildsLeft,
+  measuredBuilds,
+  avgBuildCredits,
+  totalEverAdded,
+  zero,
+  low,
+  canBuyCredits,
+}: {
+  balance: number;
+  buildsLeft: number;
+  measuredBuilds: number;
+  avgBuildCredits: number;
+  totalEverAdded: number;
+  zero: boolean;
+  low: boolean;
+  canBuyCredits: boolean;
+}) {
+  const warn = zero || low;
+  const remainingFraction = totalEverAdded > 0 ? Math.max(0, Math.min(1, balance / totalEverAdded)) : null;
+
+  return (
+    <div
+      className={
+        warn
+          ? "relative overflow-hidden rounded-xl border p-5 shadow-e2 " +
+            (zero ? "border-danger/30 bg-danger-tint" : "border-warn/30 bg-warn-tint")
+          : "btn-cta-gradient relative overflow-hidden rounded-xl p-5 text-white shadow-e2"
+      }
+    >
+      {/* A couple of small decorative glimmers in the fine, unbroken state
+          only — the "little star icons" from the reference. Aria-hidden and
+          purely atmospheric, same as the entrance glow on the create page. */}
+      {!warn && (
+        <>
+          <Sparkles
+            aria-hidden
+            className="pointer-events-none absolute top-3 right-3 size-4 opacity-70"
+          />
+          <Sparkles
+            aria-hidden
+            className="pointer-events-none absolute top-10 right-9 size-2.5 opacity-40"
+          />
+        </>
+      )}
+      <div className="flex items-start justify-between gap-2">
+        <p
+          className={
+            "text-[0.6875rem] leading-none font-semibold tracking-[0.07em] uppercase " +
+            (warn ? (zero ? "text-danger" : "text-warn") : "opacity-80")
+          }
+        >
+          {zero ? "Out of credits" : low ? "Running low" : "Credits remaining"}
+        </p>
+        {warn && (
+          <Zap className={`size-4 shrink-0 ${zero ? "text-danger" : "text-warn"}`} aria-hidden />
+        )}
+      </div>
+      <p className="mt-3 flex items-baseline gap-1.5">
+        <span
+          className={`k-num text-2xl leading-none font-semibold tracking-tight ${warn ? "text-ink" : ""}`}
+        >
+          {formatCredits(balance)}
+        </span>
+        <span className={`text-[0.8125rem] ${warn ? "text-ink-2" : "opacity-90"}`}>credits</span>
+      </p>
+
+      {/* The real bar: balance as a share of everything ever added. Absent
+          when nothing has ever been added (a state that should not happen —
+          the signup grant always writes one — but is not worth crashing
+          over). */}
+      {remainingFraction !== null && (
+        <div className="mt-3">
+          <div className={`h-1.5 overflow-hidden rounded-full ${warn ? "bg-surface-3" : "bg-white/25"}`}>
+            <div
+              className="h-full rounded-full transition-[width] duration-[var(--t-3)]"
+              style={{
+                width: `${remainingFraction * 100}%`,
+                background: warn ? "var(--ink-3)" : "white",
+              }}
+            />
+          </div>
+          <p className={`mt-1.5 text-[0.6875rem] ${warn ? "text-ink-3" : "opacity-80"}`}>
+            <span className="k-num">{Math.round(remainingFraction * 100)}%</span> of the{" "}
+            <span className="k-num">{formatCredits(totalEverAdded)}</span> credits you&apos;ve
+            bought or been given.
+          </p>
+        </div>
+      )}
+
+      <p className={`mt-2 text-xs leading-relaxed ${warn ? "text-ink-2" : "opacity-95"}`}>
+        {zero
+          ? "The next build won't start until you add credits."
+          : low
+            ? "You may not have enough for another full build."
+            : buildsLeft >= 1
+              ? `About ${formatCredits(buildsLeft)} more ${buildsLeft === 1 ? "build" : "builds"}.`
+              : "Not quite enough for a full build."}
+      </p>
+      <p className={`mt-1.5 text-[0.6875rem] leading-relaxed ${warn ? "text-ink-3" : "opacity-85"}`}>
+        {measuredBuilds > 0
+          ? `Measured from your own builds, averaging ${formatCredits(avgBuildCredits)} credits each.`
+          : `Based on a typical build, about ${formatCredits(avgBuildCredits)} credits.`}{" "}
+        Credits never expire and nothing renews.
+      </p>
+
+      {warn && canBuyCredits && (
+        <div className="mt-3">
+          <ButtonLink href="/dashboard/billing" variant={zero ? "danger" : "secondary"} size="xs">
+            Buy credits
+          </ButtonLink>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Four distinct icon-chip gradients for the top stat row — purely decorative
+// hue variety (this is one row of equally-weighted facts, not a set of
+// semantic states), so each pulls from the chart palette rather than the
+// reserved --brand-gradient. "ok" is the one genuine semantic case (more
+// credits you can still spend reads as a green fact), so it uses the real
+// --ok token instead of a chart hue.
+const STAT_TONES = {
+  pink: "linear-gradient(135deg, var(--brand), var(--brand-hover))",
+  purple: "linear-gradient(135deg, var(--brand-chart-2), #7a2be0)",
+  peach: "linear-gradient(135deg, var(--brand-chart-3), var(--brand-chart-2))",
+  ok: "linear-gradient(135deg, var(--ok), #0a6b45)",
+} as const;
+
+/** One of the plain stat cards in the top row. `info`, when given, is an
+    InfoPopover — used only where the number needs a sentence of method
+    explained, so it doesn't have to live in the card body permanently. */
 function StatTile({
   icon,
   label,
   value,
   unit,
   detail,
+  info,
+  tone,
 }: {
   icon: ReactNode;
   label: string;
   value: string;
   unit?: string;
   detail: ReactNode;
+  info?: ReactNode;
+  tone: keyof typeof STAT_TONES;
 }) {
   return (
     <Card className="flex flex-col">
-      <span
-        aria-hidden
-        className="mb-4 grid size-8 shrink-0 place-items-center rounded-md bg-brand-tint text-brand-ink dark:text-brand"
-      >
-        {icon}
-      </span>
-      <Stat label={label} value={value} unit={unit} detail={detail} />
-    </Card>
-  );
-}
-
-/** One tile in the bottom "what isn't charged" strip. */
-function WaivedTile({
-  icon,
-  label,
-  value,
-  detail,
-}: {
-  icon: ReactNode;
-  label: string;
-  value: string;
-  detail: ReactNode;
-}) {
-  return (
-    <Card className="flex items-start gap-3">
-      <span
-        aria-hidden
-        className="grid size-9 shrink-0 place-items-center rounded-md bg-surface-2 text-ink-2"
-      >
-        {icon}
-      </span>
-      <div className="min-w-0 flex-1">
-        <Stat label={label} value={value} detail={detail} />
+      <div className="mb-4 flex items-center justify-between">
+        <span
+          aria-hidden
+          className="grid size-8 shrink-0 place-items-center rounded-md text-white shadow-[0_4px_12px_-4px_var(--glow)]"
+          style={{ background: STAT_TONES[tone] }}
+        >
+          {icon}
+        </span>
+        {info}
       </div>
+      <span className="k-label">{label}</span>
+      <span className="mt-2 flex items-baseline gap-1.5">
+        <span className="k-num text-2xl leading-none font-semibold tracking-tight text-ink">
+          {value}
+        </span>
+        {unit != null && <span className="text-[0.8125rem] text-ink-3">{unit}</span>}
+      </span>
+      <span className="mt-2 text-xs text-ink-2">{detail}</span>
     </Card>
   );
 }
 
-/** One website's share of spend: the figure, a bar against the largest single
-    line, and the percentage of everything ever spent. Rows rather than a table
-    because this column is a third of the page wide — a five-column table here
-    would scroll sideways inside its own box on every screen. */
+/** One website's share of spend: the figure, a gradient bar against the
+    largest single line, and the percentage of everything ever spent. Rows
+    rather than a table because this column is a third of the page wide — a
+    five-column table here would scroll sideways inside its own box on every
+    screen. */
 function SiteRow({
   name,
   credits,
   max,
   share,
-  tone,
+  gradient,
   barLabel,
   footnote,
 }: {
@@ -631,10 +718,11 @@ function SiteRow({
   credits: number;
   max: number;
   share: string;
-  tone: "brand" | "neutral";
+  gradient: string;
   barLabel: string;
   footnote: ReactNode;
 }) {
+  const pct = Math.max(0, Math.min(100, (credits / max) * 100));
   return (
     <li>
       <div className="flex items-baseline justify-between gap-3">
@@ -644,7 +732,19 @@ function SiteRow({
         </span>
       </div>
       <div className="mt-2 flex items-center gap-2">
-        <Progress className="flex-1" size="sm" tone={tone} value={credits} max={max} label={barLabel} />
+        <div
+          role="progressbar"
+          aria-label={barLabel}
+          aria-valuenow={Math.round(pct)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-3"
+        >
+          <div
+            className="h-full rounded-full transition-[width] duration-[var(--t-3)]"
+            style={{ width: `${pct}%`, background: gradient }}
+          />
+        </div>
         <span className="k-num w-9 shrink-0 text-right text-xs text-ink-3">{share}</span>
       </div>
       <p className="mt-1.5 text-xs leading-relaxed text-ink-3">{footnote}</p>

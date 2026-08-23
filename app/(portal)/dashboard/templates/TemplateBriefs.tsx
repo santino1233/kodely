@@ -1,12 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowRight, Check, ChevronDown, Copy, FileText } from "lucide-react";
+import { ArrowRight, Check, ChevronDown, Copy, FileText, LayoutTemplate } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button, ButtonLink } from "@/components/ui/Button";
-import { Card, SectionHeader } from "@/components/ui/Card";
+import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SearchInput } from "@/components/ui/Field";
+import { PageHero } from "@/components/ui/PageHero";
 import { useToast } from "@/components/ui/Toast";
 import type { Template, TemplateCategory } from "@/lib/templates";
 
@@ -70,7 +71,9 @@ export function TemplateBriefs({
 
   return (
     <div className="mx-auto w-full max-w-5xl">
-      <SectionHeader as="h1"
+      <PageHero
+        className="mb-6"
+        icon={<LayoutTemplate className="size-5" aria-hidden />}
         title="Templates"
         description="Starting points for the box on Create Website — every one of them is a brief you can rewrite."
         action={

@@ -370,6 +370,47 @@ export async function mtdBuildKind(userId: string): Promise<MtdBuildKind> {
   return { createCredits, editCredits };
 }
 
+export type ActivityRow = {
+  id: string;
+  createdAt: Date;
+  delta: number;
+  reason: string;
+  projectId: string | null;
+  projectName: string | null;
+};
+
+/**
+ * The newest few ledger entries, for a compact "Recent activity" card.
+ *
+ * Deliberately NOT a second paging/search/filter implementation. The full,
+ * paginated, filterable statement already exists at /dashboard/billing —
+ * same table, same query shape. Building a second one here would mean two
+ * places that could disagree about a customer's own money. This returns a
+ * short recent slice and the page links to the real one for "everything".
+ */
+export async function recentActivity(userId: string, take = 6): Promise<ActivityRow[]> {
+  const rows = await db.creditLedger.findMany({
+    where: { userId },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take,
+    select: {
+      id: true,
+      createdAt: true,
+      delta: true,
+      reason: true,
+      build: { select: { project: { select: { id: true, name: true } } } },
+    },
+  });
+  return rows.map((r) => ({
+    id: r.id,
+    createdAt: r.createdAt,
+    delta: r.delta,
+    reason: r.reason,
+    projectId: r.build?.project?.id ?? null,
+    projectName: r.build?.project?.name ?? null,
+  }));
+}
+
 export type LedgerTotals = {
   /** Every positive delta: the signup grant, paid top-ups, social rewards. */
   added: number;

@@ -35,6 +35,7 @@ import {
   type Icon,
   type IconWeight,
 } from "./icons";
+import { vendorProvenanceLine } from "./provenance";
 import { FLAGS, flagSvg, type Flag } from "./flags";
 import {
   DIVIDERS,
@@ -136,17 +137,27 @@ function iconEntry(icon: Icon): Entry {
     kind: "icon",
     name: icon.name,
     keywords: icon.keywords,
-    render: (opts) => ({
-      format: "jsx",
-      source: iconJsx(icon.id, { weight: opts.weight ?? "regular", size: null, className: "h-6 w-6" }) ?? "",
-      usage:
-        "Paste inline into a .tsx file. Stroke is currentColor, so set the colour with a Tailwind text-* class on the icon or its parent; size with h-*/w-*.",
-      variants: {
-        svg: iconSvg(icon.id, { weight: opts.weight ?? "regular" }) ?? "",
-        dataUri: iconDataUri(icon.id, { weight: opts.weight ?? "regular" }) ?? "",
-        category: icon.category,
-      },
-    }),
+    render: (opts) => {
+      const baseUsage =
+        "Paste inline into a .tsx file. Stroke is currentColor, so set the colour with a Tailwind text-* class on the icon or its parent; size with h-*/w-*.";
+      return {
+        format: "jsx",
+        source: iconJsx(icon.id, { weight: opts.weight ?? "regular", size: null, className: "h-6 w-6" }) ?? "",
+        // A vendored icon's licence is surfaced directly in `usage` — the tool
+        // output a model actually reads — rather than only in a side table,
+        // so an attribution-required or brand-flagged asset could never be
+        // placed silently. Every icon vendored so far is permissive and not a
+        // brand mark, so today this only ever adds a provenance line; the
+        // mechanism is what has to exist for the day that isn't true.
+        usage: icon.provenance ? `${baseUsage} ${vendorProvenanceLine(icon.provenance)}` : baseUsage,
+        variants: {
+          svg: iconSvg(icon.id, { weight: opts.weight ?? "regular" }) ?? "",
+          dataUri: iconDataUri(icon.id, { weight: opts.weight ?? "regular" }) ?? "",
+          category: icon.category,
+          ...(icon.provenance ? { provenance: JSON.stringify(icon.provenance) } : {}),
+        },
+      };
+    },
   };
 }
 
@@ -507,13 +518,33 @@ const SYNONYMS: Record<string, string[]> = {
   hours: ["clock", "time"],
   booking: ["calendar", "ticket"],
   enquiry: ["mail", "message", "help"],
+  support: ["headset", "lifebuoy", "help"],
+  helpdesk: ["headset", "lifebuoy"],
+  directory: ["address-book"],
   // trades and services
-  plumber: ["wrench", "droplet", "repair"],
-  plumbing: ["wrench", "droplet"],
-  electrician: ["zap", "wrench"],
-  builder: ["hammer", "home"],
-  construction: ["hammer", "building"],
-  handyman: ["wrench", "hammer"],
+  //
+  // Before the icon set was widened (docs/research/asset-sources.md §4), every
+  // one of these resolved to the same generic "wrench" icon — a plumber, an
+  // electrician, a handyman and a mechanic all got identical iconography.
+  // Each trade now points at icons that are actually specific to it.
+  plumber: ["pipe-wrench", "pipeline", "droplet", "repair"],
+  plumbing: ["pipe-wrench", "pipeline", "droplet"],
+  electrician: ["circuit-board", "electric-plug", "zap"],
+  electrical: ["circuit-board", "electric-plug", "zap"],
+  builder: ["hard-hat", "hammer", "home"],
+  construction: ["hard-hat", "hammer", "building"],
+  contractor: ["hard-hat", "hammer", "toolbox"],
+  handyman: ["toolbox", "wrench-screwdriver", "power-drill", "hammer"],
+  carpenter: ["power-drill", "hammer", "toolbox"],
+  painter: ["paint-roller", "paint-brush"],
+  decorator: ["paint-roller", "paint-brush"],
+  hvac: ["air-vent", "fan"],
+  ventilation: ["air-vent", "fan"],
+  aircon: ["air-vent", "fan"],
+  solar: ["solar-panel"],
+  architect: ["compass-tool", "building"],
+  marketing: ["megaphone"],
+  advertising: ["megaphone"],
   hairdresser: ["scissors", "salon"],
   barber: ["scissors"],
   salon: ["scissors", "lotus", "spa"],
@@ -529,11 +560,16 @@ const SYNONYMS: Record<string, string[]> = {
   clinic: ["stethoscope", "tooth"],
   photographer: ["camera"],
   photography: ["camera", "image"],
-  cleaner: ["spray", "droplet"],
-  cleaning: ["spray"],
-  gardener: ["leaf", "sprout", "tree"],
-  landscaping: ["leaf", "tree", "mountain"],
-  florist: ["sprout", "lotus", "leaf"],
+  cleaner: ["broom", "spray", "laundry-wash", "droplet"],
+  cleaning: ["broom", "spray", "laundry-wash"],
+  janitorial: ["broom", "spray"],
+  security: ["cctv", "shield-lock"],
+  locksmith: ["shield-lock", "key"],
+  "it support": ["server-rack", "router", "cpu-chip", "network"],
+  tech: ["server-rack", "router", "cpu-chip"],
+  gardener: ["leaf", "sprout", "tree", "potted-plant"],
+  landscaping: ["leaf", "tree", "mountain", "potted-plant"],
+  florist: ["sprout", "lotus", "leaf", "potted-plant"],
   mechanic: ["car", "wrench"],
   garage: ["car", "wrench"],
   taxi: ["car"],

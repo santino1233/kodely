@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { CreditCard } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import { getSpendCapStatus, spentInWindow } from "@/lib/credits";
 import {
@@ -10,6 +11,7 @@ import {
 } from "@/app/api/rewards/_lib";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { PageHero } from "@/components/ui/PageHero";
 import { Progress, toneForUsage } from "@/components/ui/Progress";
 import RewardsCard from "@/components/rewards/RewardsCard";
 import SpendCapForm from "../SpendCapForm";
@@ -47,6 +49,14 @@ export default async function SettingsCreditsPage({
 
   return (
     <>
+      {/* Own hero for this tab — same reasoning and same tab icon (CreditCard)
+          as the Account tab's PageHero; the layout's h1 stays "Settings". */}
+      <PageHero
+        as="h2"
+        icon={<CreditCard className="size-5" aria-hidden />}
+        title="Credits"
+      />
+
       <Card>
         <CardHeader
           title="Spending cap"

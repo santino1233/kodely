@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { LayoutTemplate, Wand2, X } from "lucide-react";
+import { FileText, Hammer, LayoutTemplate, Wand2, X } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { PageHero } from "@/components/ui/PageHero";
+import { useToast } from "@/components/ui/Toast";
 import { getTemplate } from "@/lib/templates";
 import {
   TemplatePickerModal,
@@ -12,18 +14,13 @@ import {
 } from "@/components/templates/TemplatePickerModal";
 import { InlineWizard, type InlineWizardResult } from "@/components/wizard/InlineWizard";
 import { PromptBox } from "./PromptBox";
-
-/* One-tap starters. Short on purpose — these are a way in, not a brief; the
-   fully-written briefs live behind "Use a template". Each one describes a
-   site this product can genuinely produce: one page, no backend. */
-const EXAMPLES = [
-  "A one-page site for my barbershop with services, prices and hours",
-  "A portfolio for a freelance product designer",
-  "A landing page for a project-tracking tool for small agencies",
-  "A neighbourhood coffee shop page with a drinks list and opening hours",
-  "A launch page for a hardcover book I'm selling",
-  "A wedding info page with the schedule, travel and dress code",
-];
+import {
+  ACCEPTED_VIDEO_TYPES,
+  PDF_TYPE,
+  extractVideoFirstFrame,
+  prepareReferenceDocument,
+  prepareReferenceImage,
+} from "./attachment";
 
 export type CreditContext = {
   balance: number;
@@ -32,16 +29,41 @@ export type CreditContext = {
 };
 
 /**
- * A logo handed over by the template picker or the wizard.
+ * The one IMAGE attached to this build — from the template picker, the
+ * wizard, directly on this page via the "+" button/paste/drop, OR now as the
+ * first-frame extraction of a directly-attached video (see attachFile below).
+ * Kept as `AttachedLogo`/`logo`/`onLogoChange` rather than renamed to
+ * something like `AttachedImage`: CreateFlow.tsx already imports this exact
+ * shape, and a rename would be cosmetic at best and a compile break at worst.
+ * Direct attachment often is not a logo at all (a screenshot, a product photo,
+ * a video's first frame pasted for colour/style), so the on-page copy below
+ * no longer calls it "your logo" — only the type name does.
  *
- * `dataUrl` is already a `data:image/png;base64,…` produced by
- * components/templates/logo.ts / components/wizard/inline-logo.ts, which both
- * exist to satisfy the one gate in app/api/generate/route.ts. It travels to
- * that route as the `image` field and reaches the model on attempt 1 — see the
- * note in CreateFlow.tsx for why that, and not the brand-kit route, is where a
- * logo picked up here can honestly go.
+ * `dataUrl` is already a `data:image/(png|jpeg|webp);base64,…` — produced by
+ * components/templates/logo.ts / components/wizard/inline-logo.ts for the two
+ * helper flows, and by ./attachment.ts's prepareReferenceImage() (directly, or
+ * via extractVideoFirstFrame()) for a direct attachment. It travels to
+ * app/api/generate/route.ts as the `image` field and reaches the model on
+ * attempt 1 — see the note in CreateFlow.tsx for why that, and not the
+ * brand-kit route, is where an image picked up here can honestly go.
+ *
+ * This and `AttachedDocument` right below are mutually exclusive: there is
+ * exactly one reference-file slot on this page, and it holds either an image
+ * (or a video's extracted frame, which IS an image by the time it reaches
+ * this type) or a PDF, never both — see attachFile's onLogoChange(null) /
+ * onReferenceDocumentChange(null) pairing.
  */
 export type AttachedLogo = { dataUrl: string; bytes: number };
+
+/**
+ * The one PDF attached to this build — the second, newer half of the same
+ * single reference-file slot `AttachedLogo` describes above. `dataUrl` is
+ * `data:application/pdf;base64,…`, produced by ./attachment.ts's
+ * prepareReferenceDocument(). It travels to app/api/generate/route.ts as the
+ * new `document` field, gated to attempt 1 exactly like `image` — see
+ * lib/agent.ts's message construction for both.
+ */
+export type AttachedDocument = { dataUrl: string; bytes: number; name: string };
 
 /** What a completed helper flow hands back to the page. */
 export type AssistResult = {
@@ -86,6 +108,8 @@ export function Composer({
   onChange,
   logo,
   onLogoChange,
+  referenceDocument,
+  onReferenceDocumentChange,
   onAssist,
   onSubmit,
   fromTemplate,
@@ -98,6 +122,12 @@ export function Composer({
       customer handed over, instead of quietly dropping it. */
   logo: AttachedLogo | null;
   onLogoChange: (logo: AttachedLogo | null) => void;
+  /** Same idea as `logo`/`onLogoChange`, for the PDF half of the one
+      reference-file slot — see the note on AttachedDocument above. Named
+      `referenceDocument`, not `document`, so it never shadows the global DOM
+      `document` object inside this component. */
+  referenceDocument: AttachedDocument | null;
+  onReferenceDocumentChange: (document: AttachedDocument | null) => void;
   onAssist: (result: AssistResult) => void;
   onSubmit: () => void;
   fromTemplate: string | null;
@@ -112,6 +142,7 @@ export function Composer({
   // at stays where it was and simply fills in.
   const [pickerOpen, setPickerOpen] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
+  const pushToast = useToast();
 
   const { balance, estimate, cap } = credits;
   const outOfCredits = balance <= 0;
@@ -133,6 +164,91 @@ export function Composer({
     });
   }
 
+  /**
+   * The "+" button, a paste, and a drop onto the box all end up here — one
+   * path so all three agree on what counts as a valid attachment, and there
+   * is exactly one reference-file slot: attaching a new file always replaces
+   * whichever of `logo`/`referenceDocument` was holding it (they never both
+   * hold something at once — each branch below clears the other).
+   *
+   * Three real kinds, three real paths:
+   *   - a PDF is read as bytes and travels as the `document` field — the
+   *     model reads the actual document.
+   *   - a video has NO input path on the Anthropic API at all. What actually
+   *     happens is extractVideoFirstFrame() grabs one still PNG frame and
+   *     runs it through the exact same prepareReferenceImage() an ordinary
+   *     image goes through, so it becomes an `AttachedLogo` like any other
+   *     image and travels as the `image` field. The toast below says exactly
+   *     that — a still frame, not the video — so nobody thinks the model
+   *     watched or listened to anything.
+   *   - anything else goes through prepareReferenceImage() as before; its own
+   *     error message (for a rejected but still-image-shaped type, e.g. HEIC
+   *     or SVG, or for anything not image/video/PDF at all) is the honest
+   *     rejection for everything this composer doesn't support.
+   */
+  async function attachFile(file: File, extraIgnored = 0) {
+    const replacing = logo !== null || referenceDocument !== null;
+
+    if (file.type === PDF_TYPE) {
+      const result = await prepareReferenceDocument(file);
+      if (!result.ok) {
+        pushToast({ tone: "danger", message: result.error });
+        return;
+      }
+      onLogoChange(null);
+      onReferenceDocumentChange({ dataUrl: result.dataUrl, bytes: result.bytes, name: result.name });
+      announceAttachment(
+        "PDF",
+        replacing,
+        extraIgnored,
+        "Kodely will read its text and layout on the first build attempt — it does not become part of the site.",
+      );
+      return;
+    }
+
+    if ((ACCEPTED_VIDEO_TYPES as readonly string[]).includes(file.type)) {
+      const result = await extractVideoFirstFrame(file);
+      if (!result.ok) {
+        pushToast({ tone: "danger", message: result.error });
+        return;
+      }
+      onReferenceDocumentChange(null);
+      onLogoChange({ dataUrl: result.dataUrl, bytes: result.bytes });
+      announceAttachment(
+        "Video's first frame",
+        replacing,
+        extraIgnored,
+        "Kodely only sees that one still image, on the first build attempt — never the motion or audio.",
+      );
+      return;
+    }
+
+    const result = await prepareReferenceImage(file);
+    if (!result.ok) {
+      pushToast({ tone: "danger", message: result.error });
+      return;
+    }
+
+    onReferenceDocumentChange(null);
+    onLogoChange({ dataUrl: result.dataUrl, bytes: result.bytes });
+    announceAttachment("Image", replacing, extraIgnored, "Kodely will look at it on the first build attempt.");
+  }
+
+  // Only one reference file ever reaches the build, so the newest attachment
+  // always wins — this just makes sure that's said out loud rather than the
+  // previous attachment quietly vanishing with no explanation.
+  function announceAttachment(label: string, replacing: boolean, extraIgnored: number, epilogue: string) {
+    const notes: string[] = [];
+    if (replacing) notes.push("replaced what you had attached");
+    if (extraIgnored > 0) {
+      notes.push(`only used one of the ${extraIgnored + 1} files you dropped`);
+    }
+    pushToast({
+      tone: "ok",
+      message: notes.length > 0 ? `${label} attached — ${notes.join("; ")}.` : `${label} attached — ${epilogue}`,
+    });
+  }
+
   function acceptWizard(result: InlineWizardResult) {
     setWizardOpen(false);
     onAssist({
@@ -146,18 +262,24 @@ export function Composer({
 
   return (
     <div className="mx-auto w-full max-w-2xl">
-      <header className="pt-6 text-center sm:pt-14">
-        <h1 className="k-display text-ink">What do you want to build?</h1>
-        <p className="mx-auto mt-3 max-w-xl text-[0.9375rem] leading-relaxed text-ink-2">
-          Describe it in your own words. Kodely writes a real one-page site —
-          React, Tailwind, your copy — and you keep editing it by asking for
-          changes.
-        </p>
-      </header>
+      {/* No top margin here — the parent (CreateFlow) now centers this
+          whole block vertically in the viewport, so extra space above it
+          would push it off-center rather than give it room. */}
+      <PageHero
+        icon={<Hammer className="size-5" aria-hidden />}
+        title="What do you want to build?"
+        description="Describe it in your own words. Kodely writes a real site — React, Tailwind, your copy, as many pages as it actually needs — and you keep editing it by asking for changes."
+      />
 
       <div className="mt-8">
-        <PromptBox value={value} onChange={onChange} onSubmit={onSubmit} canSubmit={ready}>
-          {(fromTemplate !== null || logo !== null) && (
+        <PromptBox
+          value={value}
+          onChange={onChange}
+          onSubmit={onSubmit}
+          canSubmit={ready}
+          onAttachFile={attachFile}
+        >
+          {(fromTemplate !== null || logo !== null || referenceDocument !== null) && (
             <div className="flex flex-col gap-2 px-6 pt-4">
               {fromTemplate !== null && (
                 <div className="flex flex-wrap items-center gap-2">
@@ -173,11 +295,11 @@ export function Composer({
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={logo.dataUrl}
-                    alt="The logo you attached"
+                    alt="The image you attached"
                     className="size-10 shrink-0 rounded-md border border-hair object-contain"
                   />
                   <p className="min-w-0 flex-1 text-xs leading-relaxed text-ink-3">
-                    Your logo travels with this build. Kodely looks at it on the{" "}
+                    This image travels with this build. Kodely looks at it on the{" "}
                     <span className="k-num">first</span> attempt only — about{" "}
                     <span className="k-num">
                       {Math.max(1, Math.round(logo.bytes / 1024))} KB
@@ -190,6 +312,32 @@ export function Composer({
                     size="sm"
                     icon={<X size={14} />}
                     onClick={() => onLogoChange(null)}
+                  >
+                    Remove
+                  </Button>
+                </div>
+              )}
+
+              {referenceDocument !== null && (
+                <div className="flex items-center gap-3">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-md border border-hair bg-surface-2 text-ink-3">
+                    <FileText size={18} aria-hidden />
+                  </div>
+                  <p className="min-w-0 flex-1 text-xs leading-relaxed text-ink-3">
+                    <span className="truncate font-medium text-ink-2">{referenceDocument.name}</span> travels
+                    with this build. Kodely reads its text and layout on the{" "}
+                    <span className="k-num">first</span> attempt only — about{" "}
+                    <span className="k-num">
+                      {Math.max(1, Math.round(referenceDocument.bytes / 1024))} KB
+                    </span>
+                    . It is content and structure guidance, not a file that gets embedded in the
+                    output site.
+                  </p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    icon={<X size={14} />}
+                    onClick={() => onReferenceDocumentChange(null)}
                   >
                     Remove
                   </Button>
@@ -213,23 +361,9 @@ export function Composer({
         </AssistChip>
       </div>
 
-      <div className="mt-5 flex flex-wrap justify-center gap-2">
-        {EXAMPLES.map((example) => (
-          <button
-            key={example}
-            type="button"
-            onClick={() => onChange(example)}
-            className="k-focus rounded-full border border-hair bg-surface px-3 py-1.5 text-xs text-ink-2 shadow-e1 transition-[color,border-color,background] duration-[var(--t-1)] hover:border-line-mid hover:bg-surface-2 hover:text-ink"
-          >
-            {example}
-          </button>
-        ))}
-      </div>
-
       <div className="mt-8">
         <CreditNote
           balance={balance}
-          estimate={estimate}
           outOfCredits={outOfCredits}
           tight={tight}
           cap={cap}
@@ -278,7 +412,6 @@ function AssistChip({
 
 function CreditNote({
   balance,
-  estimate,
   outOfCredits,
   tight,
   cap,
@@ -287,7 +420,6 @@ function CreditNote({
   canTopUp,
 }: {
   balance: number;
-  estimate: { low: number; high: number };
   outOfCredits: boolean;
   tight: boolean;
   cap: CreditContext["cap"];
@@ -297,21 +429,9 @@ function CreditNote({
 }) {
   return (
     <div className="rounded-xl border border-hair bg-surface-2/60 p-4">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-        <p className="text-[0.8125rem] text-ink-2">
-          A first build usually costs{" "}
-          <span className="k-num font-semibold text-ink">
-            {estimate.low}–{estimate.high}
-          </span>{" "}
-          credits.{" "}
-          <span className="text-ink-3">
-            It is a range, not a quote — the real figure depends on how much site you asked for.
-          </span>
-        </p>
-        <p className="text-[0.8125rem] text-ink-2">
-          You have <span className="k-num font-semibold text-ink">{balance}</span>
-        </p>
-      </div>
+      <p className="text-[0.8125rem] text-ink-2">
+        You have <span className="k-num font-semibold text-ink">{balance}</span> credits
+      </p>
 
       <p className="mt-2 text-xs leading-relaxed text-ink-3">
         You are charged only for the attempt you asked for. If the first output doesn’t compile,

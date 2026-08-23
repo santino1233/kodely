@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { ArrowUp, Mic } from "lucide-react";
+import { ArrowUp, Mic, Plus } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
+import { ATTACHMENT_ACCEPT } from "./attachment";
 
 /**
  * The homepage prompt box, on the Create page.
@@ -118,6 +119,7 @@ export function PromptBox({
   onChange,
   onSubmit,
   canSubmit,
+  onAttachFile,
   children,
 }: {
   value: string;
@@ -125,14 +127,27 @@ export function PromptBox({
   onSubmit: () => void;
   /** False while the box is empty, or while a build would be refused outright. */
   canSubmit: boolean;
+  /**
+   * A file arrived via the "+" picker, a paste, or a drop onto the box.
+   * `extraIgnored` is the count of additional files dropped alongside it that
+   * were never looked at — the pipeline only ever attaches one, so the
+   * caller can tell the customer the rest were ignored rather than silently
+   * dropping them with no explanation. PromptBox does no validation of its
+   * own (file type, size, re-encoding): that all lives with the state this
+   * feeds, same as it already did for the wizard/template hand-off.
+   */
+  onAttachFile: (file: File, extraIgnored?: number) => void;
   /** Rendered inside the box, above the textarea — the template badge and the
-      attached-logo row. Inside rather than above so the glow still hugs the
+      attached-image row. Inside rather than above so the glow still hugs the
       one box the customer is looking at. */
   children?: React.ReactNode;
 }) {
   const reduced = useReducedMotion();
   const [focused, setFocused] = useState(false);
   const [listening, setListening] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const dragDepth = useRef(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const speechSupported = useSyncExternalStore(
     NEVER_CHANGES,
     readSpeechSupported,
@@ -170,6 +185,62 @@ export function PromptBox({
   }
 
   useEffect(() => () => recognitionRef.current?.stop(), []);
+
+  // Counted rather than a plain boolean: dragging over a CHILD element (the
+  // textarea, the badge row) fires dragleave on the parent before dragenter
+  // on the child lands, and a boolean flips the drop-target state off for one
+  // frame every time the pointer crosses an inner boundary — a visible
+  // flicker for the whole time the pointer is over the box. The counter only
+  // reaches zero once the pointer has actually left every nested element.
+  function handleDragEnter(e: React.DragEvent) {
+    e.preventDefault();
+    dragDepth.current += 1;
+    setDragOver(true);
+  }
+  function handleDragOver(e: React.DragEvent) {
+    // Required even though it does nothing else: a dragover with no handler
+    // (or one that doesn't preventDefault) tells the browser this element is
+    // not a valid drop target, and the drop event never fires at all.
+    e.preventDefault();
+  }
+  function handleDragLeave(e: React.DragEvent) {
+    e.preventDefault();
+    dragDepth.current = Math.max(0, dragDepth.current - 1);
+    if (dragDepth.current === 0) setDragOver(false);
+  }
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    dragDepth.current = 0;
+    setDragOver(false);
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) onAttachFile(files[0], files.length - 1);
+  }
+
+  function handlePaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
+    const item = Array.from(e.clipboardData.items).find(
+      (it) =>
+        it.kind === "file" &&
+        (it.type.startsWith("image/") ||
+          it.type.startsWith("video/") ||
+          it.type === "application/pdf"),
+    );
+    if (!item) return; // no attachable file on the clipboard — let normal text paste happen
+    const file = item.getAsFile();
+    if (!file) return;
+    // Stops the browser from ALSO inserting a filename or a broken inline
+    // image placeholder into the textarea alongside the real attachment.
+    e.preventDefault();
+    onAttachFile(file);
+  }
+
+  function handlePicked(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    // Cleared unconditionally so picking the SAME file twice in a row still
+    // fires this handler the second time — the browser only emits `change`
+    // on a value transition, and an unchanged `value` would silently no-op.
+    e.target.value = "";
+    if (file) onAttachFile(file);
+  }
 
   return (
     // This wrapper is sized to exactly the composer box — the glow layers
@@ -238,21 +309,43 @@ export function PromptBox({
           frosted quality from backdrop-blur, just not at the cost of
           legibility. */}
       <div
+        onDragEnter={handleDragEnter}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
         className="relative z-10 overflow-hidden rounded-[1.75rem] bg-white/95 backdrop-blur-2xl backdrop-saturate-150 transition-colors duration-300 dark:bg-neutral-950/95"
         style={{
           // No focus-driven glow here — the animated ring behind the box is the
           // only glow, and a second one on focus fought with it. Focus is still
           // signalled (it must be, for keyboard users) but with a quiet border
-          // shift, plus the textarea's own inside outline below.
+          // shift, plus the textarea's own inside outline below. Dragging a
+          // file over the box outranks both: it is the clearest sign of the
+          // three that something is about to happen.
           border: `1.5px solid ${
-            focused
-              ? "color-mix(in srgb, white 45%, var(--accent) 55%)"
-              : "color-mix(in srgb, white 75%, var(--accent) 25%)"
+            dragOver
+              ? "var(--brand)"
+              : focused
+                ? "color-mix(in srgb, white 45%, var(--accent) 55%)"
+                : "color-mix(in srgb, white 75%, var(--accent) 25%)"
           }`,
           boxShadow: "var(--sh-s), inset 0 1px 0 rgba(255,255,255,0.5)",
         }}
       >
         {children}
+
+        {/* The visible drop-target state the drag-and-drop requirement asks
+            for. Sits above everything else in the box but never intercepts
+            the drop itself — the box element it's layered over already owns
+            the drag handlers, and a pointer-events-none child never steals
+            dragenter/dragleave from its parent. */}
+        {dragOver && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center rounded-[1.75rem] bg-brand-tint/90 backdrop-blur-sm"
+          >
+            <p className="k-label text-brand-ink">Drop file to attach</p>
+          </div>
+        )}
 
         {/* The placeholder was the only label, and it disappears on the first
             keystroke. A visible one would change the design, so this is a
@@ -266,6 +359,7 @@ export function PromptBox({
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
+          onPaste={handlePaste}
           onKeyDown={(e) => {
             // Cmd/Ctrl+Enter builds; plain Enter makes a newline. The homepage
             // box sends on plain Enter because what it sends is a one-liner and
@@ -291,12 +385,35 @@ export function PromptBox({
           className="w-full resize-none rounded-[1.6rem] bg-transparent px-6 pb-14 pt-5 text-[15px] leading-relaxed text-neutral-900 outline-none placeholder:text-neutral-500 focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-[var(--brand-ring)] dark:text-white dark:placeholder:text-neutral-400"
         />
 
-        {/* Rendered only once the client has confirmed the Web Speech API
-            exists — see the useSyncExternalStore note above. Absent (not
-            disabled) everywhere it would not work, which is the honest
-            treatment for a capability the browser simply does not have. */}
-        {speechSupported && (
-          <div className="absolute bottom-3 left-3 flex items-center gap-1">
+        <div className="absolute bottom-3 left-3 flex items-center gap-1">
+          {/* The "+" IS the attach affordance for this page — there is no
+              second, separately-labelled "attach reference image" button
+              alongside it. Hidden input + a real button wrapping it, rather
+              than a bare <input type="file">, because a file input cannot be
+              styled to match the rest of this hand-rolled control row. */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={ATTACHMENT_ACCEPT}
+            tabIndex={-1}
+            aria-hidden
+            className="sr-only"
+            onChange={handlePicked}
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            aria-label="Attach a reference file"
+            className="k-focus flex h-9 w-9 items-center justify-center rounded-full text-neutral-500 transition-colors hover:bg-black/5 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-white/10 dark:hover:text-white"
+          >
+            <Plus size={16} strokeWidth={2} />
+          </button>
+
+          {/* Rendered only once the client has confirmed the Web Speech API
+              exists — see the useSyncExternalStore note above. Absent (not
+              disabled) everywhere it would not work, which is the honest
+              treatment for a capability the browser simply does not have. */}
+          {speechSupported && (
             <button
               type="button"
               onClick={toggleListening}
@@ -323,8 +440,8 @@ export function PromptBox({
               )}
               <Mic size={16} strokeWidth={2} className="relative" />
             </button>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* The one brand-gradient fill on this view — the primary action. */}
         <motion.button

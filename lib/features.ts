@@ -217,6 +217,16 @@ Also keep a mailto: link to [your email address] and a tel: link to [your phone 
     category: "The practical details",
     fragment: `An "Areas we cover" section listing [the areas you cover] as a compact, scannable list of place names — chips or a multi-column list rather than a paragraph — with one line above it saying how far you will travel and whether there is a call-out charge, left as a bracketed placeholder if not supplied.`,
   },
+  {
+    id: "list-filter",
+    label: "A filter or search box over your own list",
+    description:
+      "A search box that narrows a menu, price list or catalogue already on the page as you type.",
+    category: "The practical details",
+    caveat:
+      "This filters what is already written into the page — it cannot search a growing catalogue or a database, because a generated site has neither.",
+    fragment: `A live filter box above a list already on the page (menu items, services, price tiers, portfolio pieces): a text input that narrows the visible items as the visitor types, implemented with plain client-side JavaScript matching against the item text already in the DOM — no network request, no backend, no external library. Show a "No matches" message rather than an empty gap when nothing matches. This only works over the fixed set of items written into this page at build time, not a growing or externally-hosted catalogue.`,
+  },
 
   // ── What you offer ───────────────────────────────────────────────────────
   {

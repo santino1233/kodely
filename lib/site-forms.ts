@@ -1,8 +1,23 @@
-import { createHash } from "node:crypto";
 import { db } from "@/lib/db";
 import { isMailConfigured, sendMail } from "@/lib/mail";
 import { appUrl } from "@/lib/notifications/templates";
-import { bareHost, siteHostAllowed } from "@/app/api/site/[slug]/site-host";
+import { siteHostAllowed } from "@/app/api/site/[slug]/site-host";
+import {
+  PATH_IDENTIFIER_RE,
+  STRICT_EMAIL_RE,
+  clientIp,
+  createBurstLimiter,
+  escapeHtml,
+  hashIp,
+  htmlReply,
+  isLikelySpam,
+  nextPath,
+  originAllowed,
+  parseFields,
+  readCapped,
+  siteBase,
+  siteNotFound,
+} from "@/lib/site-endpoint";
 
 // =============================================================================
 // FORM SUBMISSIONS FROM PUBLISHED GENERATED SITES
@@ -36,8 +51,14 @@ import { bareHost, siteHostAllowed } from "@/app/api/site/[slug]/site-host";
 // write time, and escaped again on the way into the notification email —
 // where nothing submitted may reach a header except one strictly-validated
 // address (see replyToFor).
-
-const SITES_BASE = (process.env.KODELY_SITES_BASE ?? "kodely.site").trim().toLowerCase();
+//
+// SHARED MACHINERY
+// ----------------
+// Host/origin checks, body reading, field parsing, IP hashing, the burst
+// limiter shape and the HTML-reply plumbing are identical to
+// lib/site-records.ts's needs and live in lib/site-endpoint.ts. Only what is
+// genuinely specific to a form submission — the model written, the
+// notification email, this endpoint's exact wording — stays here.
 
 /** First path segment of a submission URL: `/__forms/<formName>`. */
 export const FORM_PATH_SEGMENT = "__forms";
@@ -53,16 +74,8 @@ export const FORM_PATH_SEGMENT = "__forms";
 
 /** Bytes of request body ever read. Anything larger is refused unread. */
 const MAX_BODY_BYTES = 32 * 1024;
-/** Stored fields, excluding `_`-prefixed control fields. */
-const MAX_FIELDS = 12;
-const MAX_KEY_LENGTH = 64;
-const MAX_VALUE_LENGTH = 5000;
 /** A form name is part of a URL and is stored; keep it boring. */
-const FORM_NAME_RE = /^[a-z0-9][a-z0-9-]{0,31}$/;
-/** Field names the builder may emit. Rejecting anything else keeps the stored
- *  JSON's key space to identifiers, so no key can collide with object
- *  internals or need escaping anywhere downstream. */
-const FIELD_NAME_RE = /^[A-Za-z][A-Za-z0-9_-]{0,63}$/;
+const FORM_NAME_RE = PATH_IDENTIFIER_RE;
 
 // ── Rate limits ──────────────────────────────────────────────────────────────
 //
@@ -85,6 +98,8 @@ const FIELD_NAME_RE = /^[A-Za-z][A-Za-z0-9_-]{0,63}$/;
 
 const BURST_LIMIT = 8;
 const BURST_WINDOW_MS = 5 * 60_000;
+const BURST_MAX_KEYS = 20_000;
+const burst = createBurstLimiter({ limit: BURST_LIMIT, windowMs: BURST_WINDOW_MS, maxKeys: BURST_MAX_KEYS });
 
 const IP_HOUR_LIMIT = 15;
 const IP_DAY_LIMIT = 50;
@@ -100,275 +115,9 @@ const EMAIL_MAX_PER_HOUR = 10;
  *  almost certainly not one. Advisory only — see `_t` in the markup contract. */
 const MIN_FILL_MS = 2_000;
 
-// ── IP handling ──────────────────────────────────────────────────────────────
-
-/**
- * The client address, or the shared bucket for traffic that did not come
- * through the edge.
- *
- * Identical reasoning to clientIp() in lib/rate-limit.ts, which cannot be
- * imported (that file is not mine to change and does not export it): only
- * `cf-connecting-ip` is trustworthy here. Cloudflare sets it on every request,
- * overwriting whatever the client sent. `x-forwarded-for`'s first entry is
- * attacker-chosen — Cloudflare APPENDS rather than replaces — so keying on it
- * hands an attacker a fresh bucket per request and the limiter does nothing.
- * (app/api/contact/route.ts still does exactly that; this does not copy it.)
- *
- * No header ⇒ direct-to-origin or local dev ⇒ one shared, strict bucket.
- * Fails closed: such traffic is throttled collectively, never exempted.
- */
-function clientIp(req: Request): string {
-  return req.headers.get("cf-connecting-ip")?.trim().toLowerCase() || "no-edge";
-}
-
-/**
- * What actually gets stored. A raw visitor IP on a contact-form row is personal
- * data the site owner has no need for and we have no reason to hold; a salted
- * digest still supports rate limiting and abuse triage and is useless for
- * anything else. Stable across restarts on purpose — a per-process salt would
- * hand every address a fresh bucket on each deploy.
- */
+/** Salt is form-specific so a form submission's ipHash and a site record's
+ *  ipHash are never comparable to each other, even for the same visitor. */
 const IP_SALT = process.env.FORM_IP_SALT ?? "kodely:form-submission:v1";
-function hashIp(ip: string): string {
-  return createHash("sha256").update(`${IP_SALT}:${ip}`).digest("hex");
-}
-
-// ── Layer 1: in-process burst limiter ────────────────────────────────────────
-
-const burst = new Map<string, number[]>();
-const BURST_MAX_KEYS = 20_000;
-
-/**
- * Bound the map without ever letting a flood of unique keys wipe it.
- *
- * Deliberately NOT the wholesale `clear()` used by checkEnhanceRateLimit and
- * app/api/contact/route.ts: those guard authenticated or low-value paths, while
- * here a clear would be a documented way for an attacker to reset the counter
- * that is throttling them. Expired entries go first, then the least recently
- * active — an attacker's own bucket is the most recently active, so it is the
- * last thing evicted. Same reasoning as sweep() in lib/rate-limit.ts.
- */
-function sweepBurst(now: number): void {
-  if (burst.size <= BURST_MAX_KEYS) return;
-  for (const [key, hits] of burst) {
-    if (hits.length === 0 || hits[hits.length - 1] <= now - BURST_WINDOW_MS) burst.delete(key);
-  }
-  if (burst.size <= BURST_MAX_KEYS) return;
-  const byLastSeen = [...burst.entries()].sort(
-    (a, b) => a[1][a[1].length - 1] - b[1][b[1].length - 1],
-  );
-  for (const [key] of byLastSeen.slice(0, burst.size - BURST_MAX_KEYS)) burst.delete(key);
-}
-
-function burstLimited(ipHash: string): boolean {
-  const now = Date.now();
-  sweepBurst(now);
-  const recent = (burst.get(ipHash) ?? []).filter((t) => t > now - BURST_WINDOW_MS);
-  if (recent.length >= BURST_LIMIT) {
-    burst.set(ipHash, recent);
-    return true;
-  }
-  recent.push(now);
-  burst.set(ipHash, recent);
-  return false;
-}
-
-// ── Parsing ──────────────────────────────────────────────────────────────────
-
-/**
- * Read at most `MAX_BODY_BYTES`, then stop.
- *
- * `await req.text()` would buffer whatever was sent, and Content-Length is a
- * claim by the caller, not a fact — so the length header is only used as a fast
- * pre-check and the stream is counted as it arrives. Returns null when the cap
- * is passed, and cancels the rest rather than draining it.
- */
-async function readCapped(req: Request): Promise<string | null> {
-  const declared = Number(req.headers.get("content-length") ?? "");
-  if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) return null;
-
-  const body = req.body;
-  if (!body) return "";
-
-  const reader = body.getReader();
-  const chunks: Buffer[] = [];
-  let total = 0;
-  let done = false;
-  while (!done) {
-    const next = await reader.read();
-    done = next.done;
-    if (next.value) {
-      total += next.value.byteLength;
-      if (total > MAX_BODY_BYTES) {
-        await reader.cancel().catch(() => undefined);
-        return null;
-      }
-      chunks.push(Buffer.from(next.value));
-    }
-  }
-  return Buffer.concat(chunks).toString("utf8");
-}
-
-/** Collapse control characters, normalise newlines, trim. Never HTML-escapes:
- *  escaping belongs at each output boundary, not in storage, or the stored
- *  value stops being what the visitor typed. */
-function cleanValue(raw: string): string {
-  return raw
-    .replace(/\r\n?/g, "\n")
-    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
-    .trim();
-}
-
-type ParsedBody =
-  | { ok: true; fields: Record<string, string>; control: Record<string, string> }
-  | { ok: false; status: number; message: string };
-
-function parseFields(raw: string): ParsedBody {
-  let params: URLSearchParams;
-  try {
-    params = new URLSearchParams(raw);
-  } catch {
-    return { ok: false, status: 400, message: "That form could not be read." };
-  }
-
-  const fields: Record<string, string> = {};
-  const control: Record<string, string> = {};
-  const seen = new Set<string>();
-
-  for (const key of params.keys()) {
-    if (seen.has(key)) continue;
-    seen.add(key);
-
-    if (key.length > MAX_KEY_LENGTH) {
-      return { ok: false, status: 400, message: "That form has an unexpected field." };
-    }
-
-    // `_`-prefixed names are control fields: the honeypot, the timing token,
-    // the post-submit destination. They are never stored and never emailed,
-    // which is also what keeps the honeypot's value out of the owner's inbox.
-    if (key.startsWith("_")) {
-      control[key] = cleanValue(params.get(key) ?? "").slice(0, 200);
-      continue;
-    }
-
-    if (!FIELD_NAME_RE.test(key)) {
-      return { ok: false, status: 400, message: "That form has an unexpected field." };
-    }
-
-    // Repeated names (a checkbox group) collapse to one field, not many.
-    const value = cleanValue(params.getAll(key).join(", "));
-    if (value.length > MAX_VALUE_LENGTH) {
-      return {
-        ok: false,
-        status: 413,
-        message: `One of those answers is too long (${MAX_VALUE_LENGTH} characters max).`,
-      };
-    }
-    if (value === "") continue;
-
-    if (Object.keys(fields).length >= MAX_FIELDS) {
-      return { ok: false, status: 400, message: "That form has too many fields." };
-    }
-    fields[key] = value;
-  }
-
-  if (Object.keys(fields).length === 0) {
-    return { ok: false, status: 400, message: "Please fill in the form before sending it." };
-  }
-  return { ok: true, fields, control };
-}
-
-// ── Responses ────────────────────────────────────────────────────────────────
-//
-// A native form POST is a NAVIGATION: whatever comes back is what the visitor
-// sees. So every reply here is a small, self-contained HTML page rather than
-// JSON, and it echoes nothing that was submitted.
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-// Our own page, not the customer's, so it gets its own policy rather than
-// SANDBOX_CSP: it needs nothing but inline styles and must never be framed.
-const REPLY_CSP =
-  "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
-
-function page(status: number, title: string, body: string, backHref: string): Response {
-  const html = `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="robots" content="noindex">
-    <title>${escapeHtml(title)}</title>
-  </head>
-  <body style="margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:#f6f7f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#111111;">
-    <main style="max-width:420px;text-align:center;">
-      <h1 style="margin:0 0 12px 0;font-size:20px;font-weight:600;letter-spacing:-0.01em;">${escapeHtml(title)}</h1>
-      <p style="margin:0 0 20px 0;font-size:15px;line-height:1.6;color:#4b5563;">${escapeHtml(body)}</p>
-      <a href="${escapeHtml(backHref)}" style="display:inline-block;padding:10px 18px;background:#111111;color:#ffffff;text-decoration:none;border-radius:8px;font-size:15px;font-weight:600;">Back to the site</a>
-    </main>
-  </body>
-</html>
-`;
-  return new Response(html, {
-    status,
-    headers: {
-      "Content-Type": "text/html; charset=utf-8",
-      "Content-Security-Policy": REPLY_CSP,
-      "X-Content-Type-Options": "nosniff",
-      "Referrer-Policy": "no-referrer",
-      "Cache-Control": "no-store",
-    },
-  });
-}
-
-/**
- * The reply for "this site does not exist, is not published, or you are asking
- * from a host that may not serve it".
- *
- * One response for all three on purpose, and byte-compatible in meaning with
- * the GET handler's 404: a caller probing for which slugs exist, or which are
- * published, learns nothing from the difference.
- */
-function notFound(): Response {
-  return new Response("Site not found.", {
-    status: 404,
-    headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
-  });
-}
-
-/**
- * Where "Back to the site" and `_next` point.
- *
- * On the branded subdomain the site is at `/`. On the staging path form
- * (staging.kodely.me/api/site/<slug>/ — see site-host.ts) it is one directory
- * deep, and a bare `/` would leave the customer's site entirely.
- */
-function siteBase(host: string, slug: string): string {
-  return bareHost(host) === `${slug}.${SITES_BASE}` ? "/" : `/api/site/${slug}/`;
-}
-
-/**
- * An optional post-submit destination, resolved against the site's own base.
- *
- * Only a path, never a URL: it must start with a single `/`, and `//evil.example`
- * (a protocol-relative URL, which is a cross-origin redirect wearing a path's
- * clothes) is rejected along with anything carrying a scheme or a backslash.
- * So this cannot become an open redirect, whatever the builder emits.
- */
-function nextPath(control: Record<string, string>, base: string): string | null {
-  const raw = control._next;
-  if (!raw) return null;
-  if (!/^\/[A-Za-z0-9\-._~!$&'()*+,;=:@%/?#]*$/.test(raw)) return null;
-  if (raw.startsWith("//")) return null;
-  return `${base}${raw.slice(1)}`;
-}
 
 // ── Notification email ───────────────────────────────────────────────────────
 //
@@ -398,9 +147,11 @@ function headerSafe(value: string, max = 200): string {
  *
  * From is never the visitor: sending as their domain fails its SPF/DMARC. Same
  * reasoning as sendContactEmail() in lib/mail.ts, and sendMail() enforces it.
+ *
+ * STRICT_EMAIL_RE itself now lives in lib/site-endpoint.ts — lib/site-records.ts
+ * needs the identical "is this plausibly an email" check for its own reply
+ * page, and a second regex here would only be able to drift from this one.
  */
-const STRICT_EMAIL_RE = /^[A-Za-z0-9!#$%&'*+/=?^_`{|}~.-]{1,64}@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$/;
-
 function replyToFor(fields: Record<string, string>): string | undefined {
   const candidate = fields.email ?? fields.Email ?? "";
   if (candidate.length > 200) return undefined;
@@ -511,32 +262,16 @@ export async function submitSiteForm(
   // Same gate as GET, and for the same reason: the proxy is explicit that it is
   // never the only check, and a POST that stores data is the last place to rely
   // on one. A wrong host is indistinguishable from a missing site.
-  if (!siteHostAllowed(host, slug)) return notFound();
+  if (!siteHostAllowed(host, slug)) return siteNotFound();
 
-  if (path.length !== 2 || path[0] !== FORM_PATH_SEGMENT) return notFound();
+  if (path.length !== 2 || path[0] !== FORM_PATH_SEGMENT) return siteNotFound();
   const formName = path[1].toLowerCase();
-  if (!FORM_NAME_RE.test(formName)) return notFound();
+  if (!FORM_NAME_RE.test(formName)) return siteNotFound();
 
   const base = siteBase(host, slug);
 
-  // A browser always sends Origin on a cross-document POST, and for a form on
-  // the site itself it is the site's own origin. Requiring it costs nothing and
-  // turns away the simplest scripted floods and any other page trying to post
-  // here on a visitor's behalf. It is FORGEABLE by anything that is not a
-  // browser — this is a filter, not an authorisation check, and nothing below
-  // depends on it being true.
-  const origin = req.headers.get("origin");
-  if (!origin) {
-    return page(403, "That didn't send", "This form has to be submitted from the site itself.", base);
-  }
-  let originHost: string;
-  try {
-    originHost = new URL(origin).host;
-  } catch {
-    return page(403, "That didn't send", "This form has to be submitted from the site itself.", base);
-  }
-  if (!siteHostAllowed(originHost, slug)) {
-    return page(403, "That didn't send", "This form has to be submitted from the site itself.", base);
+  if (!originAllowed(req, slug)) {
+    return htmlReply(403, "That didn't send", "This form has to be submitted from the site itself.", base);
   }
 
   // Only the encoding a plain HTML form produces. multipart exists for file
@@ -545,23 +280,23 @@ export async function submitSiteForm(
   // the page itself from being.
   const contentType = (req.headers.get("content-type") ?? "").split(";")[0].trim().toLowerCase();
   if (contentType !== "application/x-www-form-urlencoded") {
-    return page(415, "That didn't send", "This form was submitted in a format we don't accept.", base);
+    return htmlReply(415, "That didn't send", "This form was submitted in a format we don't accept.", base);
   }
 
-  const ipHash = hashIp(clientIp(req));
+  const ipHash = hashIp(IP_SALT, clientIp(req));
 
   // Layer 1, before anything touches the database.
-  if (burstLimited(ipHash)) {
-    return page(429, "Too many messages", "Please wait a few minutes and try again.", base);
+  if (burst.limited(ipHash)) {
+    return htmlReply(429, "Too many messages", "Please wait a few minutes and try again.", base);
   }
 
-  const raw = await readCapped(req);
+  const raw = await readCapped(req, MAX_BODY_BYTES);
   if (raw === null) {
-    return page(413, "That message is too long", "Please shorten it and try again.", base);
+    return htmlReply(413, "That message is too long", "Please shorten it and try again.", base);
   }
 
   const parsed = parseFields(raw);
-  if (!parsed.ok) return page(parsed.status, "That didn't send", parsed.message, base);
+  if (!parsed.ok) return htmlReply(parsed.status, "That didn't send", parsed.message, base);
   const { fields, control } = parsed;
 
   const project = await db.project.findUnique({
@@ -575,7 +310,7 @@ export async function submitSiteForm(
   });
   // PUBLISHED only. A draft site is not reachable on this host anyway, but the
   // storage decision is made here, not inferred from routing.
-  if (!project || !project.publishedAt) return notFound();
+  if (!project || !project.publishedAt) return siteNotFound();
 
   // Layers 2 and 3. Two bounded reads rather than four counts: the day window
   // contains the hour window, and `take` caps the work at one row past the
@@ -603,32 +338,19 @@ export async function submitSiteForm(
   const projectHour = inHour(projectRows);
 
   if (ipHour >= IP_HOUR_LIMIT || ipRows.length >= IP_DAY_LIMIT) {
-    return page(429, "Too many messages", "Please try again later.", base);
+    return htmlReply(429, "Too many messages", "Please try again later.", base);
   }
   if (projectHour >= PROJECT_HOUR_LIMIT || projectRows.length >= PROJECT_DAY_LIMIT) {
     // Deliberately the same wording as the per-IP refusal: a visitor should not
     // be told that somebody else has filled this site's quota.
-    return page(429, "Too many messages", "Please try again later.", base);
+    return htmlReply(429, "Too many messages", "Please try again later.", base);
   }
 
-  // Honeypot: a field no human can see, so anything in it is automation. The
-  // row is KEPT and flagged rather than dropped — the schema's own comment asks
-  // for that, so a false positive is recoverable and the rate is measurable —
-  // and it still consumes quota, so flagging is not a cheap way to write rows.
-  const trapped = (control._gotcha ?? "") !== "";
-
-  // Timing, advisory: only ever a verdict when the token is present and sane.
-  // The page is static and cached, so this can only be set by the tiny inline
-  // script in the markup contract; a no-JS visitor sends nothing and is judged
-  // on the honeypot alone.
-  const startedAt = Number(control._t ?? "");
-  const tooFast =
-    Number.isFinite(startedAt) &&
-    startedAt > now - 24 * 60 * 60_000 &&
-    startedAt <= now &&
-    now - startedAt < MIN_FILL_MS;
-
-  const spam = trapped || tooFast;
+  // Honeypot + timing: the row is KEPT and flagged rather than dropped — the
+  // schema's own comment asks for that, so a false positive is recoverable and
+  // the rate is measurable — and it still consumes quota, so flagging is not a
+  // cheap way to write rows.
+  const spam = isLikelySpam(control, now, MIN_FILL_MS);
 
   await db.formSubmission.create({
     data: { projectId: project.id, formName, fields, ipHash, spam },
@@ -658,7 +380,7 @@ export async function submitSiteForm(
 
   // A spam-flagged submitter gets the ordinary reply: telling a bot it was
   // caught only teaches it to try another shape.
-  return page(200, "Thanks — that's been sent", "We'll get back to you shortly.", base);
+  return htmlReply(200, "Thanks — that's been sent", "We'll get back to you shortly.", base);
 }
 
 // ── RESIDUALS ────────────────────────────────────────────────────────────────

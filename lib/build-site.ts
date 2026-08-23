@@ -15,6 +15,24 @@ const BUILD_TIMEOUT_MS = 60_000;
 
 export class BuildError extends Error {}
 
+// The one binary file type this pipeline knows how to carry. FileMap is
+// Record<string, string> end to end (every ProjectFile.content column is
+// text), so a real .woff2 — the vendored, foundation-seeded fonts in
+// lib/foundation-fonts.ts, never something the agent writes itself — travels
+// as base64 rather than raw bytes. Both ends of this file agree on the
+// encoding: writeSourceFile below decodes it back to real bytes before a
+// build touches it, and readDistTree re-encodes whatever Vite emitted to
+// dist/fonts/*.woff2 (an unmodified copy of the same file, since Vite copies
+// public/ verbatim) the same way, so the round trip is lossless. The site and
+// preview serving routes decode it a second time, right before the response
+// goes out, back into the real binary the browser expects.
+const BINARY_EXTENSIONS = new Set([".woff2"]);
+
+function isBinaryPath(path: string): boolean {
+  const dot = path.lastIndexOf(".");
+  return dot !== -1 && BINARY_EXTENSIONS.has(path.slice(dot));
+}
+
 /**
  * Compiles a project's source files into static output via `vite build`,
  * in a throwaway directory, bounded by a timeout. Never runs `npm install`
@@ -29,7 +47,11 @@ export async function buildSite(sourceFiles: FileMap): Promise<FileMap> {
     for (const [path, content] of Object.entries(sourceFiles)) {
       const fullPath = join(workDir, path);
       await mkdir(dirname(fullPath), { recursive: true });
-      await writeFile(fullPath, content, "utf8");
+      if (isBinaryPath(path)) {
+        await writeFile(fullPath, Buffer.from(content, "base64"));
+      } else {
+        await writeFile(fullPath, content, "utf8");
+      }
     }
 
     // "junction" on Windows, "dir" elsewhere. A Windows directory symlink
@@ -132,10 +154,18 @@ async function readDistTree(dir: string): Promise<FileMap> {
         await walk(full, rel);
       } else {
         const ext = entry.name.slice(entry.name.lastIndexOf("."));
-        if (!TEXT_EXTENSIONS.has(ext)) continue; // no binary assets — matches the inline-SVG/data-URI-only contract
+        // Binary is allowed for exactly the one extension the foundation
+        // seeds itself (see BINARY_EXTENSIONS above) — everything else stays
+        // text-only, matching the inline-SVG/data-URI-only contract the agent
+        // is prompted with for images. This is not a door the agent can walk
+        // through: it never writes a .woff2 file, only references the ones
+        // already sitting in public/fonts/ from project creation.
+        if (!TEXT_EXTENSIONS.has(ext) && !BINARY_EXTENSIONS.has(ext)) continue;
         const size = (await stat(full)).size;
         if (size > 2_000_000) continue; // guard against something huge slipping through
-        files[rel] = await readFile(full, "utf8");
+        files[rel] = BINARY_EXTENSIONS.has(ext)
+          ? (await readFile(full)).toString("base64")
+          : await readFile(full, "utf8");
       }
     }
   }

@@ -148,6 +148,170 @@ model FormSubmission {
   @@index([createdAt])
 }
 
+// A generic record written back by a PUBLISHED generated site — the storage
+// primitive behind "Phase 0" of real backend-backed site features (bookings,
+// client portals, simple data), generalising FormSubmission the same way
+// `/__records/<kind>` generalises `/__forms/<name>`. See lib/site-records.ts.
+//
+// This model carries NO product logic: `kind` is an arbitrary short
+// identifier chosen by whatever the builder generates (a form, a listing, a
+// booking, a CRM row — anything), and `fields` is an arbitrary JSON payload
+// under the same write-time discipline as FormSubmission.fields (validated
+// key names, capped sizes). Nothing here assumes a shape, checks for
+// conflicts, or knows what a "booking" or a "listing" is — that is
+// deliberately future work, not this table's job.
+model SiteRecord {
+  id        String   @id @default(cuid())
+  projectId String
+  /// Which kind of record this is, when a site writes more than one — e.g.
+  /// "booking", "listing", or anything else a generated site invents. Same
+  /// regex discipline as FormSubmission.formName; validated at the endpoint,
+  /// never trusted as-is.
+  kind      String
+  /// The record's own payload. Untrusted public input — never rendered as
+  /// HTML, never interpolated into a query, and capped hard at write time,
+  /// exactly like FormSubmission.fields.
+  fields    Json
+  /// Lets a record be superseded or cancelled without deleting history.
+  /// "active" until something later gives it a reason to change; Phase 0
+  /// writes nothing else here.
+  status    String   @default("active")
+  /// For rate limiting and abuse triage only. Not shown to the site owner.
+  /// Same salted-hash approach as FormSubmission.ipHash.
+  ipHash    String?
+  /// Set when it looks like spam, same honeypot-flag pattern as
+  /// FormSubmission.spam. Kept rather than dropped, so a false positive is
+  /// recoverable and the rate is measurable.
+  spam      Boolean  @default(false)
+  /// SHA-256 of a random per-record token, salted the same way ipHash is
+  /// (see RECORD_EDIT_TOKEN_SALT in lib/site-records.ts). Never the raw
+  /// token — that is handed to the submitter exactly once, in the reply
+  /// page, and never stored. Null for a record created before this column
+  /// existed, or if generation somehow failed; either way, a null hash
+  /// simply means no visitor-facing manage link works for that row — the
+  /// project owner can still act on it from the authenticated dashboard.
+  editTokenHash String?
+  /// Which visitor (if any) created this record — stamped ONLY when a valid
+  /// SiteSession cookie was present on the same-origin POST that created it
+  /// (see resolveSiteVisitor()/submitSiteRecord() in lib/site-auth.ts and
+  /// lib/site-records.ts). Null for every anonymous submission, which remains
+  /// the common case: this is an optional linkage, never a new requirement on
+  /// what a record can be. Cascade: a visitor's own rows disappear with them,
+  /// matching SiteSession/SiteLoginToken below — none of this is retained
+  /// data the project owner has an independent claim to once the visitor
+  /// (and their per-project identity) is gone.
+  siteVisitorId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  siteVisitor SiteVisitor? @relation(fields: [siteVisitorId], references: [id], onDelete: Cascade)
+
+  // The owner's list view (filtered by kind) and the per-project rate-limit
+  // queries both scan this shape.
+  @@index([projectId, kind, createdAt])
+  // data-kodely-mine's read path: "this kind, this visitor" — see
+  // renderSiteRecords() in lib/site-record-render.ts.
+  @@index([projectId, kind, siteVisitorId])
+}
+
+// ── Visitor accounts on a PUBLISHED generated site — magic-link only ────────
+//
+// A COMPLETELY SEPARATE trust domain from Kodely's own portal auth (User /
+// Session / lib/auth.ts, above): a visitor signing into a generated site at
+// <slug>.kodely.site is a stranger to Kodely who happens to be looking at one
+// customer's site, never a Kodely account holder, and must never be
+// confusable with one. Hence dedicated tables (not User/Session), a
+// dedicated cookie (kodely_site_session, never kodely_session), and no
+// identity linking across projects: the same email on two different
+// generated sites is two different, uncorrelated SiteVisitor rows, which
+// keeps this simple and avoids a real cross-site privacy/correlation
+// problem. See lib/site-auth.ts.
+//
+// Passwords are NEVER part of this system, on purpose — see the header
+// comment in lib/site-auth.ts for why magic-link is the only option the
+// builder model is ever taught.
+model SiteVisitor {
+  id        String   @id @default(cuid())
+  projectId String
+  email     String
+  createdAt DateTime @default(now())
+
+  project     Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  loginTokens SiteLoginToken[]
+  sessions    SiteSession[]
+  records     SiteRecord[]
+
+  // One identity per (project, email) — the find-or-create in
+  // requestSiteLogin() relies on this being enforceable, not just conventional.
+  @@unique([projectId, email])
+}
+
+// A one-time, time-limited magic-link token — the ENTIRE authentication
+// mechanism for a site visitor. Never a password, never anything a visitor
+// chooses or types beyond their email address.
+model SiteLoginToken {
+  id            String    @id @default(cuid())
+  siteVisitorId String
+  /// Salted SHA-256 of the raw token mailed to the visitor — same discipline
+  /// as SiteRecord.editTokenHash (RECORD_EDIT_TOKEN_SALT) and Session.tokenHash
+  /// in lib/auth.ts: the raw value is handed out exactly once, by email, and
+  /// never stored.
+  tokenHash String
+  /// 15 minutes from creation. A magic link is meant to be used within the
+  /// same browsing session it was requested in, not saved for later — a much
+  /// tighter window than SiteSession's 30 days deliberately, since this token
+  /// alone is what proves the email was really read.
+  expiresAt DateTime
+  /// Null until consumed, then stamped — the one-time-use guard. A used (or
+  /// expired) token must never authenticate again; verifySiteLogin() checks
+  /// both.
+  usedAt DateTime?
+
+  siteVisitor SiteVisitor @relation(fields: [siteVisitorId], references: [id], onDelete: Cascade)
+
+  // The verify lookup is "find by tokenHash" — same shape as
+  // Session.tokenHash's unique index, but not unique here: a NEW token is
+  // minted on every login request rather than reusing/rotating one row (an
+  // old, still-live token from an earlier request must keep working, or
+  // resending a link would silently invalidate the one already in the
+  // visitor's inbox), and two independently-random 256-bit tokens colliding
+  // is not a real possibility worth a unique constraint over.
+  @@index([tokenHash])
+}
+
+// The actual signed-in session behind the kodely_site_session cookie —
+// mirrors Session in lib/auth.ts in shape, deliberately not in table.
+model SiteSession {
+  id            String   @id @default(cuid())
+  siteVisitorId String
+  /// Denormalised from siteVisitor.projectId, mirroring FormSubmission's own
+  /// denormalisation habit — resolveSiteVisitor() (the GET route's per-request
+  /// "who is this" check, and the record-creation stamping path) needs a
+  /// fast, single-column "is this session valid FOR THIS PROJECT" test, and
+  /// without this it would need a join on every request that only exists to
+  /// re-derive a value that can never change for a given session.
+  projectId String
+  /// Salted SHA-256 of the raw cookie value. Same reasoning as every other
+  /// token hash in this file: a database read never yields a usable cookie.
+  tokenHash String   @unique
+  /// 30 days from creation — same lifetime as the portal's own Session, and
+  /// for the same reason (SESSION_DAYS in lib/auth.ts): long enough that a
+  /// returning visitor stays signed in, refreshed by signing in again via a
+  /// fresh magic link rather than by any rolling-renewal logic here.
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  siteVisitor SiteVisitor @relation(fields: [siteVisitorId], references: [id], onDelete: Cascade)
+
+  // resolveSiteVisitor()'s only query: "this hash, still valid, for this
+  // project" — tokenHash is already unique above, but the project scope is
+  // what actually enforces that a session minted on Site A can never resolve
+  // a visitor "for" Site B, so it earns its own index rather than relying on
+  // the unique one alone.
+  @@index([projectId, tokenHash])
+}
+
 // Pre-auth attempt counter for login and signup.
 //
 // Exists because the limiter that guards them cannot key on a user id — there
@@ -421,9 +585,11 @@ model Project {
   messages    Message[]
   builds      Build[]
   submissions FormSubmission[]
+  records     SiteRecord[]
   // SetNull, not Cascade — see SupportTicket.projectId. Deleting a site must
   // not silently delete the conversation about why it was broken.
   supportTickets SupportTicket[]
+  siteVisitors   SiteVisitor[]
 
   @@index([userId])
 }

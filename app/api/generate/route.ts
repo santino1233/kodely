@@ -46,16 +46,25 @@ export async function POST(req: Request) {
     projectId?: string;
     prompt?: string;
     image?: string;
+    document?: string;
   } | null;
   const prompt = body?.prompt?.trim();
   if (!body?.projectId || !prompt) {
     return Response.json({ error: "Missing project or prompt." }, { status: 400 });
   }
 
-  // Only a data: URL (what the client-side downscale in PromptHero produces)
-  // is accepted — anything else is silently dropped rather than passed on.
+  // Only a data: URL (what the client-side downscale in PromptHero, or the
+  // composer's own image/video-frame path, produces) is accepted — anything
+  // else is silently dropped rather than passed on.
   const imageMatch = body.image?.match(/^data:(image\/(?:png|jpeg|webp));base64,(.+)$/);
   const image = imageMatch ? { mediaType: imageMatch[1], data: imageMatch[2] } : undefined;
+
+  // Same idea, for a directly-attached PDF (app/(portal)/dashboard/new's
+  // Composer/attachment.ts). Real document input to the model — see
+  // lib/agent.ts's message construction — not a file that ends up embedded
+  // in the built site.
+  const documentMatch = body.document?.match(/^data:application\/pdf;base64,(.+)$/);
+  const document = documentMatch ? { data: documentMatch[1] } : undefined;
 
   const project = await db.project.findFirst({
     where: { id: body.projectId, userId: user.id },
@@ -139,6 +148,7 @@ export async function POST(req: Request) {
       projectId: project.id,
       kind,
       hasImage: Boolean(image),
+      hasDocument: Boolean(document),
       // Only meaningful on an edit — a first build has no prior output to be
       // reacting to. Left off `create` so followUpIntents() isn't diluted by
       // rows that were never follow-ups.
@@ -246,8 +256,9 @@ export async function POST(req: Request) {
             kind,
             // Only attached on the very first turn of a project — a repair
             // retry re-sends the same `request` text but should not attach
-            // the image again mid-loop.
+            // the image (or document) again mid-loop.
             image: attempt === 1 ? image : undefined,
+            document: attempt === 1 ? document : undefined,
             signal: abortController.signal,
             onWrite: async (path, content) => {
               if (!normalizePath(path)) return false;

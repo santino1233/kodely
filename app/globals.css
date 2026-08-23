@@ -75,6 +75,12 @@
   --brand-tint-2: rgba(224, 27, 110, 0.14);
   --brand-ring: rgba(224, 27, 110, 0.38);
   --brand-ink: #a41050;
+  /* A second brand hue purely for chart gradients (bar fills, donut
+     segments) — pairs with --brand so a gradient has somewhere to go
+     without reaching for the marketing --brand-gradient, which stays
+     reserved for the primary CTA / credits cards. */
+  --brand-chart-2: #a33dff;
+  --brand-chart-3: #ff9868;
 
   /* Semantic status. Kept clearly OFF the brand ramp: a "success" that reads
      as brand pink is unreadable as status, and the peach in the gradient is
@@ -147,6 +153,8 @@
     --brand-tint-2: rgba(255, 92, 151, 0.2);
     --brand-ring: rgba(255, 92, 151, 0.45);
     --brand-ink: #ffd0e0;
+    --brand-chart-2: #b472ff;
+    --brand-chart-3: #ffae7e;
 
     --ok: #34d399;
     --ok-tint: rgba(52, 211, 153, 0.14);
@@ -185,6 +193,8 @@
   --brand-tint-2: rgba(255, 92, 151, 0.2);
   --brand-ring: rgba(255, 92, 151, 0.45);
   --brand-ink: #ffd0e0;
+  --brand-chart-2: #b472ff;
+  --brand-chart-3: #ffae7e;
 
   --ok: #34d399;
   --ok-tint: rgba(52, 211, 153, 0.14);
@@ -872,6 +882,51 @@ body {
   background: radial-gradient(closest-side, var(--glow-2), transparent);
 }
 
+/* Page hero — components/ui/PageHero.tsx. A calmer, STATIC-glass treatment,
+   deliberately distinct from the two motion-heavy glass effects already in
+   this file: it does not spin like the AI composer's `.glow-clip-a/-b` ring,
+   and it is not a full diagonal wash like `.k-wash` — a page can carry a
+   PageHero AND its own `.k-wash` panel elsewhere (e.g. /dashboard/billing's
+   "Add credits" card) without the two effects reading as the same thing
+   twice. The frost is a translucent surface tint + backdrop-blur; the only
+   ambient colour is a single contained radial tint tucked behind the icon
+   corner, using the existing brand-tint tokens rather than a new hue. The
+   only motion is a slow, small breathe on the icon badge — plain CSS,
+   already covered by the `prefers-reduced-motion` rule below like every
+   other animation on this page, so it needs no rule of its own. */
+.k-hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border-soft);
+  background: color-mix(in oklab, var(--surface) 66%, transparent);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  box-shadow:
+    var(--e2),
+    inset 0 1px 0 color-mix(in oklab, white 14%, transparent);
+}
+
+.k-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse 60% 90% at 88% -10%, var(--brand-tint-2), transparent 70%);
+}
+
+@keyframes k-hero-icon-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+.k-hero-icon {
+  animation: k-hero-icon-breathe 4.5s var(--ease-io) infinite;
+}
+
 /* Sidebar collapse. The width lives on the shell as a custom property so the
    sidebar, the mobile drawer and the main column all animate off one value
    and cannot disagree mid-transition. */
@@ -896,4 +951,51 @@ body {
     filter: saturate(0.82);
     transform: none;
   }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SCROLLBAR — one Kodely-branded scrollbar, everywhere.
+   ══════════════════════════════════════════════════════════════════════════
+   Applied on :root rather than per-container, so every scrollable region in
+   the product — the sidebar, a modal body, a code panel, a long settings
+   page — gets it automatically with zero per-component work. A component
+   that genuinely needs a different treatment (dark-on-dark inside the
+   builder's code view, say) can still override `scrollbar-color` locally;
+   this is the default, not a lock.
+
+   Firefox uses the two-value `scrollbar-color` property directly — no way to
+   restyle its shape, only its two colours, which is why the thumb colour
+   below is chosen to read clearly at Firefox's fixed width too. Chrome,
+   Safari and Edge use the `::-webkit-scrollbar*` pseudo-elements, which DO
+   control shape — thinner, rounded, and with a hover state to match the
+   rest of the product's hover language (border-mid on hover, same as a
+   ghost button). Both engines are targeted; neither is left on its browser
+   default, which is what made every scrollable panel look like it belonged
+   to a different, older product. */
+:root {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--border-strong);
+  border-radius: 999px;
+  /* A transparent border matching the track colour insets the visible thumb
+     within the scrollbar's own box — the standard trick for a slim rounded
+     thumb that doesn't touch the edge of a rounded panel it scrolls inside. */
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--brand-ring);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
 }

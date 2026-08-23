@@ -1,36 +1,45 @@
+"use client";
+
+import { useState } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { formatCredits } from "../billing/ledger";
 import type { SpendBucket } from "./data";
 
 /* Credits spent over time, drawn by hand.
    ───────────────────────────────────────────────────────────────────────────
-   NO CHARTING DEPENDENCY. This is plain SVG in a Server Component: it ships no
-   JavaScript at all, which for a static bar chart is not a compromise — it is
-   the better answer.
+   NO CHARTING DEPENDENCY. This is plain SVG — a "use client" component now
+   only because the reference screen wants a hover tooltip along the line,
+   which needs mouse-position state. Everything ELSE about the chart is the
+   same hand-drawn approach as before: no library, every colour a design
+   token via CSS variables (never a raw hex on an element), same three
+   accessibility channels.
 
-   THEMING. Every colour is a Tailwind class bound to a design token
-   (`fill-brand`, `stroke-hair`, `fill-ink-3`), never an attribute and never a
-   hex, so light and dark are handled by the same variable swap as the rest of
-   the product. Presentational SVG attributes lose to CSS, which is why the
-   classes work at all.
+   THEMING. Gradients are declared as local <defs>, not the reserved
+   --brand-gradient (that stays on the primary CTA / credits cards) — see the
+   comment beside them below.
 
    ACCESSIBILITY. Three channels, in order of who they serve:
      1. A prose summary above the chart — the shape of the data in a sentence,
         for everyone including people who skim.
      2. The <svg> is role="img" with an aria-label carrying that same summary,
-        so a screen reader gets the gist instead of 30 unlabelled <rect>s.
+        so a screen reader gets the gist instead of an unlabelled path.
      3. A real <table> in a <details>, keyboard-operable, carrying every figure
-        the bars encode. The bars are not individually focusable BECAUSE the
-        table exists: 30 tab stops that each announce one number is worse than
-        one tab stop that opens all of them.
+        the line encodes. The hover tooltip is a POINTER-ONLY convenience on
+        top of this, never the only way to read a value.
    The chart is also legible at any width — it scales uniformly with its
    viewBox, so no label is ever clipped or squashed.
 
-   GRANULARITY. A bar may cover one UTC day or a whole week — see groupBuckets
-   in ./data.ts, which the "All time" range needs because 400 daily bars in a
-   660-unit plot are 1px apart. Every label, the summary and the table read the
-   span off the bucket itself rather than assuming a day, so a weekly bar is
-   never presented as a daily one. */
+   GRANULARITY. A point may cover one UTC day or a whole week — see
+   groupBuckets in ./data.ts, which the "All time" range needs because 400
+   daily points in a 660-unit plot are 1px apart. Every label, the summary and
+   the table read the span off the bucket itself rather than assuming a day,
+   so a weekly point is never presented as a daily one.
+
+   LINE, NOT BARS, AND WHAT THAT COSTS. A zero-spend period is now a dip to
+   the baseline rather than an omitted bar — genuinely more honest about
+   continuity (spend didn't pause, it was literally zero that day) at the cost
+   of the line looking busier on a mostly-idle account. Both are real
+   readings of the same numbers; this is the one the reference asked for. */
 
 const AXIS_DATE = new Intl.DateTimeFormat("en-GB", {
   day: "numeric",
@@ -84,10 +93,34 @@ const W = 720;
 const H = 210;
 const PAD_L = 48;
 const PAD_R = 10;
-const PAD_T = 12;
+const PAD_T = 16;
 const PAD_B = 30;
 const PLOT_W = W - PAD_L - PAD_R;
 const PLOT_H = H - PAD_T - PAD_B;
+
+type Point = { x: number; y: number; b: SpendBucket };
+
+/** A light Catmull-Rom-to-cubic-Bezier smoothing (tension 1/6) — enough to
+    turn straight segments into the soft curve the reference chart uses,
+    without a charting dependency. Passes through every real point exactly;
+    only the curvature between them is interpolated. */
+function smoothPath(points: Point[]): string {
+  if (points.length === 0) return "";
+  if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+  let d = `M ${points[0].x} ${points[0].y}`;
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[i === 0 ? 0 : i - 1];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[i + 2 < points.length ? i + 2 : i + 1];
+    const c1x = p1.x + (p2.x - p0.x) / 6;
+    const c1y = p1.y + (p2.y - p0.y) / 6;
+    const c2x = p2.x - (p3.x - p1.x) / 6;
+    const c2y = p2.y - (p3.y - p1.y) / 6;
+    d += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${p2.x} ${p2.y}`;
+  }
+  return d;
+}
 
 export function UsageChart({
   buckets,
@@ -95,11 +128,13 @@ export function UsageChart({
   rangeLabel,
 }: {
   buckets: SpendBucket[];
-  /** Total UTC days the range covers, however they are grouped into bars. */
+  /** Total UTC days the range covers, however they are grouped into points. */
   days: number;
   /** How the range reads in a sentence: "the last 30 days", "all time". */
   rangeLabel: string;
 }) {
+  const [hover, setHover] = useState<number | null>(null);
+
   const total = buckets.reduce((sum, b) => sum + b.credits, 0);
   const grouped = buckets.some((b) => b.days > 1);
   const unit = grouped ? "week" : "day";
@@ -127,21 +162,34 @@ export function UsageChart({
     `The heaviest ${unit} was ${bucketLabel(peak)} at ` +
     `${formatCredits(peak.credits)} credits.`;
 
-  const slot = PLOT_W / buckets.length;
-  const barW = Math.max(2, Math.min(18, slot * 0.62));
-
-  // Three gridlines is the most a 170-unit-tall plot can carry without the
+  // Three gridlines is the most a 164-unit-tall plot can carry without the
   // labels becoming the loudest thing in it.
   const gridValues = [0, max / 2, max];
 
-  // Four x labels, evenly spaced and always including both ends, so the reader
-  // can date any bar by interpolation without 30 overlapping labels.
   const last = buckets.length - 1;
   const tickIndexes = Array.from(
     new Set([0, Math.round(last / 3), Math.round((2 * last) / 3), last]),
   ).filter((i) => i >= 0 && i <= last);
 
-  const y = (value: number) => PAD_T + PLOT_H * (1 - value / max);
+  const xAt = (i: number) => (last > 0 ? PAD_L + (PLOT_W * i) / last : PAD_L + PLOT_W / 2);
+  const yAt = (value: number) => PAD_T + PLOT_H * (1 - value / max);
+
+  const points: Point[] = buckets.map((b, i) => ({ x: xAt(i), y: yAt(b.credits), b }));
+  const linePath = smoothPath(points);
+  const areaPath =
+    points.length > 0
+      ? `${linePath} L ${points[last].x} ${PAD_T + PLOT_H} L ${points[0].x} ${PAD_T + PLOT_H} Z`
+      : "";
+
+  const hovered = hover !== null ? points[hover] : null;
+
+  function handleMove(e: React.MouseEvent<SVGSVGElement>) {
+    if (last <= 0) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const localX = ((e.clientX - rect.left) / rect.width) * W;
+    const t = (localX - PAD_L) / PLOT_W;
+    setHover(Math.max(0, Math.min(last, Math.round(t * last))));
+  }
 
   return (
     <figure className="mt-5">
@@ -154,60 +202,109 @@ export function UsageChart({
         {bucketLabel(peak)}.
       </figcaption>
 
-      <svg role="img" aria-label={summary} viewBox={`0 0 ${W} ${H}`} className="mt-4 h-auto w-full">
-        {gridValues.map((value) => (
-          <g key={value}>
+      <div className="relative mt-4">
+        <svg
+          role="img"
+          aria-label={summary}
+          viewBox={`0 0 ${W} ${H}`}
+          className="h-auto w-full"
+          onMouseMove={handleMove}
+          onMouseLeave={() => setHover(null)}
+        >
+          <defs>
+            {/* Line + fill gradients, local to this chart — not the reserved
+                --brand-gradient (that stays on the primary CTA / credits
+                cards). The line runs brand → chart-2 left to right; the fill
+                fades from a soft brand wash at the line down to nothing at
+                the baseline, the "glow under the curve" look the reference
+                uses. */}
+            <linearGradient id="usage-line" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="var(--brand)" />
+              <stop offset="100%" stopColor="var(--brand-chart-2)" />
+            </linearGradient>
+            <linearGradient id="usage-area" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--brand)" stopOpacity="0.35" />
+              <stop offset="100%" stopColor="var(--brand)" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+
+          {gridValues.map((value) => (
+            <g key={value}>
+              <line
+                x1={PAD_L}
+                x2={W - PAD_R}
+                y1={yAt(value)}
+                y2={yAt(value)}
+                className={value === 0 ? "stroke-line-mid" : "stroke-hair"}
+                strokeWidth={1}
+              />
+              <text
+                x={PAD_L - 8}
+                y={yAt(value) + 3.5}
+                textAnchor="end"
+                fontSize={10}
+                className="k-num fill-ink-3"
+              >
+                {formatCredits(Math.round(value))}
+              </text>
+            </g>
+          ))}
+
+          <path d={areaPath} fill="url(#usage-area)" />
+          <path d={linePath} fill="none" stroke="url(#usage-line)" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+
+          {points.map((p, i) =>
+            p.b.credits > 0 ? (
+              <circle
+                key={p.b.ts}
+                cx={p.x}
+                cy={p.y}
+                r={hover === i ? 4 : 2.5}
+                className="fill-brand"
+                style={{ transition: "r 120ms var(--ease-io)" }}
+              />
+            ) : null,
+          )}
+
+          {hovered && (
             <line
-              x1={PAD_L}
-              x2={W - PAD_R}
-              y1={y(value)}
-              y2={y(value)}
-              className={value === 0 ? "stroke-line-mid" : "stroke-hair"}
+              x1={hovered.x}
+              x2={hovered.x}
+              y1={PAD_T}
+              y2={PAD_T + PLOT_H}
+              className="stroke-line-mid"
               strokeWidth={1}
+              strokeDasharray="3 3"
             />
+          )}
+
+          {tickIndexes.map((i) => (
             <text
-              x={PAD_L - 8}
-              y={y(value) + 3.5}
-              textAnchor="end"
+              key={buckets[i].ts}
+              x={xAt(i)}
+              y={H - 10}
+              textAnchor={i === 0 ? "start" : i === last ? "end" : "middle"}
               fontSize={10}
               className="k-num fill-ink-3"
             >
-              {formatCredits(Math.round(value))}
+              {AXIS_DATE.format(new Date(buckets[i].ts))}
             </text>
-          </g>
-        ))}
+          ))}
+        </svg>
 
-        {buckets.map((b, i) => {
-          if (b.credits <= 0) return null;
-          // A one-unit floor so a real but tiny period is a visible mark rather
-          // than a gap indistinguishable from one with no spend at all.
-          const height = Math.max(1.5, (b.credits / max) * PLOT_H);
-          return (
-            <rect
-              key={b.ts}
-              x={PAD_L + slot * (i + 0.5) - barW / 2}
-              y={PAD_T + PLOT_H - height}
-              width={barW}
-              height={height}
-              rx={1.5}
-              className="fill-brand"
-            />
-          );
-        })}
-
-        {tickIndexes.map((i) => (
-          <text
-            key={buckets[i].ts}
-            x={PAD_L + slot * (i + 0.5)}
-            y={H - 10}
-            textAnchor={i === 0 ? "start" : i === last ? "end" : "middle"}
-            fontSize={10}
-            className="k-num fill-ink-3"
+        {/* The hover tooltip — a pointer-only convenience, positioned by the
+            same viewBox math as the SVG itself, so it always lands on the
+            hovered point regardless of how wide the chart has scaled. */}
+        {hovered && (
+          <div
+            className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-[calc(100%+10px)] rounded-lg border border-hair bg-surface px-3 py-2 text-xs whitespace-nowrap shadow-e2"
+            style={{ left: `${(hovered.x / W) * 100}%`, top: `${(hovered.y / H) * 100}%` }}
           >
-            {AXIS_DATE.format(new Date(buckets[i].ts))}
-          </text>
-        ))}
-      </svg>
+            <p className="font-medium text-ink">{bucketLabel(hovered.b)}</p>
+            <p className="k-num text-ink-2">{formatCredits(hovered.b.credits)} credits</p>
+          </div>
+        )}
+      </div>
 
       <details className="mt-4">
         <summary className="k-focus inline-flex cursor-pointer rounded-sm text-[0.8125rem] font-medium text-ink-2 hover:text-ink">

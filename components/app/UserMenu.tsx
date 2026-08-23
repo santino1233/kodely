@@ -6,20 +6,17 @@ import { CreditCard, LogOut, Moon, Settings, Sun } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Menu } from "@/components/ui/Menu";
 
-/* The bottom of the sidebar. The brief asked for "current plan" here, and
-   there is no plan — the product sells credit packs, not subscriptions
-   (confirmed: no subscription model, no price, no renewal date anywhere in
-   the schema or Stripe integration; checkout runs in one-off `payment` mode).
-   So this shows the CREDIT BALANCE instead, which is the number that actually
-   governs what the customer can do next. Inventing a "Pro" chip here would be
-   the single most visible lie in the redesign. */
+/* The bottom of the sidebar, directly under SidebarFooter's gradient credits
+   card. This row used to repeat the balance a second time right underneath
+   that card ("Name" / "1,234 credits") — the same number twice in a row read
+   as a mistake, not as emphasis. This row's job is account identity (who's
+   signed in, settings, sign out); the credits card above it already owns the
+   balance. */
 export function UserMenu({
   user,
-  balance,
   collapsed,
 }: {
   user: { email: string; name: string | null };
-  balance: number;
   collapsed: boolean;
 }) {
   const router = useRouter();
@@ -106,9 +103,7 @@ export function UserMenu({
                 <span className="block truncate text-[0.8125rem] font-medium text-ink">
                   {display}
                 </span>
-                <span className="k-num block truncate text-[0.6875rem] text-ink-2">
-                  {balance.toLocaleString()} credits
-                </span>
+                <span className="block truncate text-[0.6875rem] text-ink-2">{user.email}</span>
               </span>
             )}
           </button>

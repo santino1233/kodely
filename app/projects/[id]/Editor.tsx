@@ -288,6 +288,11 @@ export default function Editor(props: Props) {
   const [applied, setApplied] = useState<Applied | null>(null);
   const [previewNonce, setPreviewNonce] = useState(0);
   const [published, setPublished] = useState(props.published);
+  // Local, like `published` above and for the same reason: the subdomain can
+  // change after this page rendered (the SEO panel's address editor), and
+  // every place that reads it — the live URL, the download filename, the
+  // command palette — has to see the new one without a full reload.
+  const [slug, setSlug] = useState(props.slug);
   const [publishing, setPublishing] = useState(false);
   const [view, setView] = useState<View>("preview");
   // Chat and preview cannot share a phone screen. See the note on the layout
@@ -367,8 +372,8 @@ export default function Editor(props: Props) {
   // window during render would tear on hydration.
   const siteHost = useSyncExternalStore(
     NO_SUBSCRIBE,
-    () => liveSiteUrl(props.slug).replace(/^https?:\/\//, ""),
-    () => `${props.slug}.${SITES_BASE}`,
+    () => liveSiteUrl(slug).replace(/^https?:\/\//, ""),
+    () => `${slug}.${SITES_BASE}`,
   );
 
   async function refreshFiles() {
@@ -1101,7 +1106,7 @@ export default function Editor(props: Props) {
       const url = URL.createObjectURL(await res.blob());
       const link = document.createElement("a");
       link.href = url;
-      link.download = `${props.slug}.zip`;
+      link.download = `${slug}.zip`;
       link.click();
       // The click hands the blob off asynchronously, so revoking in the same
       // tick can cancel the download in some browsers. Next tick is enough,
@@ -1250,7 +1255,7 @@ export default function Editor(props: Props) {
     runCommand?.();
   }
 
-  const liveHref = published ? liveSiteUrl(props.slug) : null;
+  const liveHref = published ? liveSiteUrl(slug) : null;
   const assistantState = busy ? "working" : error ? "error" : "ready";
   const suggestions = busy
     ? []
@@ -1454,6 +1459,12 @@ export default function Editor(props: Props) {
           run: () => router.push(`/projects/${props.projectId}/submissions`),
         },
         {
+          id: "records",
+          label: "Site records",
+          keywords: "data bookings listings crm storage records",
+          run: () => router.push(`/projects/${props.projectId}/records`),
+        },
+        {
           id: "settings",
           label: "Settings",
           keywords: "spend cap account billing preferences",
@@ -1571,6 +1582,9 @@ export default function Editor(props: Props) {
           // so the undo cursor has to learn the draft no longer matches its
           // checkpoint. See onManualSave.
           onSaved={onManualSave}
+          slug={slug}
+          sitesBase={SITES_BASE}
+          onSlugChanged={setSlug}
         />
       ) : (
         // onSaved is not optional: a brand save rewrites src/index.css and
@@ -1766,6 +1780,11 @@ export default function Editor(props: Props) {
                     ? `Form submissions (${props.unreadSubmissions})`
                     : "Form submissions",
                 href: `/projects/${props.projectId}/submissions`,
+              },
+              {
+                kind: "item",
+                label: "Site records",
+                href: `/projects/${props.projectId}/records`,
               },
               { kind: "separator" },
               { kind: "item", label: "Credits & billing", href: "/pricing" },

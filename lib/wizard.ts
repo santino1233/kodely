@@ -258,7 +258,7 @@ export function getLook(id: string): LookDirection | undefined {
  * no backend, no fake forms, no photography, bracketed placeholders for every
  * fact only the owner knows.
  */
-const GENERIC_SKELETON = `Build a one-page website for [your business name].
+const GENERIC_SKELETON = `Build a website for [your business name].
 
 Audience: [who you are trying to reach]. Tone: [how you want to come across] — specific and human rather than corporate.
 
@@ -286,9 +286,24 @@ function stripTrailingPunctuation(value: string): string {
 
 /**
  * The first line of every starter prompt is written to stand alone as a summary
- * ("Build a one-page website for [your cafe's name], …") — TemplateCard already
- * relies on that. So it is the one line safe to rewrite with the user's own
- * facts, and doing so is what turns a template into *their* brief.
+ * ("Build a website for [your cafe's name], …") — TemplateCard already relies
+ * on that. So it is the one line safe to rewrite with the user's own facts, and
+ * doing so is what turns a template into *their* brief.
+ *
+ * Deliberately silent on page count. Earlier this hardcoded "Build a one-page
+ * website for…" on every assembled prompt, regardless of what the customer
+ * actually typed in `whatYouDo` — so someone who wrote "with a separate page
+ * for each location" was contradicted by the very first sentence the model
+ * read. lib/agent.ts's SYSTEM prompt already tells the model when to reach for
+ * pages ("use pages when the content genuinely differs… don't manufacture thin
+ * pages to look bigger") — that is the one place page count should be decided,
+ * informed by the customer's own words, not asserted here first.
+ *
+ * A handful of templates (see lib/templates.ts) keep "one-page" in their own
+ * skeleton on purpose, because being a single page is intrinsic to that kind of
+ * site (a link-in-bio, a coming-soon teaser). This function never removes or
+ * adds that wording — it only ever rewrites with the customer's own facts, so a
+ * deliberate template constraint survives untouched whenever `what` is empty.
  *
  * Three cases, and none of them invents anything:
  *   - name + description : write our own opener from both.
@@ -308,13 +323,13 @@ function openingLine(a: WizardAnswers, skeletonFirstLine: string): string {
   const what = stripTrailingPunctuation(clean(a.whatYouDo, MAX_WHAT_CHARS));
 
   if (what) {
-    return `Build a one-page website for ${name || "[your business name]"} — ${what}.`;
+    return `Build a website for ${name || "[your business name]"} — ${what}.`;
   }
   if (name) {
     const substituted = skeletonFirstLine.replace(/\[[^\]]*\]/, name);
     // Only trust the substitution if it actually found a bracket.
     if (substituted !== skeletonFirstLine) return substituted;
-    return `Build a one-page website for ${name}.`;
+    return `Build a website for ${name}.`;
   }
   return skeletonFirstLine;
 }

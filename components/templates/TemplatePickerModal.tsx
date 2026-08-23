@@ -269,10 +269,34 @@ export function TemplatePickerModal({
       </p>
 
       {stage === "gallery" ? (
-        <div ref={galleryRef} tabIndex={-1} className="outline-none">
+        <div
+          ref={galleryRef}
+          tabIndex={-1}
+          // Bounded to the space actually left inside the dialog, not to a
+          // guess at the viewport in isolation — see the identical note in
+          // InlineWizard.tsx. The native <dialog> in Modal.tsx has no height
+          // or overflow of its own, so a fixed `vh` cap on just the grid below
+          // (the old `max-h-[52vh]`) could still add up with this row, the
+          // category filter and Modal's own title/description/footer to more
+          // than the browser's default `overflow: auto` clamp allows — and
+          // when it did, the dialog itself started scrolling as a second,
+          // independent scroll container around this one (verified: at a
+          // 1280×600 viewport, `dialog.scrollHeight` (637) exceeded
+          // `dialog.clientHeight` (560) while the grid below was ALSO
+          // overflowing). Only the grid flexes and scrolls; the search row
+          // and category filter are fixed-height so they never disappear.
+          // `relative` anchors the containing block for every sr-only radio
+          // inside this stage (the category filter uses one per option) —
+          // without it, each one's containing block is the native <dialog>
+          // itself (`dialog:modal` is `position: fixed`), so its off-screen
+          // hypothetical position inflates the DIALOG's own scrollable
+          // overflow straight through this `overflow-hidden`. Same fix as
+          // InlineWizard.tsx, same reasoning.
+          className="relative flex max-h-[max(8rem,calc(100dvh-18rem))] flex-col overflow-hidden outline-none"
+        >
           <h3 className="sr-only">Choose a template</h3>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
             <div className="min-w-0 flex-1">
               <label htmlFor="template-picker-search" className="sr-only">
                 Search templates by name, description or prompt
@@ -303,7 +327,7 @@ export function TemplatePickerModal({
           {/* A real radio group, not a row of aria-pressed buttons: the filter
               is single-select, so arrow-key navigation and the "3 of 8"
               announcement come for free. Same idiom as the public gallery. */}
-          <fieldset className="mt-3">
+          <fieldset className="mt-3 shrink-0">
             <legend className="k-label mb-2">Category</legend>
             <div className="flex flex-wrap gap-1.5">
               {[ALL, ...TEMPLATE_CATEGORIES].map((option) => (
@@ -327,7 +351,9 @@ export function TemplatePickerModal({
             </div>
           </fieldset>
 
-          <div className="mt-4 max-h-[52vh] overflow-y-auto pr-1">
+          {/* The ONE scroll region for this stage — `min-h-0` is load-bearing
+              on a flex child, see InlineWizard.tsx. */}
+          <div className="mt-4 min-h-0 flex-1 overflow-y-auto pr-1">
             {visible.length === 0 ? (
               <EmptyState
                 kind="no-results"
@@ -410,7 +436,13 @@ export function TemplatePickerModal({
         />
       ) : (
         <div ref={intakeRef} tabIndex={-1} className="outline-none">
-          <div className="max-h-[52vh] overflow-y-auto pr-1">
+          {/* Same fix as the gallery grid above and InlineWizard.tsx: bounded
+              to what the dialog actually has left, not to a fixed `vh`, so
+              the browser's own `overflow: auto` on <dialog> never has to
+              kick in as a second scroll container. `relative` anchors the
+              containing block for the palette picker's sr-only radios for
+              the same reason — see the note on the gallery stage above. */}
+          <div className="relative max-h-[max(8rem,calc(100dvh-18rem))] overflow-y-auto pr-1">
             <div className="flex flex-wrap items-center gap-2">
               <Badge tone="brand">{template.category}</Badge>
               <p className="min-w-0 flex-1 text-xs leading-relaxed text-ink-3">

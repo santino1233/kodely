@@ -1,7 +1,49 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, ImagePlus, Info, RotateCcw, Sparkles, X } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  BadgeCheck,
+  BarChart3,
+  BookOpen,
+  CalendarCheck,
+  CalendarOff,
+  Check,
+  Clock,
+  Grid2x2,
+  HelpCircle,
+  ImageOff,
+  ImagePlus,
+  Info,
+  LayoutGrid,
+  ListFilter,
+  Mail,
+  MailPlus,
+  MailX,
+  Map,
+  MapPin,
+  MapPinned,
+  Megaphone,
+  MessageCircleOff,
+  MessageSquare,
+  Phone,
+  Quote,
+  RotateCcw,
+  Rss,
+  Search,
+  Share2,
+  ShoppingCart,
+  Sparkles,
+  Tag,
+  Type,
+  UserX,
+  Users,
+  VideoOff,
+  Workflow,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 
 import { AIProgress, stepsAt } from "@/components/ui/AIProgress";
 import { Badge } from "@/components/ui/Badge";
@@ -251,75 +293,109 @@ export function InlineWizard({
         {`Stage ${stage + 1} of ${STAGES.length}: ${STAGES[stage].label}.`}
       </p>
 
-      <div className="flex items-center justify-between gap-3 border-b border-hair pb-3">
-        <Logo markSize={20} className="text-[0.9375rem]" />
-        <Badge tone="brand">
-          Stage <span className="k-num">{stage + 1}</span> of{" "}
-          <span className="k-num">{STAGES.length}</span>
-        </Badge>
-      </div>
+      {/* Bounded to the space actually left inside the dialog, not to a guess
+          at the viewport in isolation. The native <dialog> in Modal.tsx has no
+          height or overflow of its own, so it falls back to the browser's UA
+          default (`overflow: auto`, `max-height: calc(100% - Npx)` of the
+          viewport) — if this whole block were allowed to grow past what that
+          leaves once Modal's own title, description and footer are accounted
+          for, the DIALOG ITSELF starts scrolling as a second, independent
+          scroll container around the one below, wrapping the header and
+          footer with it (verified: at a 1280×600 viewport on the Features
+          stage, `dialog.scrollHeight` exceeds `dialog.clientHeight` at the same
+          time the inner region overflows). Capping this outer flex column
+          well under 100dvh and letting only the stage content flex is what
+          keeps the dialog itself at `fit-content` and guarantees there is
+          exactly one scrollbar.
 
-      {/* The rail is the visual half of the indicator only — the sr-only status
-          line above is what a screen reader hears. Hidden from the tree rather
-          than left to compete with it: AIProgress carries its own aria-live,
-          and two announcements for one change is one too many. */}
-      <div aria-hidden className="mt-3.5">
-        <AIProgress
-          steps={stepsAt(STAGES, stage)}
-          className="sm:flex-row sm:flex-wrap sm:gap-x-4 sm:gap-y-1.5"
-        />
-      </div>
+          `relative` is load-bearing for a second, less visible reason: every
+          sr-only radio in these stages (category chips, look cards, tone
+          chips) is `position: absolute` with no positioned ancestor of its
+          own. Without a positioned ancestor HERE, its containing block is the
+          native <dialog> itself — `dialog:modal` is `position: fixed` in the
+          UA stylesheet — so its off-screen "hypothetical static position"
+          (wherever it would have sat in the unclipped flow, which can be
+          hundreds of pixels below the fold on the longer stages) inflates the
+          DIALOG's own scrollable-overflow area straight through both
+          `overflow-hidden` here and the `overflow-y-auto` below, independent
+          of the max-height fix above (verified: even after that fix,
+          `dialog.scrollTop` could still be driven to 71px on the shortest
+          stage, dragging the header off the top of the card). Anchoring the
+          containing block here keeps it local, where `overflow-hidden`
+          actually clips it. */}
+      <div className="relative flex max-h-[max(8rem,calc(100dvh-18rem))] flex-col overflow-hidden">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-hair pb-3">
+          <Logo markSize={20} className="text-[0.9375rem]" />
+          <Badge tone="brand">
+            Stage <span className="k-num">{stage + 1}</span> of{" "}
+            <span className="k-num">{STAGES.length}</span>
+          </Badge>
+        </div>
 
-      {/* Its own scroll region so Back and Next never leave the viewport on a
-          laptop. The dialog would otherwise scroll as a whole, putting the only
-          way forward below the fold on the longest stages. */}
-      <div className="mt-4 max-h-[min(56vh,30rem)] overflow-y-auto pr-1">
-        {stage === 0 && (
-          <DescribeStage
-            headingRef={headingRef}
-            answers={answers}
-            matches={matches}
-            onPickCategory={pickCategory}
-            onUpdate={update}
+        {/* The rail is the visual half of the indicator only — the sr-only status
+            line above is what a screen reader hears. Hidden from the tree rather
+            than left to compete with it: AIProgress carries its own aria-live,
+            and two announcements for one change is one too many. */}
+        <div aria-hidden className="mt-3.5 shrink-0">
+          <AIProgress
+            steps={stepsAt(STAGES, stage)}
+            className="sm:flex-row sm:flex-wrap sm:gap-x-4 sm:gap-y-1.5"
           />
-        )}
-        {stage === 1 && <DetailsStage headingRef={headingRef} answers={answers} onUpdate={update} />}
-        {stage === 2 && (
-          <StyleStage
-            headingRef={headingRef}
-            answers={answers}
-            onUpdate={update}
-            logoError={logoError}
-            onLogoError={setLogoError}
-          />
-        )}
-        {stage === 3 && (
-          <FeaturesStage
-            headingRef={headingRef}
-            selected={answers.featureIds}
-            onToggle={toggleFeature}
-          />
-        )}
-        {stage === 4 && (
-          <ReviewStage
-            headingRef={headingRef}
-            promptText={promptText}
-            edited={edited}
-            onEdit={setEdited}
-            onRevert={() => setEdited(null)}
-            basis={{
-              template:
-                (answers.templateId ? getTemplate(answers.templateId) : undefined)?.name ?? null,
-              look: (answers.lookId ? getLook(answers.lookId) : undefined)?.name ?? null,
-              features: chosenFeatures.length,
-              logo: answers.logo?.name ?? null,
-            }}
-            caveats={chosenFeatures.flatMap((f) =>
-              f.caveat != null ? [{ id: f.id, label: f.label, caveat: f.caveat }] : [],
-            )}
-            answered={hasInlineAnswers(answers)}
-          />
-        )}
+        </div>
+
+        {/* The ONE scroll region. `min-h-0` is load-bearing on a flex child —
+            without it a flex item refuses to shrink below its content's natural
+            height, which is exactly the bug this whole wrapper exists to avoid. */}
+        <div className="mt-4 min-h-0 flex-1 overflow-y-auto pr-1">
+          {stage === 0 && (
+            <DescribeStage
+              headingRef={headingRef}
+              answers={answers}
+              matches={matches}
+              onPickCategory={pickCategory}
+              onUpdate={update}
+            />
+          )}
+          {stage === 1 && (
+            <DetailsStage headingRef={headingRef} answers={answers} onUpdate={update} />
+          )}
+          {stage === 2 && (
+            <StyleStage
+              headingRef={headingRef}
+              answers={answers}
+              onUpdate={update}
+              logoError={logoError}
+              onLogoError={setLogoError}
+            />
+          )}
+          {stage === 3 && (
+            <FeaturesStage
+              headingRef={headingRef}
+              selected={answers.featureIds}
+              onToggle={toggleFeature}
+            />
+          )}
+          {stage === 4 && (
+            <ReviewStage
+              headingRef={headingRef}
+              promptText={promptText}
+              edited={edited}
+              onEdit={setEdited}
+              onRevert={() => setEdited(null)}
+              basis={{
+                template:
+                  (answers.templateId ? getTemplate(answers.templateId) : undefined)?.name ?? null,
+                look: (answers.lookId ? getLook(answers.lookId) : undefined)?.name ?? null,
+                features: chosenFeatures.length,
+                logo: answers.logo?.name ?? null,
+              }}
+              caveats={chosenFeatures.flatMap((f) =>
+                f.caveat != null ? [{ id: f.id, label: f.label, caveat: f.caveat }] : [],
+              )}
+              answered={hasInlineAnswers(answers)}
+            />
+          )}
+        </div>
       </div>
     </Modal>
   );
@@ -429,8 +505,8 @@ function DescribeStage({
           className="min-h-24"
           maxLength={LIMITS.describe}
           // Lower-case on purpose: the first sentence becomes the tail of
-          // "Build a one-page website for [name] — …", so the placeholder shows
-          // the shape that reads best there.
+          // "Build a website for [name] — …", so the placeholder shows the
+          // shape that reads best there.
           placeholder="a reformer pilates studio in Denver, for people who have tried a big-box gym and hated it"
           value={answers.describe}
           onChange={(e) => onUpdate({ describe: e.target.value })}
@@ -701,12 +777,23 @@ function StyleStage({
       {/* ── Logo ─────────────────────────────────────────────────────────── */}
       <div className="mt-5 border-t border-hair pt-4">
         <p className="text-[0.8125rem] font-medium text-ink">Your logo</p>
+        {/* Two true things, not one: the model genuinely sees the actual
+            file (verified — it travels through finish()'s `logoDataUrl`,
+            Composer.tsx's acceptWizard(), CreateFlow.tsx's run(), and into
+            the `image` field of POST /api/generate, which lib/agent.ts
+            attaches as real vision input on attempt 1 only), AND the file
+            itself can never be embedded on the page. Stating only the second
+            half — the old copy — was accurate but read as "the upload does
+            nothing"; both halves belong on the same line so neither reads as
+            the whole story. */}
         <p className="mt-1 text-xs leading-relaxed text-ink-2">
-          Kodely looks at it once, on the first attempt, and pulls the palette towards it.
+          Kodely genuinely looks at the file itself — not just a colour you typed in — on the first
+          build attempt, and matches the site&rsquo;s palette and character to what it sees.
         </p>
         <Caveat>
-          The image file itself can’t go on the page — Kodely sites carry no uploaded pictures. The
-          brief asks for a clearly-marked space where your logo goes instead.
+          What it can&rsquo;t do is put that file on the finished page — Kodely sites carry no
+          uploaded pictures, ever. The brief asks for a clearly-marked space where your logo goes
+          instead, so that space is honest rather than a promise the upload will land there.
         </Caveat>
 
         {answers.logo !== null ? (
@@ -856,6 +943,54 @@ function LookCard({
 // Stage 4 — Features
 // ---------------------------------------------------------------------------
 
+/**
+ * One icon per feature, keyed by the stable `id` in lib/features.ts. Lives
+ * here rather than in the feature library itself: lib/features.ts is a
+ * content/data file this wizard doesn't own the substance of (every string in
+ * it is a promise about what a published site does), so a purely visual
+ * lookup stays beside the component that draws it. Add a line here whenever a
+ * feature is added there — nothing else needs to change.
+ */
+const FEATURE_ICONS: Record<string, LucideIcon> = {
+  "contact-form": MessageSquare,
+  "email-button": Mail,
+  "call-button": Phone,
+  "booking-link": CalendarCheck,
+  "enquiry-capture": MailPlus,
+  "social-links": Share2,
+  "opening-hours": Clock,
+  "find-us": MapPin,
+  "service-area": MapPinned,
+  "list-filter": ListFilter,
+  services: LayoutGrid,
+  pricing: Tag,
+  showcase: Grid2x2,
+  process: Workflow,
+  testimonials: Quote,
+  faq: HelpCircle,
+  credentials: BadgeCheck,
+  about: BookOpen,
+  team: Users,
+  "final-cta": Megaphone,
+};
+
+/** Same idea, for the things a Kodely site cannot do — every entry there
+ *  needs an icon just as much as an offered feature does. */
+const NOT_OFFERED_ICONS: Record<string, LucideIcon> = {
+  "online-booking": CalendarOff,
+  accounts: UserX,
+  checkout: ShoppingCart,
+  search: Search,
+  "map-embed": Map,
+  photos: ImageOff,
+  "live-chat": MessageCircleOff,
+  analytics: BarChart3,
+  "social-feed": Rss,
+  "video-embed": VideoOff,
+  "custom-fonts": Type,
+  "mailing-list": MailX,
+};
+
 function FeaturesStage({
   headingRef,
   selected,
@@ -868,33 +1003,53 @@ function FeaturesStage({
   const groups = featuresByCategory();
 
   return (
-    <section>
+    // `@container` so the grid below can respond to the DIALOG's own width
+    // (capped at max-w-2xl by Modal.tsx) rather than the browser viewport —
+    // a `lg:` breakpoint would go by viewport width and could hit 3 narrow
+    // columns while the dialog itself is still sitting at 672px, or stay at
+    // 2 wide ones on a phone in landscape where the dialog is much wider than
+    // its portrait self. Tailwind v4 ships container queries natively.
+    <section className="@container">
       <StageHeading headingRef={headingRef} title="What should the site have on it?">
         Only things a finished Kodely site genuinely does. Where one comes with a catch, the catch is
-        beside the box and not in the small print.
+        beside the card and not in the small print.
       </StageHeading>
 
       {groups.map((group) => (
         <fieldset key={group.category} className="mt-5">
           <legend className="k-label text-ink-3">{group.category}</legend>
-          <div className="mt-2 grid gap-2">
+          {/* One column below ~384px of actual dialog width (a phone in
+              portrait), two from there, three once the dialog has its full
+              672px to work with. */}
+          <div className="mt-2 grid grid-cols-1 gap-2.5 @sm:grid-cols-2 @xl:grid-cols-3">
             {group.features.map((feature) => {
               const checked = selected.includes(feature.id);
+              const Icon = FEATURE_ICONS[feature.id] ?? Sparkles;
               return (
                 <label
                   key={feature.id}
-                  className={`flex cursor-pointer gap-3 rounded-lg border p-3 transition-colors duration-[var(--t-1)] ${WRAPPED_FOCUS} ${
+                  className={`flex cursor-pointer flex-col gap-2 rounded-lg border p-3 transition-colors duration-[var(--t-1)] ${WRAPPED_FOCUS} ${
                     checked
                       ? "border-brand bg-brand-tint"
                       : "border-hair bg-surface hover:border-line-mid hover:bg-surface-2"
                   }`}
                 >
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => onToggle(feature.id)}
-                    className="mt-0.5 size-4 shrink-0 accent-[var(--brand)]"
-                  />
+                  <span className="flex items-start justify-between gap-2">
+                    <span
+                      className={`grid size-8 shrink-0 place-items-center rounded-md ${
+                        checked ? "bg-surface text-brand" : "bg-surface-2 text-ink-2"
+                      }`}
+                    >
+                      <Icon size={16} aria-hidden />
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => onToggle(feature.id)}
+                      aria-label={feature.label}
+                      className="mt-1 size-4 shrink-0 accent-[var(--brand)]"
+                    />
+                  </span>
                   <span className="min-w-0">
                     <span className="block text-[0.8125rem] font-medium text-ink">
                       {feature.label}
@@ -919,17 +1074,28 @@ function FeaturesStage({
         <summary className="k-focus cursor-pointer rounded-lg px-3 py-2.5 text-[0.8125rem] font-medium text-ink">
           What Kodely can’t build — and what to do instead
         </summary>
-        <ul className="space-y-3 border-t border-hair px-3 py-3">
-          {NOT_OFFERED.map((item) => (
-            <li key={item.id}>
-              <p className="text-[0.8125rem] font-medium text-ink">{item.label}</p>
-              <p className="mt-0.5 text-xs leading-relaxed text-ink-2">{item.reason}</p>
-              <p className="mt-1 text-xs leading-relaxed text-ok">
-                <span className="font-medium">Instead: </span>
-                {item.instead}
-              </p>
-            </li>
-          ))}
+        <ul className="grid gap-3 border-t border-hair px-3 py-3 sm:grid-cols-2">
+          {NOT_OFFERED.map((item) => {
+            const Icon = NOT_OFFERED_ICONS[item.id] ?? Info;
+            return (
+              <li key={item.id} className="flex gap-2.5">
+                <span
+                  aria-hidden
+                  className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-md bg-surface text-ink-3"
+                >
+                  <Icon size={14} />
+                </span>
+                <span className="min-w-0">
+                  <p className="text-[0.8125rem] font-medium text-ink">{item.label}</p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-ink-2">{item.reason}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-ok">
+                    <span className="font-medium">Instead: </span>
+                    {item.instead}
+                  </p>
+                </span>
+              </li>
+            );
+          })}
         </ul>
       </details>
     </section>
@@ -972,7 +1138,7 @@ function ReviewStage({
       <p className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-ink-3">
         <span>
           Starting brief:{" "}
-          <span className="text-ink-2">{basis.template ?? "a generic one-pager"}</span>
+          <span className="text-ink-2">{basis.template ?? "a generic brief"}</span>
         </span>
         <span>
           Look: <span className="text-ink-2">{basis.look ?? "Kodely chooses"}</span>
@@ -998,8 +1164,8 @@ function ReviewStage({
 
       {!answered && (
         <p className="mt-3 rounded-md border border-hair bg-surface-2 p-2.5 text-xs leading-relaxed text-ink-2">
-          You skipped every stage, so this is the generic one-page brief. It still builds a real
-          site — going back and answering even one stage makes it yours.
+          You skipped every stage, so this is the generic brief. It still builds a real site —
+          going back and answering even one stage makes it yours.
         </p>
       )}
 

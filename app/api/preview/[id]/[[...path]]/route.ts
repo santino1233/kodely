@@ -11,6 +11,7 @@ const MIME: Record<string, string> = {
   json: "application/json",
   svg: "image/svg+xml",
   txt: "text/plain; charset=utf-8",
+  woff2: "font/woff2",
 };
 
 // MUST stay byte-identical to SANDBOX_CSP in app/api/site/[slug]/[[...path]]/route.ts.
@@ -85,7 +86,11 @@ export async function GET(
   }
 
   const ext = filePath.split(".").pop() ?? "";
-  return new Response(file.content, {
+  // .woff2 travels as base64 through this whole pipeline (lib/build-site.ts)
+  // since every ProjectFile.content column is text — decode it back to real
+  // bytes here, same as the published-site route does.
+  const body = ext === "woff2" ? Buffer.from(file.content, "base64") : file.content;
+  return new Response(body, {
     headers: {
       "Content-Type": MIME[ext] ?? "application/octet-stream",
       "Content-Security-Policy": SANDBOX_CSP,

@@ -73,15 +73,28 @@ export type SourceProvenance = {
 const ICONS_PROVENANCE: SourceProvenance = {
   id: "icons",
   module: "lib/assets/icons.ts",
-  origin: "Hand-authored geometry on a 24×24 grid",
-  licence: "No licence — original work, nothing third-party to licence",
-  licenceShort: "None (original)",
+  origin:
+    "Mixed: hand-authored geometry on a 24×24 grid for the original set, plus a curated set of vendored icons pulled" +
+    " verbatim from four permissively-licensed open-source icon projects, each carrying its own per-asset record (see" +
+    " {@link VendorProvenance} and lib/assets/icon-licenses/)",
+  licence:
+    "No licence for the hand-authored geometry. The vendored subset is ISC (Lucide) and MIT (the Feather-derived" +
+    " subset of Lucide, Tabler, Phosphor, Heroicons) — see lib/assets/icon-licenses/<pack>/LICENSE for the exact text" +
+    " fetched from each project's own repository.",
+  licenceShort: "Mixed: none + ISC/MIT",
   confidence: "declared",
   claim:
-    "Every path is hand-authored geometry: primitives laid out on a 24x24 grid. No path data was copied from any icon library, free or licensed.",
+    "The original ~147 icons are hand-authored geometry: primitives laid out on a 24x24 grid, with no path data" +
+    " copied from any icon library. A second, smaller set of icons was later vendored from Lucide, Tabler Icons," +
+    " Phosphor Icons and Heroicons — real upstream path data, not redrawn — to close specific gaps (the `services`" +
+    " category's trade icons and the `contact` category) where the hand-authored set had collapsed unrelated" +
+    " businesses onto one generic icon. Every vendored icon carries a {@link VendorProvenance} record: source repo," +
+    " upstream icon id, licence, the exact commit/tag pulled, and a retrieved-at date. This is no longer a" +
+    " module-level-only claim for the vendored subset — see {@link vendorProvenanceFor}.",
   caveats: [
     "The 10 icons in the `social` category are deliberately simplified, generic renderings — not the trademark artwork. Copyright-clean, trademark-loaded: a site using them commercially should check the platform's own brand guidelines. docs/research/asset-sources.md makes the same point about brand marks in every third-party set it reviewed.",
-    "One geometry, three stroke weights. The weight is a render-time argument, not a second drawing, so \"style\" is not a property an icon carries.",
+    "One geometry, three stroke weights. The weight is a render-time argument, not a second drawing, so \"style\" is not a property an icon carries — true for both the hand-authored and vendored icons, since the vendored icons were selected specifically because their upstream source is stroke/outline geometry compatible with this render model.",
+    "Vendored icons are all general-purpose UI/object icons (tools, hardware, contact glyphs) from general icon packs, not brand-logo packs. Every vendored record's `isBrandMark` is `false`. Any brand-adjacent icon spotted in Tabler or Phosphor while curating (e.g. `whatsapp-logo`, `telegram-logo` in Phosphor) was excluded rather than vendored — see docs/research/asset-sources.md §4.",
   ],
 };
 
@@ -182,3 +195,108 @@ export const PROVENANCE_REQUIREMENTS = [
   "A licence field the build agent's tool output can carry, so an attribution-required asset cannot be placed silently.",
   "A brand/trademark flag, so logo-like marks are excluded from anything the model places autonomously (§3, iconoop).",
 ];
+
+// ---------------------------------------------------------------------------
+// Per-asset provenance — the infrastructure PROVENANCE_REQUIREMENTS asked for.
+// ---------------------------------------------------------------------------
+
+/**
+ * Which upstream project a vendored icon came from. Kept as a closed union —
+ * not a free string — so a fifth pack can't be wired in without a decision
+ * about its licence being made at the type level first.
+ */
+export type VendorSource = "lucide" | "tabler" | "phosphor" | "heroicons";
+
+/**
+ * One licence fetched, read, and saved verbatim from the upstream repo. Every
+ * entry here corresponds to a file under lib/assets/icon-licenses/<key>/LICENSE
+ * — the file is the source of truth; this is a pointer to it plus the repo
+ * coordinates needed to find it again.
+ */
+export const VENDOR_REPOS: Record<VendorSource, { repo: string; url: string; licenceFile: string }> = {
+  lucide: {
+    repo: "lucide-icons/lucide",
+    url: "https://github.com/lucide-icons/lucide",
+    licenceFile: "lib/assets/icon-licenses/lucide/LICENSE",
+  },
+  tabler: {
+    repo: "tabler/tabler-icons",
+    url: "https://github.com/tabler/tabler-icons",
+    licenceFile: "lib/assets/icon-licenses/tabler/LICENSE",
+  },
+  phosphor: {
+    repo: "phosphor-icons/core",
+    url: "https://github.com/phosphor-icons/core",
+    licenceFile: "lib/assets/icon-licenses/phosphor/LICENSE",
+  },
+  heroicons: {
+    repo: "tailwindlabs/heroicons",
+    url: "https://github.com/tailwindlabs/heroicons",
+    licenceFile: "lib/assets/icon-licenses/heroicons/LICENSE",
+  },
+};
+
+/**
+ * A per-asset provenance record — the thing {@link PROVENANCE_REQUIREMENTS}
+ * said had to exist before any third-party asset could be added. One of these
+ * is attached to every vendored icon; a hand-authored icon carries none,
+ * because "no record" is the correct provenance for original work.
+ */
+export type VendorProvenance = {
+  /** Which upstream project. */
+  source: VendorSource;
+  /** owner/repo, duplicated from {@link VENDOR_REPOS} for convenience at the call site. */
+  sourceRepo: string;
+  /** The file/icon name in the upstream repo, e.g. "circuit-board" or "pipe-wrench". */
+  upstreamId: string;
+  /** SPDX-ish short form for a dense cell, e.g. "MIT" or "ISC". */
+  licence: string;
+  /** Full attribution line — copyright holder plus licence name. */
+  licenceHolder: string;
+  /** The exact commit this file was pulled at, so "current upstream" claims are never used. */
+  commit: string;
+  /** ISO date this asset was fetched. */
+  retrievedAt: string;
+  /**
+   * The brand/trademark exclusion flag PROVENANCE_REQUIREMENTS asked for.
+   * `false` for every icon vendored so far — Lucide/Tabler/Phosphor/Heroicons
+   * are general UI icon sets, not logo packs, and anything brand-shaped
+   * spotted while curating (Phosphor ships `whatsapp-logo`, `telegram-logo`)
+   * was excluded rather than vendored. The field exists so a future vendored
+   * asset that IS a brand mark has somewhere to say so — and so a picker or
+   * an autonomous placement path can filter on it — rather than the
+   * exclusion being enforced only by a human remembering to check.
+   */
+  isBrandMark: boolean;
+};
+
+/** Build a full record from the parts that vary per icon; repo metadata comes from {@link VENDOR_REPOS}. */
+export function vendorProvenance(
+  source: VendorSource,
+  upstreamId: string,
+  licence: string,
+  licenceHolder: string,
+  commit: string,
+  retrievedAt: string,
+  isBrandMark = false,
+): VendorProvenance {
+  return {
+    source,
+    sourceRepo: VENDOR_REPOS[source].repo,
+    upstreamId,
+    licence,
+    licenceHolder,
+    commit,
+    retrievedAt,
+    isBrandMark,
+  };
+}
+
+/** One line, suitable for a tool-output `usage` string, so a licence can never be placed silently. */
+export function vendorProvenanceLine(p: VendorProvenance): string {
+  const short = p.commit.slice(0, 12);
+  return (
+    `Vendored from ${p.sourceRepo} (upstream id "${p.upstreamId}") at commit ${short}, retrieved ${p.retrievedAt}.` +
+    ` Licence: ${p.licence} — ${p.licenceHolder}. Not a brand/trademark mark.`
+  );
+}

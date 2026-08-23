@@ -576,7 +576,7 @@ function ReviewStep({
         <span>
           Starting brief:{" "}
           <span className="text-neutral-700 dark:text-neutral-300">
-            {basis.template ?? "a generic one-pager"}
+            {basis.template ?? "a generic brief"}
           </span>
         </span>
         <span>

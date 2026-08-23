@@ -1,6 +1,10 @@
 import { db } from "@/lib/db";
 import { applySeo, pageUrl, robotsTxt, siteBaseUrl, sitemapXml } from "@/lib/site-seo";
 import { submitSiteForm } from "@/lib/site-forms";
+import { RECORD_PATH_SEGMENT, submitSiteRecord, submitSiteRecordUpdate, viewSiteRecord } from "@/lib/site-records";
+import { renderSiteRecords } from "@/lib/site-record-render";
+import { AUTH_PATH_SEGMENT, logoutSiteVisitor, requestSiteLogin, resolveSiteVisitor, verifySiteLogin } from "@/lib/site-auth";
+import { siteNotFound } from "@/lib/site-endpoint";
 import { siteHostAllowed } from "../site-host";
 
 export const dynamic = "force-dynamic";
@@ -101,20 +105,45 @@ function candidatePaths(filePath: string): string[] {
 }
 
 /**
- * Form submissions from a published site: `POST /__forms/<formName>`, which
- * arrives here as `/api/site/<slug>/__forms/<formName>` via proxy.ts.
+ * The only POST shapes a published site's own origin ever answers:
  *
- * Everything — host check, published check, caps, abuse control, storage and
- * the owner notification — is in lib/site-forms.ts. Anything that is not that
- * exact path shape is a 404 there, so this does not become a general POST
- * surface on the sites domain.
+ *  - `/__forms/<formName>`, which arrives here as
+ *    `/api/site/<slug>/__forms/<formName>` via proxy.ts. Everything — host
+ *    check, published check, caps, abuse control, storage and the owner
+ *    notification — is in lib/site-forms.ts.
+ *  - `/__records/<kind>`, the generic storage primitive behind
+ *    backend-backed site features (bookings, client portals, simple data —
+ *    see lib/site-records.ts). Same shape, same safety machinery, no
+ *    product-specific logic here or there.
+ *  - `/__records/<kind>/<id>`, the update/cancel target for the "manage
+ *    this" link `/__records/<kind>` handed the submitter — one path segment
+ *    longer, dispatched separately because it needs a token, not an origin
+ *    check alone.
+ *  - `/__auth/request` and `/__auth/logout` — the magic-link visitor-account
+ *    system (see lib/site-auth.ts): asking for a sign-in link, and signing
+ *    out. `/__auth/verify` (the link itself) is a GET, dispatched below.
+ *
+ * Anything that is not one of these exact path shapes is a 404 in the
+ * handler it's dispatched to, so this does not become a general POST surface
+ * on the sites domain.
  */
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ slug: string; path?: string[] }> },
 ) {
   const { slug, path } = await params;
-  return submitSiteForm(req, slug, path ?? []);
+  const segments = path ?? [];
+  if (segments[0] === RECORD_PATH_SEGMENT) {
+    return segments.length === 3
+      ? submitSiteRecordUpdate(req, slug, segments)
+      : submitSiteRecord(req, slug, segments);
+  }
+  if (segments[0] === AUTH_PATH_SEGMENT) {
+    if (segments[1] === "request") return requestSiteLogin(req, slug, segments);
+    if (segments[1] === "logout") return logoutSiteVisitor(req, slug, segments);
+    return siteNotFound();
+  }
+  return submitSiteForm(req, slug, segments);
 }
 
 export async function GET(
@@ -133,6 +162,22 @@ export async function GET(
   // not confirm that a slug exists to someone probing the wrong host.
   if (!siteHostAllowed(req.headers.get("host") ?? "", slug)) {
     return new Response("Site not found.", { status: 404 });
+  }
+
+  // `/__records/<kind>/<id>` — the "manage this" link handed out by
+  // lib/site-records.ts's create reply. Dispatched here, before the file
+  // lookup below, because it is not a stored file at all; everything about
+  // it (host check, token check, the invalid-link reply) lives in
+  // lib/site-records.ts, same division of labour as the POST dispatch above.
+  if (path && path.length === 3 && path[0] === RECORD_PATH_SEGMENT) {
+    return viewSiteRecord(req, slug, path);
+  }
+
+  // `/__auth/verify` — the magic-link visitor-account system's own GET route
+  // (lib/site-auth.ts). Same reasoning as the manage-link dispatch above: not
+  // a stored file, dispatched before the file lookup.
+  if (path && path.length === 2 && path[0] === AUTH_PATH_SEGMENT && path[1] === "verify") {
+    return verifySiteLogin(req, slug, path);
   }
 
   const project = await db.project.findUnique({ where: { slug } });
@@ -191,14 +236,39 @@ export async function GET(
   // pageUrl(), not baseUrl: canonical and og:url must name THIS page. Keyed off
   // the file that actually answered, so /about and /about.html both canonicalise
   // to /about and Google sees one page rather than two competing duplicates.
+  // Live read-back (Phase 1B): a builder-authored `data-kodely-records="<kind>"`
+  // container gets its matching SiteRecord rows rendered into it, server-side,
+  // per request — see lib/site-record-render.ts. Runs BEFORE applySeo() only
+  // because there is no ordering dependency between the two and this keeps
+  // "content" and "head metadata" as two separate passes over the string,
+  // each easy to reason about alone; applySeo() never looks at anything this
+  // step could have touched (it only touches <head>).
+  //
+  // `data-kodely-mine` (Phase 2) needs to know who is currently signed in —
+  // resolveSiteVisitor() is the SAME cookie/hash/lookup lib/site-auth.ts's
+  // record-creation path uses, so the two can never disagree about what
+  // "signed in" means. Only resolved when the page actually uses the
+  // attribute, so an ordinary page pays no extra query for a feature it
+  // doesn't use.
+  const visitorId =
+    ext === "html" && file.content.includes("data-kodely-mine")
+      ? ((await resolveSiteVisitor(req, project.id))?.id ?? null)
+      : null;
+
+  // .woff2 is the one binary type this pipeline carries (lib/build-site.ts) —
+  // its content column holds base64, decoded back to real bytes right before
+  // the response goes out. Every other extension's content is already the
+  // literal bytes to serve, as text.
   const body =
     ext === "html"
-      ? applySeo(file.content, {
+      ? applySeo(await renderSiteRecords(file.content, project.id, visitorId), {
           projectName: project.name,
           baseUrl,
           pageUrl: pageUrl(baseUrl, file.path),
         })
-      : file.content;
+      : ext === "woff2"
+        ? Buffer.from(file.content, "base64")
+        : file.content;
 
   return new Response(body, {
     headers: { ...seoHeaders, "Content-Type": MIME[ext] ?? "application/octet-stream" },

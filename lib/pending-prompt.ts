@@ -5,11 +5,6 @@ export const PENDING_PROMPT_KEY = "kodely:pending_prompt";
 // fits sessionStorage's per-origin limit.
 export const PENDING_PROMPT_IMAGE_KEY = "kodely:pending_prompt_image";
 
-function deriveName(prompt: string): string {
-  const trimmed = prompt.trim().replace(/\s+/g, " ");
-  return trimmed.length > 60 ? trimmed.slice(0, 57) + "…" : trimmed || "New site";
-}
-
 /**
  * After a successful login/signup, sends the user straight into a new
  * project pre-loaded with whatever they typed on the homepage before hitting
@@ -28,7 +23,9 @@ export async function destinationAfterAuth(): Promise<string> {
     const res = await fetch("/api/projects", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: deriveName(prompt) }),
+      // The server derives a real summarized title from the prompt itself
+      // (lib/title.ts) — see app/api/projects/route.ts.
+      body: JSON.stringify({ prompt }),
     });
     const body = await res.json();
     if (!res.ok || !body?.project?.id) return "/dashboard";

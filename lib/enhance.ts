@@ -74,8 +74,12 @@ const SDK_TIMEOUT_MS = 60_000;
  * One AbortSignal that trips on whichever comes first: our own deadline, or
  * the client hanging up. AbortSignal.any would do this in one line but the
  * timer still has to be cleared, so the teardown callback is needed regardless.
+ *
+ * Exported because lib/title.ts needs the exact same shape for its own
+ * short/cheap Haiku call — this is generic request-plumbing, not something
+ * specific to Enhance.
  */
-function withDeadline(ms: number, signal?: AbortSignal) {
+export function withDeadline(ms: number, signal?: AbortSignal) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), ms);
   const onAbort = () => controller.abort();

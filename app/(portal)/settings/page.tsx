@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import { Mail } from "lucide-react";
+import { Mail, UserRound } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import { Card, CardHeader } from "@/components/ui/Card";
-import { EmptyState } from "@/components/ui/EmptyState";
+import { PageHero } from "@/components/ui/PageHero";
 import { PRIVACY_EMAIL } from "@/app/api/account/_deletion";
 import NameForm from "./NameForm";
 import { formatDate } from "./_format";
@@ -43,6 +42,16 @@ export default async function SettingsAccountPage({
 
   return (
     <>
+      {/* This tab's own hero — the layout above already renders the page-level
+          "Settings" h1, so this is deliberately `as="h2"` and matches the
+          same tab icon SettingsNav uses (UserRound) rather than a second
+          icon language for the same three tabs. */}
+      <PageHero
+        as="h2"
+        icon={<UserRound className="size-5" aria-hidden />}
+        title="Account"
+      />
+
       <Card>
         <CardHeader
           title="Profile"
@@ -73,35 +82,6 @@ export default async function SettingsAccountPage({
           Member since <span className="k-num text-ink">{formatDate(user.createdAt)}</span>.
         </p>
       </Card>
-
-      {/* SURFACED, NOT OMITTED. "Where do I turn the emails off?" is a question
-          people come to a settings page with, and the answer here is a real
-          one: there is nothing to turn off. lib/notifications/templates.ts is
-          explicit that this product holds no consent record and has no
-          unsubscribe mechanism, precisely because all four messages are
-          triggered by the recipient's own account. Naming the four is more
-          use than four switches that write nowhere. */}
-      <EmptyState
-        kind="unavailable"
-        icon={<Mail className="size-6" aria-hidden />}
-        title="No email preferences to set"
-        body={
-          <>
-            Kodely sends four emails, each one triggered by something on your own account: a
-            welcome, a warning when your credits run low, a note when a build fails, and a
-            confirmation when a site goes live. There is no marketing list, no newsletter and no
-            tracking pixel — so there is nothing here to opt out of, and no switch has been drawn
-            that would pretend otherwise. The full record of what was sent to you is in your{" "}
-            <Link
-              href="/settings/security"
-              className="k-focus rounded-xs text-brand underline underline-offset-2 hover:no-underline"
-            >
-              data export
-            </Link>
-            .
-          </>
-        }
-      />
     </>
   );
 }

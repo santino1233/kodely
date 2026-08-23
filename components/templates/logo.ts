@@ -3,7 +3,7 @@ import { LOGO_LIMITS } from "@/lib/brand-kit";
 /**
  * Logo handling for the template picker.
  *
- * Same shape and the same hard rule as `app/(portal)/dashboard/new/image.ts`,
+ * Same shape and the same hard rule as `app/(portal)/dashboard/new/attachment.ts`,
  * which this is deliberately modelled on rather than importing: that module
  * belongs to the composer and re-encodes to JPEG, which is wrong for a logo.
  * The rule both files exist to enforce is identical — the output MUST match

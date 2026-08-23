@@ -137,7 +137,7 @@ export function MobileNav({
               canTopUp={canTopUp}
               collapsed={false}
             />
-            <UserMenu user={user} balance={balance} collapsed={false} />
+            <UserMenu user={user} collapsed={false} />
           </div>
         </div>
       )}

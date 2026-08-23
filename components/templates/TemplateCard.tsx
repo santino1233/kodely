@@ -32,8 +32,8 @@ export function TemplateCard({
   busy: boolean;
 }) {
   // The first line of every starter prompt is written to stand alone as a
-  // summary ("Build a one-page website for [your cafe's name], …"), so it
-  // doubles as the preview without needing a separate, driftable field.
+  // summary ("Build a website for [your cafe's name], …"), so it doubles as
+  // the preview without needing a separate, driftable field.
   const previewLine = prompt.trim().split("\n")[0];
   const editId = `template-prompt-${template.id}`;
 

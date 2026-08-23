@@ -2,7 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Composer, type AssistResult, type AttachedLogo, type CreditContext } from "./Composer";
+import {
+  Composer,
+  type AssistResult,
+  type AttachedDocument,
+  type AttachedLogo,
+  type CreditContext,
+} from "./Composer";
 import { BuildLaunch } from "./BuildLaunch";
 import {
   INITIAL_BUILD,
@@ -11,14 +17,6 @@ import {
   type BuildProgress,
   type BuildSignal,
 } from "./build-steps";
-
-/** Same shape the homepage hand-off uses (lib/pending-prompt.ts) so a project
-    started here is named the way a project started there is. Reimplemented
-    rather than imported because that helper is not exported. */
-function deriveName(prompt: string): string {
-  const trimmed = prompt.trim().replace(/\s+/g, " ");
-  return trimmed.length > 60 ? trimmed.slice(0, 57) + "…" : trimmed || "New site";
-}
 
 type Phase = "compose" | "building";
 
@@ -42,6 +40,12 @@ type Phase = "compose" | "building";
  * precisely because that is the one thing the route's regex accepts, and the
  * route hands it to the model on ATTEMPT 1 only. The composer says exactly that
  * beside the thumbnail rather than implying it is uploaded and stored.
+ *
+ * A directly-attached PDF takes a THIRD, newer path: the `document` field,
+ * gated to attempt 1 the same way, carrying real document input to the model
+ * (see lib/agent.ts). Neither helper flow here produces one — only the
+ * composer's own "+"/paste/drop can — so `referenceDocument` state exists
+ * only in this file and Composer.tsx, not in AssistResult.
  *
  * NOT the brand-kit route (PUT /api/projects/[id]/brand), which would compile
  * the logo into src/components/brand/BrandLogo.tsx and seed the palette as a
@@ -71,6 +75,11 @@ export function CreateFlow({
   const [prompt, setPrompt] = useState(initialPrompt);
   const [startedFrom, setStartedFrom] = useState<string | null>(templateName);
   const [logo, setLogo] = useState<AttachedLogo | null>(null);
+  /** The other half of the same one-slot reference attachment — see the note
+      on AttachedDocument in Composer.tsx. Mutually exclusive with `logo`;
+      Composer's attachFile() keeps that true by always clearing the one it
+      isn't setting. */
+  const [referenceDocument, setReferenceDocument] = useState<AttachedDocument | null>(null);
   const [submitted, setSubmitted] = useState("");
   const [progress, setProgress] = useState<BuildProgress>(INITIAL_BUILD);
   const [projectId, setProjectId] = useState<string | null>(null);
@@ -117,7 +126,12 @@ export function CreateFlow({
   }, []);
 
   const run = useCallback(
-    async (text: string, imageDataUrl: string | null, existingProjectId: string | null) => {
+    async (
+      text: string,
+      imageDataUrl: string | null,
+      documentDataUrl: string | null,
+      existingProjectId: string | null,
+    ) => {
       stateRef.current = INITIAL_BUILD;
       setProgress(INITIAL_BUILD);
       setStopping(false);
@@ -134,7 +148,9 @@ export function CreateFlow({
           const res = await fetch("/api/projects", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: deriveName(text) }),
+            // The server derives a real summarized title from the prompt
+            // itself (lib/title.ts) — see app/api/projects/route.ts.
+            body: JSON.stringify({ prompt: text }),
           });
           const body: unknown = await res.json().catch(() => null);
           const created =
@@ -172,7 +188,12 @@ export function CreateFlow({
         const res = await fetch("/api/generate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ projectId: id, prompt: text, image: imageDataUrl }),
+          body: JSON.stringify({
+            projectId: id,
+            prompt: text,
+            image: imageDataUrl,
+            document: documentDataUrl,
+          }),
           signal: controller.signal,
         });
 
@@ -264,7 +285,7 @@ export function CreateFlow({
         onStop={stop}
         onRetry={
           retrySafe && progress.outcome === "failed"
-            ? () => void run(submitted, logo?.dataUrl ?? null, projectId)
+            ? () => void run(submitted, logo?.dataUrl ?? null, referenceDocument?.dataUrl ?? null, projectId)
             : null
         }
         onEdit={() => {
@@ -277,26 +298,42 @@ export function CreateFlow({
   }
 
   return (
+    // Centered in the visible content area, not just at the top of a tall
+    // scroll container — the min-height subtracts the shell's own topbar and
+    // padding so "centered" means centered in what's actually on screen,
+    // approximately, across the range of real viewport heights rather than
+    // exactly on any one of them.
+    <div className="flex min-h-[calc(100dvh-var(--topbar-h)-7rem)] items-center justify-center lg:min-h-[calc(100dvh-var(--topbar-h)-9rem)]">
     <Composer
       value={prompt}
       onChange={setPrompt}
       logo={logo}
       onLogoChange={setLogo}
+      referenceDocument={referenceDocument}
+      onReferenceDocumentChange={setReferenceDocument}
       // A helper flow replaces the box's contents wholesale rather than
       // appending: the customer picked a template or answered the wizard
       // specifically to REPLACE whatever placeholder text was there, and
       // appending would leave both texts arguing with each other in the
       // request. The prompt still lands in the editable box, not the request,
       // so nothing is submitted without the customer having seen it.
+      //
+      // Both flows only ever hand back an image (`result.logo`), never a
+      // PDF — so accepting one also clears any PDF the customer had
+      // separately attached, keeping the one-slot rule true.
       onAssist={(result: AssistResult) => {
         setPrompt(result.prompt);
         setLogo(result.logo);
+        setReferenceDocument(null);
         setStartedFrom(result.templateName);
       }}
-      onSubmit={() => void run(prompt.trim(), logo?.dataUrl ?? null, projectId)}
+      onSubmit={() =>
+        void run(prompt.trim(), logo?.dataUrl ?? null, referenceDocument?.dataUrl ?? null, projectId)
+      }
       fromTemplate={startedFrom}
       credits={credits}
       canTopUp={canTopUp}
     />
+    </div>
   );
 }

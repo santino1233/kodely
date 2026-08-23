@@ -7,14 +7,14 @@
  *
  * Every prompt is written to stay inside what a generated site actually IS
  * (see the SYSTEM prompt in lib/agent.ts and the starting files in
- * lib/foundation.ts): one Vite + React + TS + Tailwind page, served under a
- * CSP that blocks every external host, with no backend — EXCEPT the one real
+ * lib/foundation.ts): a Vite + React + TS + Tailwind app, served under a CSP
+ * that blocks every external host, with no backend — EXCEPT the one real
  * exception documented in lib/agent.ts and lib/site-forms.ts: a plain HTML
  * contact form posting to the site's own `/__forms/<name>` genuinely works,
  * is stored, and emails the owner. So no template may ask for — or imply — a
  * working booking form, an account, a cart, a database, a live API call, a
- * remote or stock image, a custom web font, or a second page. A contact form
- * IS fair game where the brief calls for one.
+ * remote or stock image, or a custom web font. A contact form IS fair game
+ * where the brief calls for one.
  *
  * The 23 prompts below predate that exception and were written when contact
  * forms were also refused — most say "no backend, use mailto:" in the same
@@ -32,6 +32,34 @@
  * Two agent rules the prompts are written to cooperate with rather than
  * fight: never invent facts about a real business (hence the brackets), and
  * never build a control that only pretends to work (hence the link-outs).
+ *
+ * ## Page count is no longer asserted here
+ *
+ * These prompts used to all open with "Build a one-page website for…" as a
+ * blanket rule, regardless of what kind of business the template described.
+ * That was wrong twice over: it pre-empted lib/agent.ts's own judgment call
+ * ("use pages when the content genuinely differs… don't manufacture thin
+ * pages to look bigger" — see its Multi-page section), and it actively
+ * contradicted a customer who typed "with a page for each location" into the
+ * wizard or the intake form on top of a template that had already told the
+ * model to build one page.
+ *
+ * Most of the 23 templates below now open with the page-count-neutral "Build
+ * a website for…" / "Build a site for…" — the vertical genuinely CAN go
+ * either way (a restaurant, a law firm, a portfolio can be one great page or
+ * several; the model decides from the brief, the same way it would for the
+ * raw composer). A small number keep "one-page" as a deliberate, literal
+ * constraint because being a single page is what the format IS, not a guess
+ * about the business behind it:
+ *   - `link-in-bio`      — a link-in-bio page is by definition one page.
+ *   - `coming-soon`      — a pre-launch teaser is one screen by definition;
+ *                          its own copy says "keep it short, one screen".
+ *   - `personal-blog`    — literally named "Personal one-page blog"; the
+ *                          prompt explains why (no database, posts live in
+ *                          the page itself) as a deliberate structural choice.
+ * Nothing here was flipped to the opposite blanket rule ("always multi-page")
+ * — removing an incorrect assertion is the whole fix, not replacing it with
+ * another one.
  */
 
 export const TEMPLATE_CATEGORIES = [
@@ -66,9 +94,9 @@ export const TEMPLATES: Template[] = [
     id: "restaurant",
     name: "Restaurant",
     description:
-      "A one-page site with menu highlights, hours and location. Bookings link out to your phone or existing reservation service — there is no built-in reservation system.",
+      "A site with menu highlights, hours and location. Bookings link out to your phone or existing reservation service — there is no built-in reservation system.",
     category: "Food & drink",
-    prompt: `Build a one-page website for [your restaurant's name], a [cuisine, e.g. modern Italian] restaurant in [your city].
+    prompt: `Build a website for [your restaurant's name], a [cuisine, e.g. modern Italian] restaurant in [your city].
 
 Audience: locals deciding where to eat tonight, plus people who were recommended us and want to check we look good before calling. Tone: warm and appetising, confident, never corporate.
 
@@ -91,7 +119,7 @@ I have no photographs to give you, so carry the atmosphere with typography, a wa
     description:
       "A neighbourhood cafe page: what you serve, where you are, when you open. No online ordering or delivery — those link out if you use them.",
     category: "Food & drink",
-    prompt: `Build a one-page website for [your cafe's name], an independent coffee shop in [your neighbourhood, your city].
+    prompt: `Build a website for [your cafe's name], an independent coffee shop in [your neighbourhood, your city].
 
 Audience: people nearby looking for somewhere to work, meet a friend, or grab a flat white on the way to work. Tone: relaxed and human, a bit design-led, absolutely not "artisanal" parody.
 
@@ -114,7 +142,7 @@ No photos are available. Build the mood with a warm, slightly muted palette, big
     description:
       "A page for a mobile food business: what you cook and where you park. The weekly schedule is text you edit yourself, not a live feed.",
     category: "Food & drink",
-    prompt: `Build a one-page website for [your food truck's name], a [what you cook, e.g. Korean-Mexican] food truck operating around [your city].
+    prompt: `Build a website for [your food truck's name], a [what you cook, e.g. Korean-Mexican] food truck operating around [your city].
 
 Audience: people who saw the truck once and want to find it again, and event organisers thinking about hiring us. Tone: bold, fast, street-food energy — loud typography is welcome here.
 
@@ -137,9 +165,9 @@ No photography available — lean on strong colour, angled shapes, and inline SV
     id: "barbershop",
     name: "Barbershop",
     description:
-      "A sharp one-pager with services, prices and hours. Appointments go through a tel: link or your existing booking tool — no booking engine is built.",
+      "A sharp, credible site with services, prices and hours. Appointments go through a tel: link or your existing booking tool — no booking engine is built.",
     category: "Beauty & wellness",
-    prompt: `Build a one-page website for [your barbershop's name], a barbershop in [your city].
+    prompt: `Build a website for [your barbershop's name], a barbershop in [your city].
 
 Audience: men looking for a regular barber, and first-timers deciding whether we are the traditional kind or the fade-specialist kind. Tone: confident, masculine, clean — dark and sharp rather than rustic.
 
@@ -162,7 +190,7 @@ No photos to work with, so use a dark palette, strong type, thin rules and inlin
     description:
       "Services, price list, hours and location for a salon or beauty studio. Clients book by phone or via a link to your existing booking service.",
     category: "Beauty & wellness",
-    prompt: `Build a one-page website for [your salon's name], a hair and beauty salon in [your city].
+    prompt: `Build a website for [your salon's name], a hair and beauty salon in [your city].
 
 Audience: someone choosing a new salon — they want to know the price range, the vibe, and whether we do their kind of hair before they commit. Tone: calm, elegant, contemporary; soft neutral palette with one accent colour.
 
@@ -185,7 +213,7 @@ I have no photographs yet — build elegance out of whitespace, type and a restr
     description:
       "A studio page with classes, a written timetable and membership prices. No sign-up or payment — joining links out to your existing system.",
     category: "Beauty & wellness",
-    prompt: `Build a one-page website for [your studio's name], a [type, e.g. reformer pilates / CrossFit / boxing] studio in [your city].
+    prompt: `Build a website for [your studio's name], a [type, e.g. reformer pilates / CrossFit / boxing] studio in [your city].
 
 Audience: someone who has decided to start training and is comparing two or three local studios. They want to know what a class is actually like, what it costs, and whether beginners are welcome. Tone: energetic but grown-up — motivating, not shouty.
 
@@ -211,7 +239,7 @@ No photography available — use bold type, a high-contrast palette and inline S
     description:
       "A credibility page for a plumber, electrician, builder or similar: services, areas covered, and a big call-me button. Quotes come by phone or email.",
     category: "Local services",
-    prompt: `Build a one-page website for [your name / your business name], a [trade, e.g. plumber / electrician / carpenter] working in [your town and the areas around it].
+    prompt: `Build a website for [your name / your business name], a [trade, e.g. plumber / electrician / carpenter] working in [your town and the areas around it].
 
 Audience: someone with a problem right now, on their phone, deciding who to call. The single most important thing on the page is the phone number. Tone: straightforward, reassuring, no jargon and no marketing fluff.
 
@@ -233,7 +261,7 @@ No photos of past work are available yet, so use a clean, high-trust layout with
     description:
       "For cleaners, gardeners, dog walkers, tutors and the like: what you offer, where you cover, what it costs. Enquiries go by phone or email.",
     category: "Local services",
-    prompt: `Build a one-page website for [your business name], a [service, e.g. domestic cleaning / gardening / dog walking] business serving [your area].
+    prompt: `Build a website for [your business name], a [service, e.g. domestic cleaning / gardening / dog walking] business serving [your area].
 
 Audience: a local household comparing two or three providers. They want to know exactly what is included, roughly what it costs, and that a real person will answer. Tone: friendly, practical, trustworthy.
 
@@ -259,7 +287,7 @@ No photographs available — use a light, clean layout, inline SVG icons and cle
     description:
       "A restrained, credible page for a solicitor or small firm: practice areas, approach, contact. No client intake form or portal — enquiries go by phone and email.",
     category: "Professional services",
-    prompt: `Build a one-page website for [your firm's name], a [size, e.g. three-partner] law firm in [your city] practising [your practice areas].
+    prompt: `Build a website for [your firm's name], a [size, e.g. three-partner] law firm in [your city] practising [your practice areas].
 
 Audience: someone with a serious problem — a dispute, an injury, an estate — who is nervous and comparing firms. They need to feel competence and calm within five seconds. Tone: measured, precise, human. No stock-photo handshake energy, no exclamation marks.
 
@@ -280,9 +308,9 @@ No photography available — use serif headings, generous whitespace, a restrain
     id: "accountancy",
     name: "Accountant / bookkeeper",
     description:
-      "Services, who you work with and how fees work, on one page. No client portal or document upload — those link out to the software you already use.",
+      "Services, who you work with and how fees work. No client portal or document upload — those link out to the software you already use.",
     category: "Professional services",
-    prompt: `Build a one-page website for [your practice's name], an accountancy and bookkeeping practice in [your city] working mainly with [your client type, e.g. freelancers and small limited companies].
+    prompt: `Build a website for [your practice's name], an accountancy and bookkeeping practice in [your city] working mainly with [your client type, e.g. freelancers and small limited companies].
 
 Audience: a small business owner who is behind on their books or unhappy with their current accountant. They want to know the services, the price basis, and that deadlines will be met. Tone: clear, calm, competent — reassuring rather than salesy.
 
@@ -306,7 +334,7 @@ No photography available — use a crisp, confident layout with strong type, a c
     description:
       "A single-page pitch: the problem you solve, how you work, and how to reach you. Calls are booked via a link to your existing scheduling tool.",
     category: "Professional services",
-    prompt: `Build a one-page website for [your name], an independent [your discipline, e.g. operations / brand / data] consultant working with [your client type].
+    prompt: `Build a website for [your name], an independent [your discipline, e.g. operations / brand / data] consultant working with [your client type].
 
 Audience: a hiring manager or founder who got my name from someone and is checking whether I am the real thing before emailing. Tone: senior, specific, quietly confident — this should read like a strong point of view, not a CV.
 
@@ -327,9 +355,9 @@ No photography available — use editorial typography, a strong single accent co
     id: "agency",
     name: "Agency",
     description:
-      "A one-page agency site: services, approach, and written case-study summaries. Client logos and screenshots are placeholders you replace later.",
+      "An agency site: services, approach, and written case-study summaries. Client logos and screenshots are placeholders you replace later.",
     category: "Professional services",
-    prompt: `Build a one-page website for [your agency's name], a [type, e.g. brand and digital] agency in [your city].
+    prompt: `Build a website for [your agency's name], a [type, e.g. brand and digital] agency in [your city].
 
 Audience: a marketing lead shortlisting agencies. They want to see taste in the first three seconds and substance in the next thirty. Tone: crafted, opinionated, contemporary — the design of the page IS the portfolio.
 
@@ -355,7 +383,7 @@ I cannot supply images or client logos, so make each case study a typographic ca
     description:
       "A single-page portfolio: who you are, what you have built, how to reach you. Project thumbnails are generated placeholders until you replace them.",
     category: "Personal & creative",
-    prompt: `Build a one-page portfolio site for [your name], a [your role, e.g. product designer / frontend developer] based in [your city].
+    prompt: `Build a portfolio site for [your name], a [your role, e.g. product designer / frontend developer] based in [your city].
 
 Audience: a hiring manager or potential client who has thirty seconds and a dozen tabs open. They need to understand what I do, see evidence, and find the contact link without scrolling forever. Tone: personal and specific, confident without bragging.
 
@@ -378,7 +406,7 @@ I have no images to supply, so give each project card its own generated visual t
     description:
       "A gallery-style page for a photographer. Honest limit: you cannot upload photos yet, so the grid is filled with generated placeholder tiles you swap out later.",
     category: "Personal & creative",
-    prompt: `Build a one-page site for [your name], a [type, e.g. wedding and portrait] photographer working in [your city and region].
+    prompt: `Build a site for [your name], a [type, e.g. wedding and portrait] photographer working in [your city and region].
 
 Audience: someone planning [the occasion, e.g. a wedding] who is comparing photographers on style and price. Tone: quiet and confident — the design should get out of the way of the pictures.
 
@@ -401,9 +429,9 @@ Responsive down to 380px, with a dark mode that suits a gallery.`,
     id: "band-musician",
     name: "Band or musician",
     description:
-      "A single page for an artist: bio, tour dates and links to the platforms your music already lives on. Audio is not hosted here — streaming links out.",
+      "A site for an artist: bio, tour dates and links to the platforms your music already lives on. Audio is not hosted here — streaming links out.",
     category: "Personal & creative",
-    prompt: `Build a one-page website for [band or artist name], a [genre] act from [your city].
+    prompt: `Build a website for [band or artist name], a [genre] act from [your city].
 
 Audience: someone who just heard us at a gig or on a playlist and searched the name. They want to hear more, see when we play next, and follow us — in that order. Tone: match the genre; give the page a strong, distinctive visual identity rather than a neutral template look.
 
@@ -472,7 +500,7 @@ Make it visually distinctive: a strong gradient or pattern background, rounded c
     description:
       "A marketing page for a software product: problem, features, pricing, FAQ. Sign-up and login buttons link out to your actual app.",
     category: "Startup & product",
-    prompt: `Build a one-page landing site for [your product name], a [category, e.g. project tracking] tool for [your audience, e.g. small agencies].
+    prompt: `Build a landing site for [your product name], a [category, e.g. project tracking] tool for [your audience, e.g. small agencies].
 
 Audience: someone who just clicked an ad or a Show HN link. In ten seconds they must understand what it does, who it is for, and what it costs. Tone: sharp and specific — plain language, concrete benefits, no vague "supercharge your workflow".
 
@@ -497,7 +525,7 @@ Give the page one distinctive visual idea. Responsive to 380px with a dark mode.
     description:
       "A focused page for launching one physical or digital product. There is no cart or checkout — the buy button links to the store you already sell through.",
     category: "Startup & product",
-    prompt: `Build a one-page launch site for [your product name], a [what it is, e.g. hardcover book / mechanical keyboard / iOS app] by [your name or company].
+    prompt: `Build a launch site for [your product name], a [what it is, e.g. hardcover book / mechanical keyboard / iOS app] by [your name or company].
 
 Audience: someone sent here by a launch post, deciding in under a minute whether to buy. Tone: confident and product-obsessed; the page should feel like the product.
 
@@ -547,9 +575,9 @@ Visually: this page has one job, so give it one strong idea — an animated CSS 
     description:
       "The where-and-when page for guests: schedule, venue, travel, dress code. RSVPs go by email or to the form service you are already using.",
     category: "Events & causes",
-    prompt: `Build a one-page wedding information site for [name one] and [name two], getting married on [your date] at [your venue, your town].
+    prompt: `Build a wedding information site for [name one] and [name two], getting married on [your date] at [your venue, your town].
 
-Audience: our guests — including relatives who are not confident online. Every practical question they have should be answerable from this one page on a phone. Tone: warm and personal, elegant rather than twee.
+Audience: our guests — including relatives who are not confident online. Every practical question they have should be easy to find on a phone without digging. Tone: warm and personal, elegant rather than twee.
 
 Sections in this order:
 1. Hero — both first names, the date and the venue town.
@@ -573,7 +601,7 @@ We have no photographs to include, so use elegant typography, a soft palette, an
     description:
       "One page covering an event: what, when, where, who is speaking. Tickets and registration link out to the platform selling them.",
     category: "Events & causes",
-    prompt: `Build a one-page site for [event name], a [type, e.g. one-day conference / workshop / meetup] on [your date] at [your venue, your city].
+    prompt: `Build a site for [event name], a [type, e.g. one-day conference / workshop / meetup] on [your date] at [your venue, your city].
 
 Audience: someone deciding whether to spend a day and [ticket price] on this. They need the theme, the line-up, the practicalities and the ticket link. Tone: energetic and credible.
 
@@ -599,7 +627,7 @@ Responsive to 380px with a dark mode.`,
     description:
       "A page explaining your cause, your work and how to help. Donations link out to your existing donation platform — no payments are handled here.",
     category: "Events & causes",
-    prompt: `Build a one-page website for [your organisation's name], a [type, e.g. registered charity / volunteer-run community group] in [your area] working on [your cause].
+    prompt: `Build a website for [your organisation's name], a [type, e.g. registered charity / volunteer-run community group] in [your area] working on [your cause].
 
 Audience: three groups at once — someone who might donate, someone who might volunteer, and someone who needs the help we offer. The third group matters most, so make it easy for them to find what to do.
 
