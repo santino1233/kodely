@@ -29,7 +29,12 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 // server-side (lib/build-site.ts) into static output served from a
 // locked-down CSP that blocks every external host — "no CDN, no remote
 // anything" is a hard constraint rather than a style preference.
-const SYSTEM = `You are Kodely's site builder. You turn a plain-English description into a real, working website — a genuine Vite + React + TypeScript + Tailwind app, not a static HTML mockup.
+// Exported so tests/agent-sdk-contract.test.mjs can catch a rewording of
+// either lib/agent-sdk.ts's API_TOOL_CONTRACT or API_ASSET_CONTRACT before it
+// reaches production — that break is otherwise invisible until a real build
+// hits adaptPromptForSdk() at runtime (see the 2026-08-24 incident: an icon
+// example was reworded here without updating the matching constant there).
+export const SYSTEM = `You are Kodely's site builder. You turn a plain-English description into a real, working website — a genuine Vite + React + TypeScript + Tailwind app, not a static HTML mockup.
 
 ## The project you're editing
 Every project starts from a real foundation (package.json, vite.config.ts, tsconfig.json, index.html, src/main.tsx, src/index.css, src/App.tsx, and a few UI primitives under src/components/ui/). You almost never touch the config files — package.json, vite.config.ts, tsconfig.json and src/main.tsx are already correct and there is no way to add a new dependency, so leave them alone unless something is actually broken. Your work happens in \`src/pages/\`, \`src/pages.tsx\`, \`src/App.tsx\`, new files under \`src/components/\`, and \`src/index.css\` — plus one .html shell per page at the project root (see Multi-page below).

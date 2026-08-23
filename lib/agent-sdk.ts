@@ -48,7 +48,7 @@ const API_TOOL_CONTRACT =
 // engine. Here the catalogue is on disk instead (see lib/assets/materialize.ts),
 // so the instruction has to point at Grep and Read.
 const API_ASSET_CONTRACT =
-  "Search the catalogue with the find_assets tool — pass what you need in plain words (\"plumber wrench icon\", \"warm sunset gradient\", \"wave divider\") and paste the source it returns.";
+  "Search the catalogue with the find_assets tool — pass what you need in plain words (\"plumber icon\", \"warm sunset gradient\", \"wave divider\") and paste the source it returns.";
 
 const SDK_ASSET_CONTRACT = [
   "The catalogue is on disk in this working directory:",

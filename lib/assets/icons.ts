@@ -1213,7 +1213,7 @@ const VENDORED_DEFS: IconDef[] = [
     id: "solar-panel",
     name: "Solar panel",
     c: "services",
-    k: "solar renewable energy installer panel electrician sustainable",
+    k: "solar renewable energy installer panel sustainable",
     b: `<g transform="scale(0.09375)"><line x1="40" y1="104" x2="56" y2="104" vector-effect="non-scaling-stroke"/><line x1="65.77" y1="41.77" x2="77.09" y2="53.09" vector-effect="non-scaling-stroke"/><line x1="128" y1="16" x2="128" y2="32" vector-effect="non-scaling-stroke"/><line x1="190.23" y1="41.77" x2="178.91" y2="53.09" vector-effect="non-scaling-stroke"/><line x1="216" y1="104" x2="200" y2="104" vector-effect="non-scaling-stroke"/><path d="M88,104a40,40,0,0,1,80,0" vector-effect="non-scaling-stroke"/><polygon points="24 216 64.7 144 191.3 144 232 216 24 216" vector-effect="non-scaling-stroke"/><line x1="46.61" y1="176" x2="209.39" y2="176" vector-effect="non-scaling-stroke"/><line x1="152.35" y1="144" x2="168" y2="216" vector-effect="non-scaling-stroke"/><line x1="88" y1="216" x2="103.65" y2="144" vector-effect="non-scaling-stroke"/></g>`,
     prov: phosphorProv("solar-panel"),
   },

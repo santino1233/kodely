@@ -94,8 +94,12 @@ test("business vocabulary reaches a sensible icon", () => {
   // (see the "american flag" entry in tests/open-bugs.test.mjs), so pinning a
   // single winner here would be pinning the alphabet.
   for (const [query, acceptable] of [
-    ["plumber", ["icon:wrench", "icon:droplet"]],
-    ["electrician", ["icon:zap", "icon:wrench"]],
+    ["plumber", ["icon:wrench", "icon:droplet", "icon:pipe-wrench", "icon:pipeline"]],
+    // Was ["icon:zap", "icon:wrench"] until the icon-vendoring pass gave
+    // electricians their own real icons — resolving to the generic wrench/zap
+    // (the same icons a plumber or handyman got) was exactly the sameness bug
+    // that work fixed. See lib/assets/index.ts's SYNONYMS comment.
+    ["electrician", ["icon:circuit-board", "icon:electric-plug", "icon:zap"]],
     ["barber", ["icon:scissors"]],
     ["dentist", ["icon:tooth"]],
     ["photographer", ["icon:camera"]],
